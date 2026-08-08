@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  DATABASE_URL: postgres://nanko:nanko@localhost:5432/nanko
+  TEST_DATABASE_URL: postgres://nanko:nanko@localhost:5432/nanko_test
+  # Never set in CI: keeps OTEL registration a no-op (see src/instrumentation.ts).
+  # OTEL_EXPORTER_OTLP_ENDPOINT: (intentionally unset)
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: nanko
+          POSTGRES_PASSWORD: nanko
+          POSTGRES_DB: nanko
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nanko -d nanko"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm lint
+
+      - run: pnpm format:check
+
+      - run: pnpm typecheck
+
+      - name: Create test database
+        run: PGPASSWORD=nanko psql -h localhost -U nanko -d nanko -c "CREATE DATABASE nanko_test"
+
+      - name: Check schema.ts has no un-generated migration
+        run: |
+          pnpm db:generate
+          git diff --exit-code drizzle/ || {
+            echo "::error::src/db/schema.ts changed without running 'pnpm db:generate' and committing the resulting migration."
+            exit 1
+          }
+
+      - name: Apply migrations to a clean database
+        run: pnpm db:migrate
+
+      - run: pnpm test
+
+      - run: pnpm build
