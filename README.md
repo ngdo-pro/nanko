@@ -4,22 +4,24 @@ Outil de modélisation d'architecture C4 (Context/Container/Component). Voir [PL
 
 ## Stack
 
-Monorepo pnpm : backend Symfony + Mercure (`apps/api`), frontend React SPA/Vite (`apps/web`). Pivot depuis Next.js le 2026-08-09 — voir AGENTS.md.
+Monorepo pnpm : backend Symfony + Mercure (`apps/api`), frontend React SPA/Vite (`apps/web`).
 
 Bootstrap uniquement pour l'instant : pas de Doctrine/Postgres, pas d'API Platform, pas de CI, pas de tests, aucune reproduction du modèle métier Nanko.
 
 ## Setup
 
 ```bash
-# Hub Mercure
-docker compose up -d
-
-# Backend Symfony (depuis apps/api)
-cd apps/api && symfony server:start --port=8000 --no-tls -d
-
-# Frontend React (depuis la racine)
 pnpm install
-pnpm --filter ./apps/web dev
+make dev    # hub Mercure (Docker) + backend Symfony + frontend Vite
+make stop   # arrête tout
+```
+
+Équivalent sans Makefile :
+
+```bash
+docker compose up -d
+cd apps/api && symfony server:start --port=8000 --no-tls -d
+cd ../.. && pnpm --filter ./apps/web dev
 ```
 
 Ouvrir [http://localhost:5173](http://localhost:5173).
