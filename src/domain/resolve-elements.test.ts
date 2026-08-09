@@ -68,4 +68,68 @@ describe("resolveElements", () => {
       /not found/,
     );
   });
+
+  it("nulls out parentId when the parent is not itself visible at the target milestone", async () => {
+    const project = await makeProject();
+    const m1 = await makeMilestone(project.id, 1);
+    const m2 = await makeMilestone(project.id, 2);
+
+    const parent = await makeElement({ projectId: project.id, createdAtMilestoneId: m1.id });
+    await setElementVersion({ elementId: parent.id, milestoneId: m1.id, name: "Parent" });
+
+    // Deleted at M2, while its child survives — so at M2 the child's
+    // parentId would otherwise dangle.
+    const deletedParent = await makeElement({
+      projectId: project.id,
+      createdAtMilestoneId: m1.id,
+      deletedAtMilestoneId: m2.id,
+      kind: "container",
+    });
+    await setElementVersion({ elementId: deletedParent.id, milestoneId: m1.id, name: "Deleted" });
+
+    const child = await makeElement({
+      projectId: project.id,
+      createdAtMilestoneId: m1.id,
+      parentId: deletedParent.id,
+    });
+    await setElementVersion({ elementId: child.id, milestoneId: m1.id, name: "Child" });
+
+    const atM2 = await resolveElements(testDb, project.id, m2.id);
+    expect(atM2.map((e) => e.name).sort()).toEqual(["Child", "Parent"]);
+    expect(atM2.find((e) => e.name === "Child")?.parentId).toBeNull();
+  });
+
+  it("skips a visible element that has no version at or before the milestone instead of throwing", async () => {
+    const project = await makeProject();
+    const m1 = await makeMilestone(project.id, 1);
+
+    await makeElement({ projectId: project.id, createdAtMilestoneId: m1.id });
+
+    const versioned = await makeElement({ projectId: project.id, createdAtMilestoneId: m1.id });
+    await setElementVersion({ elementId: versioned.id, milestoneId: m1.id, name: "Versioned" });
+
+    const atM1 = await resolveElements(testDb, project.id, m1.id);
+    expect(atM1.map((e) => e.name)).toEqual(["Versioned"]);
+  });
+
+  it("nulls out parentId when the parent is visible but skipped for lacking a version", async () => {
+    const project = await makeProject();
+    const m1 = await makeMilestone(project.id, 1);
+
+    const versionlessParent = await makeElement({
+      projectId: project.id,
+      createdAtMilestoneId: m1.id,
+    });
+
+    const child = await makeElement({
+      projectId: project.id,
+      createdAtMilestoneId: m1.id,
+      parentId: versionlessParent.id,
+    });
+    await setElementVersion({ elementId: child.id, milestoneId: m1.id, name: "Child" });
+
+    const atM1 = await resolveElements(testDb, project.id, m1.id);
+    expect(atM1.map((e) => e.name)).toEqual(["Child"]);
+    expect(atM1[0]?.parentId).toBeNull();
+  });
 });

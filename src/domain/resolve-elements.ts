@@ -49,8 +49,20 @@ export async function resolveElements(
       isExternal: element.isExternal,
     })
     .from(element)
-    .innerJoin(createdMilestone, eq(createdMilestone.id, element.createdAtMilestoneId))
-    .leftJoin(deletedMilestone, eq(deletedMilestone.id, element.deletedAtMilestoneId))
+    .innerJoin(
+      createdMilestone,
+      and(
+        eq(createdMilestone.id, element.createdAtMilestoneId),
+        eq(createdMilestone.projectId, projectId),
+      ),
+    )
+    .leftJoin(
+      deletedMilestone,
+      and(
+        eq(deletedMilestone.id, element.deletedAtMilestoneId),
+        eq(deletedMilestone.projectId, projectId),
+      ),
+    )
     .where(
       and(
         eq(element.projectId, projectId),
@@ -61,52 +73,56 @@ export async function resolveElements(
 
   if (visibleElements.length === 0) return [];
 
-  const elementIds = visibleElements.map((e) => e.id);
+  const visibleIds = new Set(visibleElements.map((e) => e.id));
   const versionMilestone = alias(milestone, "version_milestone");
 
   const versions = await db
-    .select({
+    .selectDistinctOn([elementVersion.elementId], {
       elementId: elementVersion.elementId,
       name: elementVersion.name,
       description: elementVersion.description,
       technology: elementVersion.technology,
-      sortOrder: versionMilestone.sortOrder,
     })
     .from(elementVersion)
-    .innerJoin(versionMilestone, eq(versionMilestone.id, elementVersion.milestoneId))
+    .innerJoin(
+      versionMilestone,
+      and(
+        eq(versionMilestone.id, elementVersion.milestoneId),
+        eq(versionMilestone.projectId, projectId),
+      ),
+    )
     .where(
       and(
-        inArray(elementVersion.elementId, elementIds),
+        inArray(elementVersion.elementId, [...visibleIds]),
         lte(versionMilestone.sortOrder, targetSortOrder),
       ),
     )
     .orderBy(elementVersion.elementId, desc(versionMilestone.sortOrder));
 
-  // First row per elementId in this ordering is the version with the
-  // greatest sortOrder <= target (a poor man's DISTINCT ON, kept simple
-  // since this is bootstrap-scope, not the final resolveGraph()).
-  const latestVersionByElement = new Map<string, (typeof versions)[number]>();
-  for (const version of versions) {
-    if (!latestVersionByElement.has(version.elementId)) {
-      latestVersionByElement.set(version.elementId, version);
-    }
-  }
+  const latestVersionByElement = new Map(versions.map((v) => [v.elementId, v]));
 
-  return visibleElements.map((visible) => {
+  // An element visible at this milestone with no version at or before it is
+  // a data-integrity gap for that one element, not the whole graph — skip
+  // it rather than failing every element's resolution. resolvedIds (not
+  // visibleIds) is what parentId must be checked against below, since a
+  // skipped parent must also null out its children's parentId.
+  const resolvedIds = new Set(
+    visibleElements.filter((e) => latestVersionByElement.has(e.id)).map((e) => e.id),
+  );
+
+  return visibleElements.flatMap((visible) => {
     const version = latestVersionByElement.get(visible.id);
-    if (!version) {
-      throw new Error(
-        `Element ${visible.id} is visible at milestone ${milestoneId} but has no version at or before it`,
-      );
-    }
-    return {
-      id: visible.id,
-      parentId: visible.parentId,
-      kind: visible.kind,
-      isExternal: visible.isExternal,
-      name: version.name,
-      description: version.description,
-      technology: version.technology,
-    };
+    if (!version) return [];
+    return [
+      {
+        id: visible.id,
+        parentId: visible.parentId && resolvedIds.has(visible.parentId) ? visible.parentId : null,
+        kind: visible.kind,
+        isExternal: visible.isExternal,
+        name: version.name,
+        description: version.description,
+        technology: version.technology,
+      },
+    ];
   });
 }
