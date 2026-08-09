@@ -9,6 +9,13 @@ Next.js (App Router) + TypeScript strict, Tailwind, Drizzle ORM + Postgres, Vite
 ## Setup
 
 ```bash
+make init   # .env.local, services Docker (postgres, jaeger), pnpm install, migrations
+make dev    # serveur de dev
+```
+
+Équivalent sans Makefile :
+
+```bash
 cp .env.example .env.local
 docker compose up -d postgres jaeger   # jaeger requis : le tracing est activé par défaut, voir "Tracing" plus bas
 pnpm install
@@ -18,6 +25,8 @@ pnpm dev
 ```
 
 `GET /api/health` vérifie la connectivité DB.
+
+`make help` liste toutes les commandes (start/stop des services Docker, migrate, seed, studio, test, lint, etc.).
 
 ## Développement
 
