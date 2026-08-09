@@ -10,7 +10,7 @@ Next.js (App Router) + TypeScript strict, Tailwind, Drizzle ORM + Postgres, Vite
 
 ```bash
 cp .env.example .env.local
-docker compose up -d postgres   # + jaeger, voir "Tracing" plus bas
+docker compose up -d postgres jaeger   # jaeger requis : le tracing est activé par défaut, voir "Tracing" plus bas
 pnpm install
 pnpm db:migrate
 pnpm db:seed                    # optionnel : jeu de données de démo

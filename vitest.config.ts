@@ -1,8 +1,6 @@
 import { defineConfig } from "vitest/config";
-import { config } from "dotenv";
 import path from "node:path";
-
-config({ path: ".env.local" });
+import "./src/db/load-local-env";
 
 export default defineConfig({
   resolve: {
