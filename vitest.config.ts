@@ -9,7 +9,7 @@ export default defineConfig({
   test: {
     environment: "node",
     globalSetup: ["./src/db/test/global-setup.ts"],
-    setupFiles: ["./src/db/test/setup.ts"],
     fileParallelism: false, // all tests share one Postgres DB; truncate-between-tests isn't safe under parallel files
+    passWithNoTests: true, // no domain tests yet — schema and tests grow back in together
   },
 });

@@ -20,7 +20,6 @@ cp .env.example .env.local
 docker compose up -d postgres jaeger   # jaeger requis : le tracing est activé par défaut, voir "Tracing" plus bas
 pnpm install
 pnpm db:migrate
-pnpm db:seed                    # optionnel : jeu de données de démo
 pnpm dev
 ```
 
@@ -54,7 +53,7 @@ Les migrations sont commitées. La CI échoue si `schema.ts` a changé sans migr
 
 ### Tests
 
-`pnpm test` tourne contre une vraie base Postgres (`nanko_test`, créée automatiquement par `docker compose up postgres`, jamais mockée — voir `src/db/test/`). Chaque test repart d'une base tronquée (`src/db/test/setup.ts`). Les fixtures de base (`makeProject`, `makeMilestone`, `makeElement`, `setElementVersion`) sont dans `src/db/test/fixtures.ts` : c'est la brique à réutiliser pour tester `resolveGraph()`/`diff()` au fur et à mesure qu'ils sont implémentés (PLAN.md Phase 1).
+`pnpm test` tourne contre une vraie base Postgres (`nanko_test`, créée automatiquement par `docker compose up postgres`, jamais mockée — voir `src/db/test/`). Pas de tests métier pour l'instant : le schéma et les tests reviennent ensemble au fur et à mesure de PLAN.md.
 
 ### Tracing (optionnel)
 
