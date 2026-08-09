@@ -22,7 +22,7 @@ stop: ## Arrete les services Docker (containers supprimes, donnees conservees)
 clean: ## Arrete les services Docker ET supprime les donnees (destructif)
 	docker compose down -v
 
-dev: ## Lance le serveur de dev Next.js (necessite 'make start' avant)
+dev: start ## Demarre les services Docker si besoin, puis lance le serveur de dev Next.js
 	pnpm dev
 
 migrate: ## Applique les migrations Drizzle a la DB de dev
