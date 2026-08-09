@@ -1,32 +1,13 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    restart: unless-stopped
+  mercure:
+    image: dunglas/mercure
+    restart: "no"
     environment:
-      POSTGRES_USER: nanko
-      POSTGRES_PASSWORD: nanko
-      POSTGRES_DB: nanko
+      SERVER_NAME: ":80"
+      MERCURE_PUBLISHER_JWT_KEY: "!ChangeThisMercureHubJWTSecretKey!"
+      MERCURE_SUBSCRIBER_JWT_KEY: "!ChangeThisMercureHubJWTSecretKey!"
+      MERCURE_EXTRA_DIRECTIVES: |
+        anonymous
+        cors_origins http://localhost:5173
     ports:
-      - "5432:5432"
-    volumes:
-      - nanko-postgres-data:/var/lib/postgresql/data
-      - ./docker/postgres/init-test-db.sh:/docker-entrypoint-initdb.d/init-test-db.sh:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U nanko -d nanko"]
-      interval: 2s
-      timeout: 3s
-      retries: 20
-
-  # Optional: local trace UI for dev observability (see README "Tracing").
-  # Not required to run the app — only needed if OTEL_EXPORTER_OTLP_ENDPOINT is set.
-  jaeger:
-    image: jaegertracing/all-in-one:1.76.0
-    restart: unless-stopped
-    environment:
-      COLLECTOR_OTLP_ENABLED: "true"
-    ports:
-      - "16686:16686" # Jaeger UI
-      - "4318:4318" # OTLP HTTP receiver
-
-volumes:
-  nanko-postgres-data:
+      - "3001:80"

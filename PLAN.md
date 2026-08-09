@@ -1,5 +1,7 @@
 # Plan d'implémentation — Nanko
 
+> **Note (2026-08-09)** : le stack d'implémentation a pivoté de Next.js vers un monorepo Symfony (+ Mercure) / React SPA (voir `apps/`, AGENTS.md). La section "Plan technique" ci-dessous (stack, Route Handlers, roadmap d'implémentation — env. lignes 73-78, 252, 337+) décrit encore l'ancien stack Next.js et n'a pas été mise à jour ; à retraiter avant de s'y fier. Le reste (produit, scope, modèle de données conceptuel) reste valide indépendamment du stack.
+
 ## Résumé
 
 Nanko est un outil de modélisation d'architecture C4 (Context/Container/Component), pensé dès le départ comme un produit potentiellement commercialisable même si son usage V1 est interne à Evaneos (2-3 utilisateurs, sans authentification, en self-host de confiance). Il se distingue de Structurizr, IcePanel, Miro ou PlantUML par deux choix structurants en V1 : une navigation drill-down/up fluide et animée entre niveaux C4, et une timeline de milestones historique-et-future avec diff visuel entre deux points dans le temps. Le DSL maison façon Mermaid (import/export versionnable en git) bascule en V2. La V1 (Next.js + TypeScript + Postgres + React Flow) couvre C1/C2/C3, les milestones avec diff, et les annotations simples ; le modèle de données est conçu — arbre d'éléments récursif, mutations adressées par id, historique par attribut plutôt que par snapshot — pour ne pas fermer la porte aux évolutions V2/V3 (DSL, collaboration CRDT temps réel, animations de flux, niveau Code, vue split DSL live, exports visuels).

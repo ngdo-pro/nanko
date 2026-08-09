@@ -31,7 +31,7 @@ function App() {
 
   return (
     <main style={{ fontFamily: "monospace", padding: "2rem" }}>
-      <h1>spike-symfony-mercure</h1>
+      <h1>nanko</h1>
 
       <section>
         <h2>GET /api/ping</h2>
