@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+
+echo "pre-commit: make phpstan"
+make phpstan
+
+echo "pre-commit: web lint + typecheck"
+pnpm --filter web lint
+pnpm --filter web exec tsc -b
