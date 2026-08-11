@@ -18,7 +18,7 @@ final class DoctrineMilestoneRepositoryTest extends MilestoneRepositoryTestCase
         self::bootKernel();
 
         $this->connection = static::getContainer()->get(Connection::class);
-        $this->connection->executeStatement('TRUNCATE project, milestone RESTART IDENTITY');
+        $this->connection->executeStatement('TRUNCATE project, milestone, element, element_version RESTART IDENTITY');
 
         return static::getContainer()->get(DoctrineMilestoneRepository::class);
     }
