@@ -64,7 +64,7 @@ final class ElementControllerTest extends DatabaseTestCase
     }
 
     #[Test]
-    public function it returns 400 when the kind is not one of the v1 levels(): void
+    public function it returns 422 when the kind is not one of the v1 levels(): void
     {
         // GIVEN a project and a milestone
         $projectId = $this->createProject('Nanko', 'nanko');
@@ -78,7 +78,26 @@ final class ElementControllerTest extends DatabaseTestCase
         ], JSON_THROW_ON_ERROR));
 
         // THEN the request is rejected
-        self::assertResponseStatusCodeSame(400);
+        self::assertResponseStatusCodeSame(422);
+    }
+
+    #[Test]
+    public function it returns 422 when is_external is not a boolean(): void
+    {
+        // GIVEN a project and a milestone
+        $projectId = $this->createProject('Nanko', 'nanko');
+        $milestoneId = $this->createMilestone($projectId, 'Launch');
+
+        // WHEN creating an element with a non-boolean is_external
+        $this->client->request('POST', "/api/projects/{$projectId}/elements", server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'milestone_id' => $milestoneId,
+            'kind' => 'system',
+            'name' => 'Booking',
+            'is_external' => 'yes',
+        ], JSON_THROW_ON_ERROR));
+
+        // THEN the request is rejected
+        self::assertResponseStatusCodeSame(422);
     }
 
     #[Test]

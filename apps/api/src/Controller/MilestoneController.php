@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Dto\CreateMilestonePayload;
 use App\Repository\MilestoneRepositoryInterface;
 use App\Repository\ProjectNotFoundException;
-use Symfony\Component\HttpFoundation\Exception\JsonException;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 
 class MilestoneController
@@ -24,26 +24,10 @@ class MilestoneController
     }
 
     #[Route('/api/projects/{projectId}/milestones', name: 'api_milestones_create', methods: ['POST'])]
-    public function create(string $projectId, Request $request): JsonResponse
+    public function create(string $projectId, #[MapRequestPayload] CreateMilestonePayload $payload): JsonResponse
     {
         try {
-            $data = $request->toArray();
-        } catch (JsonException) {
-            $data = [];
-        }
-        $label = is_string($data['label'] ?? null) ? trim($data['label']) : '';
-        $occursOn = is_string($data['occurs_on'] ?? null) ? trim($data['occurs_on']) : null;
-        $occursOn = $occursOn === '' ? null : $occursOn;
-
-        if ($label === '' || ($occursOn !== null && preg_match('/^\d{4}-\d{2}-\d{2}$/', $occursOn) !== 1)) {
-            return new JsonResponse(
-                ['error' => 'label is required and occurs_on must be a YYYY-MM-DD date'],
-                400,
-            );
-        }
-
-        try {
-            $milestone = $this->milestones->create($projectId, $label, $occursOn);
+            $milestone = $this->milestones->create($projectId, $payload->label, $payload->occursOn);
         } catch (ProjectNotFoundException) {
             return new JsonResponse(['error' => 'project not found'], 404);
         }

@@ -67,7 +67,7 @@ final class MilestoneControllerTest extends DatabaseTestCase
     }
 
     #[Test]
-    public function it returns 400 when the label is missing(): void
+    public function it returns 422 when the label is missing(): void
     {
         // GIVEN a project
         $projectId = $this->createProject('Nanko', 'nanko');
@@ -78,11 +78,11 @@ final class MilestoneControllerTest extends DatabaseTestCase
         ], JSON_THROW_ON_ERROR));
 
         // THEN the request is rejected
-        self::assertResponseStatusCodeSame(400);
+        self::assertResponseStatusCodeSame(422);
     }
 
     #[Test]
-    public function it returns 400 when occurs on is not a valid date(): void
+    public function it returns 422 when occurs on is not a valid date(): void
     {
         // GIVEN a project
         $projectId = $this->createProject('Nanko', 'nanko');
@@ -94,7 +94,7 @@ final class MilestoneControllerTest extends DatabaseTestCase
         ], JSON_THROW_ON_ERROR));
 
         // THEN the request is rejected
-        self::assertResponseStatusCodeSame(400);
+        self::assertResponseStatusCodeSame(422);
     }
 
     #[Test]
