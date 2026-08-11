@@ -67,7 +67,7 @@ final class ProjectControllerTest extends DatabaseTestCase
     }
 
     #[Test]
-    public function it returns 400 when the slug is invalid(): void
+    public function it returns 422 when the slug is invalid(): void
     {
         // GIVEN no project exists
 
@@ -78,7 +78,7 @@ final class ProjectControllerTest extends DatabaseTestCase
         ], JSON_THROW_ON_ERROR));
 
         // THEN the request is rejected
-        self::assertResponseStatusCodeSame(400);
+        self::assertResponseStatusCodeSame(422);
     }
 
     #[Test]

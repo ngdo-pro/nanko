@@ -16,7 +16,10 @@
         "symfony/flex": "^2",
         "symfony/framework-bundle": "8.1.*",
         "symfony/mercure-bundle": "^0.4.2",
+        "symfony/property-access": "8.1.*",
         "symfony/runtime": "8.1.*",
+        "symfony/serializer": "8.1.*",
+        "symfony/validator": "8.1.*",
         "symfony/yaml": "8.1.*"
     },
     "config": {
