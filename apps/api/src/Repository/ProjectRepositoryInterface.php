@@ -17,4 +17,9 @@ interface ProjectRepositoryInterface
      * @return list<array<string, mixed>>
      */
     public function findAll(): array;
+
+    /**
+     * @throws ProjectNotFoundException
+     */
+    public function delete(string $id): void;
 }

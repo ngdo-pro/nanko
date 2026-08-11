@@ -120,11 +120,50 @@ final class ProjectControllerTest extends DatabaseTestCase
         self::assertCount(1, $list);
     }
 
-    private function createProject(string $name, string $slug): void
+    #[Test]
+    public function it deletes a project(): void
+    {
+        // GIVEN a project exists
+        $id = $this->createProject('Nanko', 'nanko');
+
+        // WHEN deleting it
+        $this->client->request('DELETE', "/api/projects/{$id}");
+
+        // THEN the response is a 204
+        self::assertResponseStatusCodeSame(204);
+
+        // AND the project no longer appears in the list
+        $this->client->request('GET', '/api/projects');
+        $list = json_decode((string) $this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertSame([], $list);
+    }
+
+    #[Test]
+    public function it returns 404 when deleting an unknown project(): void
+    {
+        // GIVEN no project exists
+
+        // WHEN deleting an unknown id
+        $this->client->request('DELETE', '/api/projects/00000000-0000-0000-0000-000000000000');
+
+        // THEN the request is rejected with a 404
+        self::assertResponseStatusCodeSame(404);
+        $body = json_decode((string) $this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertIsArray($body);
+        self::assertArrayHasKey('error', $body);
+    }
+
+    private function createProject(string $name, string $slug): string
     {
         $this->client->request('POST', '/api/projects', server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
             'name' => $name,
             'slug' => $slug,
         ], JSON_THROW_ON_ERROR));
+
+        $created = json_decode((string) $this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertIsArray($created);
+        self::assertIsString($created['id']);
+
+        return $created['id'];
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Support;
 
 use App\Repository\DuplicateSlugException;
+use App\Repository\ProjectNotFoundException;
 use App\Repository\ProjectRepositoryInterface;
 
 final class InMemoryProjectRepository implements ProjectRepositoryInterface
@@ -36,6 +37,19 @@ final class InMemoryProjectRepository implements ProjectRepositoryInterface
     public function findAll(): array
     {
         return array_values($this->projects);
+    }
+
+    public function delete(string $id): void
+    {
+        foreach ($this->projects as $slug => $project) {
+            if ($project['id'] === $id) {
+                unset($this->projects[$slug]);
+
+                return;
+            }
+        }
+
+        throw new ProjectNotFoundException($id);
     }
 
     private static function uuidV4(): string
