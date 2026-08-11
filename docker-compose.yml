@@ -11,3 +11,23 @@ services:
         cors_origins http://localhost:5173
     ports:
       - "3001:80"
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nanko
+      POSTGRES_PASSWORD: nanko
+      POSTGRES_DB: nanko
+    ports:
+      - "5432:5432"
+    volumes:
+      - nanko-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nanko -d nanko"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  nanko-postgres-data:

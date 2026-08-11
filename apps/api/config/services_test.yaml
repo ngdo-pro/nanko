@@ -1,0 +1,4 @@
+services:
+    App\Tests\Support\FakeHub: ~
+
+    Symfony\Component\Mercure\HubInterface: '@App\Tests\Support\FakeHub'
