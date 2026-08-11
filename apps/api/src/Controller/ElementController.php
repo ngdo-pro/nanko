@@ -9,6 +9,7 @@ use App\Repository\ElementRepositoryInterface;
 use App\Repository\InvalidParentException;
 use App\Repository\MilestoneNotFoundException;
 use App\Repository\ProjectNotFoundException;
+use Symfony\Component\HttpFoundation\Exception\JsonException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
@@ -24,8 +25,11 @@ class ElementController
     #[Route('/api/projects/{projectId}/elements', name: 'api_elements_create', methods: ['POST'])]
     public function create(string $projectId, Request $request): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
-        $data = is_array($data) ? $data : [];
+        try {
+            $data = $request->toArray();
+        } catch (JsonException) {
+            $data = [];
+        }
 
         $milestoneId = is_string($data['milestone_id'] ?? null) ? trim($data['milestone_id']) : '';
         $kind = is_string($data['kind'] ?? null) ? $data['kind'] : '';

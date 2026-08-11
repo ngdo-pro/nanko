@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Repository\DuplicateSlugException;
 use App\Repository\ProjectNotFoundException;
 use App\Repository\ProjectRepositoryInterface;
+use Symfony\Component\HttpFoundation\Exception\JsonException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
@@ -26,8 +27,11 @@ class ProjectController
     #[Route('/api/projects', name: 'api_projects_create', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
-        $data = is_array($data) ? $data : [];
+        try {
+            $data = $request->toArray();
+        } catch (JsonException) {
+            $data = [];
+        }
         $name = is_string($data['name'] ?? null) ? trim($data['name']) : '';
         $slug = is_string($data['slug'] ?? null) ? trim($data['slug']) : '';
 

@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Repository\MilestoneRepositoryInterface;
 use App\Repository\ProjectNotFoundException;
+use Symfony\Component\HttpFoundation\Exception\JsonException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
@@ -25,8 +26,11 @@ class MilestoneController
     #[Route('/api/projects/{projectId}/milestones', name: 'api_milestones_create', methods: ['POST'])]
     public function create(string $projectId, Request $request): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
-        $data = is_array($data) ? $data : [];
+        try {
+            $data = $request->toArray();
+        } catch (JsonException) {
+            $data = [];
+        }
         $label = is_string($data['label'] ?? null) ? trim($data['label']) : '';
         $occursOn = is_string($data['occurs_on'] ?? null) ? trim($data['occurs_on']) : null;
         $occursOn = $occursOn === '' ? null : $occursOn;
