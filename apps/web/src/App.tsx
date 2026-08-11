@@ -8,9 +8,21 @@ type PingResponse = {
   service: string;
 };
 
+type Project = {
+  id: string;
+  name: string;
+  slug: string;
+  created_at: string;
+  updated_at: string;
+};
+
 function App() {
   const [ping, setPing] = useState<PingResponse | null>(null);
   const [events, setEvents] = useState<string[]>([]);
+  const [projects, setProjects] = useState<Project[] | null>(null);
+  const [name, setName] = useState("");
+  const [slug, setSlug] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/ping`)
@@ -29,13 +41,76 @@ function App() {
     return () => source.close();
   }, []);
 
+  function loadProjects() {
+    fetch(`${API_URL}/api/projects`)
+      .then((res) => res.json())
+      .then(setProjects)
+      .catch((err) => setError(String(err)));
+  }
+
+  useEffect(loadProjects, []);
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setError(null);
+
+    const response = await fetch(`${API_URL}/api/projects`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, slug }),
+    });
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
+      setError(body?.error ?? `Request failed with status ${response.status}`);
+      return;
+    }
+
+    setName("");
+    setSlug("");
+    loadProjects();
+  }
+
   return (
     <main style={{ fontFamily: "monospace", padding: "2rem" }}>
       <h1>nanko</h1>
 
       <section>
         <h2>GET /api/ping</h2>
-        <pre>{ping ? JSON.stringify(ping, null, 2) : "loading..."}</pre>
+        <pre data-qa="ping-status">{ping ? JSON.stringify(ping, null, 2) : "loading..."}</pre>
+      </section>
+
+      <section>
+        <h2>Projects</h2>
+        <form onSubmit={handleSubmit} data-qa="project-form">
+          <input
+            data-qa="project-name-input"
+            placeholder="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />{" "}
+          <input
+            data-qa="project-slug-input"
+            placeholder="slug"
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+            required
+          />{" "}
+          <button type="submit" data-qa="project-submit">create</button>
+        </form>
+        {error && (
+          <p data-qa="project-error" style={{ color: "red" }}>
+            {error}
+          </p>
+        )}
+        <ul data-qa="project-list">
+          {projects?.map((project) => (
+            <li key={project.id} data-qa="project-item" data-qa-slug={project.slug}>
+              {project.name} ({project.slug})
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section>
