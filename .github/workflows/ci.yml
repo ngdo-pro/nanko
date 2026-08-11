@@ -1,0 +1,107 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: nanko
+          POSTGRES_PASSWORD: nanko
+          POSTGRES_DB: nanko
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nanko"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: ctype, iconv, pdo_pgsql
+          tools: composer:v2
+          coverage: none
+
+      - name: Install api dependencies
+        working-directory: apps/api
+        run: composer install --prefer-dist --no-progress
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install web dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create test database
+        working-directory: apps/api
+        run: |
+          php bin/console --env=test doctrine:database:create --if-not-exists
+          php bin/console --env=test doctrine:migrations:migrate --no-interaction
+
+      - name: Run api tests
+        working-directory: apps/api
+        run: php bin/phpunit
+
+      - name: Run web tests
+        run: pnpm --filter web test
+
+  code-quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: ctype, iconv, pdo_pgsql
+          tools: composer:v2
+          coverage: none
+
+      - name: Install api dependencies
+        working-directory: apps/api
+        run: composer install --prefer-dist --no-progress
+
+      - name: Warm dev cache (needed by phpstan-symfony)
+        working-directory: apps/api
+        run: php bin/console cache:warmup --env=dev
+
+      - name: Run PHPStan
+        working-directory: apps/api
+        run: vendor/bin/phpstan analyse --memory-limit=1G
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install web dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint web
+        run: pnpm --filter web lint
+
+      - name: Typecheck web
+        run: pnpm --filter web exec tsc -b

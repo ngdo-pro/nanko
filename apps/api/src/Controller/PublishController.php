@@ -19,7 +19,7 @@ class PublishController
         $update = new Update('spike/test', json_encode([
             'message' => 'hello from Symfony',
             'at' => date(DATE_ATOM),
-        ]));
+        ], JSON_THROW_ON_ERROR));
         $this->hub->publish($update);
 
         $response = new JsonResponse(['published' => true]);
