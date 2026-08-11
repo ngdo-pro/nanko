@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Repository\DuplicateSlugException;
+use App\Repository\ProjectNotFoundException;
 use App\Repository\ProjectRepositoryInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -44,5 +45,17 @@ class ProjectController
         }
 
         return new JsonResponse($project, 201);
+    }
+
+    #[Route('/api/projects/{id}', name: 'api_projects_delete', methods: ['DELETE'])]
+    public function delete(string $id): JsonResponse
+    {
+        try {
+            $this->projects->delete($id);
+        } catch (ProjectNotFoundException) {
+            return new JsonResponse(['error' => 'project not found'], 404);
+        }
+
+        return new JsonResponse(null, 204);
     }
 }

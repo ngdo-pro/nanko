@@ -50,6 +50,20 @@ function App() {
 
   useEffect(loadProjects, []);
 
+  async function handleDelete(id: string) {
+    setError(null);
+
+    const response = await fetch(`${API_URL}/api/projects/${id}`, { method: "DELETE" });
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
+      setError(body?.error ?? `Request failed with status ${response.status}`);
+      return;
+    }
+
+    loadProjects();
+  }
+
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
@@ -107,7 +121,12 @@ function App() {
         <ul data-qa="project-list">
           {projects?.map((project) => (
             <li key={project.id} data-qa="project-item" data-qa-slug={project.slug}>
-              {project.name} ({project.slug})
+              <span>
+                {project.name} ({project.slug})
+              </span>{" "}
+              <button data-qa="project-delete" onClick={() => handleDelete(project.id)}>
+                delete
+              </button>
             </li>
           ))}
         </ul>

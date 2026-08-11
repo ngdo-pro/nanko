@@ -35,4 +35,16 @@ final class DoctrineProjectRepository implements ProjectRepositoryInterface
             'SELECT id, name, slug, created_at, updated_at FROM project ORDER BY created_at ASC',
         );
     }
+
+    public function delete(string $id): void
+    {
+        $deleted = $this->connection->executeStatement(
+            'DELETE FROM project WHERE id = :id',
+            ['id' => $id],
+        );
+
+        if ($deleted === 0) {
+            throw new ProjectNotFoundException($id);
+        }
+    }
 }

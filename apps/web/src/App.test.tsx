@@ -96,6 +96,33 @@ describe("App", () => {
     expect(JSON.parse(String(postCall?.[1]?.body))).toEqual({ name: "New", slug: "new" });
   });
 
+  it("deletes a project and reloads the list", async () => {
+    // GIVEN an existing project and an API that accepts the deletion
+    const user = userEvent.setup();
+    let projectsListedCount = 0;
+
+    fetchMock.mockImplementation((url: string, init?: RequestInit) => {
+      if (url === PING_URL) return Promise.resolve(jsonResponse({ status: "ok", service: "spike-symfony-api" }));
+      if (url === PROJECTS_URL && (!init || init.method === undefined)) {
+        projectsListedCount += 1;
+        const projects = projectsListedCount === 1 ? [existingProject()] : [];
+        return Promise.resolve(jsonResponse(projects));
+      }
+      if (url === `${PROJECTS_URL}/11111111-1111-1111-1111-111111111111` && init?.method === "DELETE") {
+        return Promise.resolve(jsonResponse(null, { status: 204 }));
+      }
+      throw new Error(`unexpected fetch: ${url}`);
+    });
+    render(<App />);
+    expect(await screen.findByText("Nanko (nanko)")).toBeInTheDocument();
+
+    // WHEN clicking delete
+    await user.click(screen.getByRole("button", { name: "delete" }));
+
+    // THEN the project is removed from the list
+    await waitFor(() => expect(screen.queryByText("Nanko (nanko)")).not.toBeInTheDocument());
+  });
+
   it("shows the server error and keeps the form filled when creation fails", async () => {
     // GIVEN an API that rejects the creation with an error
     const user = userEvent.setup();

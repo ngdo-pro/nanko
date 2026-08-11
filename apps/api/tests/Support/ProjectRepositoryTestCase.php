@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Support;
 
 use App\Repository\DuplicateSlugException;
+use App\Repository\ProjectNotFoundException;
 use App\Repository\ProjectRepositoryInterface;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -102,5 +103,30 @@ abstract class ProjectRepositoryTestCase extends KernelTestCase
 
         // THEN the list still contains a single entry
         self::assertCount(1, $this->repository->findAll());
+    }
+
+    #[Test]
+    public function a deleted project no longer appears in the list(): void
+    {
+        // GIVEN a project was created
+        $project = $this->repository->create('Nanko', 'nanko');
+        self::assertIsString($project['id']);
+
+        // WHEN deleting it
+        $this->repository->delete($project['id']);
+
+        // THEN the list is empty
+        self::assertSame([], $this->repository->findAll());
+    }
+
+    #[Test]
+    public function deleting an unknown project throws(): void
+    {
+        // GIVEN no project exists
+
+        // WHEN deleting an unknown id
+        // THEN a ProjectNotFoundException is thrown
+        $this->expectException(ProjectNotFoundException::class);
+        $this->repository->delete('00000000-0000-0000-0000-000000000000');
     }
 }
