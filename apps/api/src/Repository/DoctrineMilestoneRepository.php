@@ -33,10 +33,20 @@ final class DoctrineMilestoneRepository implements MilestoneRepositoryInterface
 
     public function findAllByProject(string $projectId): array
     {
-        return $this->connection->fetchAllAssociative(
+        /** @var list<array{id: string, project_id: string, label: string, occurs_on: string|null, sort_order: int|string, created_at: string}> $rows */
+        $rows = $this->connection->fetchAllAssociative(
             'SELECT id, project_id, label, occurs_on, sort_order, created_at
              FROM milestone WHERE project_id = :project_id ORDER BY sort_order ASC',
             ['project_id' => $projectId],
         );
+
+        return array_map(static fn (array $row): array => [
+            'id' => $row['id'],
+            'project_id' => $row['project_id'],
+            'label' => $row['label'],
+            'occurs_on' => $row['occurs_on'],
+            'sort_order' => (int) $row['sort_order'],
+            'created_at' => $row['created_at'],
+        ], $rows);
     }
 }

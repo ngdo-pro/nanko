@@ -16,7 +16,11 @@ final class InMemoryPositionRepository implements PositionRepositoryInterface
     /** @var array<string, string> milestone id => project id */
     private array $milestoneProjectIds = [];
 
-    /** @var array<string, array<string, array<string, mixed>>> element id => (milestone id or '__default__') => position row */
+    /**
+     * @var array<string, array<string, array{
+     *     id: string, element_id: string, milestone_id: string|null, x: float, y: float, updated_at: string,
+     * }>> element id => (milestone id or '__default__') => position row
+     */
     private array $positionsByElement = [];
 
     public function registerElement(string $elementId, string $projectId): void

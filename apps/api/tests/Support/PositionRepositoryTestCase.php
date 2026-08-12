@@ -122,7 +122,6 @@ abstract class PositionRepositoryTestCase extends KernelTestCase
         $byMilestone = [];
         foreach ($positions as $position) {
             $key = $position['milestone_id'] ?? '__default__';
-            self::assertIsString($key);
             $byMilestone[$key] = $position;
         }
 

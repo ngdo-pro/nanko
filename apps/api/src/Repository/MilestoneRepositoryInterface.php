@@ -14,7 +14,14 @@ interface MilestoneRepositoryInterface
     public function create(string $projectId, string $label, ?string $occursOn): array;
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<array{
+     *     id: string,
+     *     project_id: string,
+     *     label: string,
+     *     occurs_on: string|null,
+     *     sort_order: int,
+     *     created_at: string,
+     * }>
      */
     public function findAllByProject(string $projectId): array;
 }
