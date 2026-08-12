@@ -12,7 +12,12 @@ final class InMemoryMilestoneRepository implements MilestoneRepositoryInterface
     /** @var array<string, true> */
     private array $projectIds = [];
 
-    /** @var array<string, list<array<string, mixed>>> keyed by project id */
+    /**
+     * @var array<string, list<array{
+     *     id: string, project_id: string, label: string, occurs_on: string|null,
+     *     sort_order: int, created_at: string,
+     * }>> keyed by project id
+     */
     private array $milestonesByProject = [];
 
     public function registerProject(string $projectId): void

@@ -21,7 +21,14 @@ interface PositionRepositoryInterface
      * every element in the project. Resolution (per-milestone-else-default)
      * happens in the graph resolver, not here.
      *
-     * @return list<array<string, mixed>>
+     * @return list<array{
+     *     id: string,
+     *     element_id: string,
+     *     milestone_id: string|null,
+     *     x: float,
+     *     y: float,
+     *     updated_at: string,
+     * }>
      */
     public function findAllByProject(string $projectId): array;
 }
