@@ -4,23 +4,23 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Repository;
 
-use App\Repository\DoctrineElementRepository;
-use App\Repository\ElementRepositoryInterface;
-use App\Tests\Support\ElementRepositoryTestCase;
+use App\Repository\DoctrineRelationRepository;
+use App\Repository\RelationRepositoryInterface;
+use App\Tests\Support\RelationRepositoryTestCase;
 use Doctrine\DBAL\Connection;
 
-final class DoctrineElementRepositoryTest extends ElementRepositoryTestCase
+final class DoctrineRelationRepositoryTest extends RelationRepositoryTestCase
 {
     private Connection $connection;
 
-    protected function createRepository(): ElementRepositoryInterface
+    protected function createRepository(): RelationRepositoryInterface
     {
         self::bootKernel();
 
         $this->connection = static::getContainer()->get(Connection::class);
         $this->connection->executeStatement('TRUNCATE project, milestone, element, element_version, relation, relation_version RESTART IDENTITY');
 
-        return static::getContainer()->get(DoctrineElementRepository::class);
+        return static::getContainer()->get(DoctrineRelationRepository::class);
     }
 
     protected function createProject(): string
@@ -45,6 +45,21 @@ final class DoctrineElementRepositoryTest extends ElementRepositoryTestCase
              FROM milestone WHERE project_id = :project_id
              RETURNING id',
             ['project_id' => $projectId],
+        );
+
+        self::assertIsString($row['id']);
+
+        return $row['id'];
+    }
+
+    protected function createElement(string $projectId, string $milestoneId): string
+    {
+        /** @var array<string, mixed> $row */
+        $row = $this->connection->fetchAssociative(
+            "INSERT INTO element (project_id, kind, is_external, created_at_milestone_id)
+             VALUES (:project_id, 'system', false, :milestone_id)
+             RETURNING id",
+            ['project_id' => $projectId, 'milestone_id' => $milestoneId],
         );
 
         self::assertIsString($row['id']);
