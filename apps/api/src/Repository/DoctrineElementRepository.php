@@ -108,4 +108,42 @@ final class DoctrineElementRepository implements ElementRepositoryInterface
             ['project_id' => $projectId],
         );
     }
+
+    public function findAllVersionsByProject(string $projectId): array
+    {
+        /** @var list<array{
+         *     id: string, project_id: string, parent_id: string|null, kind: string, is_external: bool|string,
+         *     created_at_milestone_id: string, deleted_at_milestone_id: string|null,
+         *     version_milestone_id: string, version_milestone_sort_order: int|string,
+         *     name: string, description: string|null, technology: string|null,
+         * }> $rows
+         */
+        $rows = $this->connection->fetchAllAssociative(
+            'SELECT e.id, e.project_id, e.parent_id, e.kind, e.is_external,
+                    e.created_at_milestone_id, e.deleted_at_milestone_id,
+                    v.milestone_id AS version_milestone_id, m.sort_order AS version_milestone_sort_order,
+                    v.name, v.description, v.technology
+             FROM element e
+             JOIN element_version v ON v.element_id = e.id
+             JOIN milestone m ON m.id = v.milestone_id
+             WHERE e.project_id = :project_id
+             ORDER BY e.seq ASC, m.sort_order ASC',
+            ['project_id' => $projectId],
+        );
+
+        return array_map(static fn (array $row): array => [
+            'id' => $row['id'],
+            'project_id' => $row['project_id'],
+            'parent_id' => $row['parent_id'],
+            'kind' => $row['kind'],
+            'is_external' => (bool) $row['is_external'],
+            'created_at_milestone_id' => $row['created_at_milestone_id'],
+            'deleted_at_milestone_id' => $row['deleted_at_milestone_id'],
+            'version_milestone_id' => $row['version_milestone_id'],
+            'version_milestone_sort_order' => (int) $row['version_milestone_sort_order'],
+            'name' => $row['name'],
+            'description' => $row['description'],
+            'technology' => $row['technology'],
+        ], $rows);
+    }
 }

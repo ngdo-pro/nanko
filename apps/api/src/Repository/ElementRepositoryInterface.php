@@ -29,4 +29,28 @@ interface ElementRepositoryInterface
      * @return list<array<string, mixed>>
      */
     public function findAllByProject(string $projectId): array;
+
+    /**
+     * Raw, unresolved rows for graph resolution: every element (visible or
+     * not, at any milestone) joined with every element_version row it has.
+     * One row per (element, version) pair — an element with N versions
+     * yields N rows. Resolution (visibility, latest-version-at-milestone)
+     * happens in the graph resolver, not here.
+     *
+     * @return list<array{
+     *     id: string,
+     *     project_id: string,
+     *     parent_id: ?string,
+     *     kind: string,
+     *     is_external: bool,
+     *     created_at_milestone_id: string,
+     *     deleted_at_milestone_id: ?string,
+     *     version_milestone_id: string,
+     *     version_milestone_sort_order: int,
+     *     name: string,
+     *     description: ?string,
+     *     technology: ?string,
+     * }>
+     */
+    public function findAllVersionsByProject(string $projectId): array;
 }

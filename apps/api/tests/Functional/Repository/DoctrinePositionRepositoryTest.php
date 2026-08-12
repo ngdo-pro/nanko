@@ -4,23 +4,23 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Repository;
 
-use App\Repository\DoctrineRelationRepository;
-use App\Repository\RelationRepositoryInterface;
-use App\Tests\Support\RelationRepositoryTestCase;
+use App\Repository\DoctrinePositionRepository;
+use App\Repository\PositionRepositoryInterface;
+use App\Tests\Support\PositionRepositoryTestCase;
 use Doctrine\DBAL\Connection;
 
-final class DoctrineRelationRepositoryTest extends RelationRepositoryTestCase
+final class DoctrinePositionRepositoryTest extends PositionRepositoryTestCase
 {
     private Connection $connection;
 
-    protected function createRepository(): RelationRepositoryInterface
+    protected function createRepository(): PositionRepositoryInterface
     {
         self::bootKernel();
 
         $this->connection = static::getContainer()->get(Connection::class);
         $this->connection->executeStatement('TRUNCATE project, milestone, element, element_version, relation, relation_version, position RESTART IDENTITY');
 
-        return static::getContainer()->get(DoctrineRelationRepository::class);
+        return static::getContainer()->get(DoctrinePositionRepository::class);
     }
 
     protected function createProject(): string

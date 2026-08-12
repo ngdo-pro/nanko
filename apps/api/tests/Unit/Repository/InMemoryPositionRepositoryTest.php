@@ -4,23 +4,20 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Repository;
 
-use App\Repository\RelationRepositoryInterface;
+use App\Repository\PositionRepositoryInterface;
 use App\Tests\Support\InMemoryElementRepository;
 use App\Tests\Support\InMemoryMilestoneRepository;
+use App\Tests\Support\InMemoryPositionRepository;
 use App\Tests\Support\InMemoryProjectRepository;
-use App\Tests\Support\InMemoryRelationRepository;
-use App\Tests\Support\RelationRepositoryTestCase;
+use App\Tests\Support\PositionRepositoryTestCase;
 
-final class InMemoryRelationRepositoryTest extends RelationRepositoryTestCase
+final class InMemoryPositionRepositoryTest extends PositionRepositoryTestCase
 {
-    private InMemoryRelationRepository $inMemoryRepository;
+    private InMemoryPositionRepository $inMemoryRepository;
 
-    /** @var array<string, int> milestone id => sort_order */
-    private array $milestoneSortOrders = [];
-
-    protected function createRepository(): RelationRepositoryInterface
+    protected function createRepository(): PositionRepositoryInterface
     {
-        $this->inMemoryRepository = new InMemoryRelationRepository();
+        $this->inMemoryRepository = new InMemoryPositionRepository();
 
         return $this->inMemoryRepository;
     }
@@ -29,8 +26,6 @@ final class InMemoryRelationRepositoryTest extends RelationRepositoryTestCase
     {
         $project = (new InMemoryProjectRepository())->create('Test project', uniqid('test-project-'));
         self::assertIsString($project['id']);
-
-        $this->inMemoryRepository->registerProject($project['id']);
 
         return $project['id'];
     }
@@ -41,10 +36,8 @@ final class InMemoryRelationRepositoryTest extends RelationRepositoryTestCase
         $milestoneRepository->registerProject($projectId);
         $milestone = $milestoneRepository->create($projectId, 'Test milestone', null);
         self::assertIsString($milestone['id']);
-        self::assertIsInt($milestone['sort_order']);
 
-        $this->inMemoryRepository->registerMilestone($milestone['id'], $projectId, $milestone['sort_order']);
-        $this->milestoneSortOrders[$milestone['id']] = $milestone['sort_order'];
+        $this->inMemoryRepository->registerMilestone($milestone['id'], $projectId);
 
         return $milestone['id'];
     }
@@ -53,7 +46,7 @@ final class InMemoryRelationRepositoryTest extends RelationRepositoryTestCase
     {
         $elementRepository = new InMemoryElementRepository();
         $elementRepository->registerProject($projectId);
-        $elementRepository->registerMilestone($milestoneId, $projectId, $this->milestoneSortOrders[$milestoneId] ?? 0);
+        $elementRepository->registerMilestone($milestoneId, $projectId);
         $element = $elementRepository->create($projectId, $milestoneId, 'system', null, 'Test element', null, null, false);
         self::assertIsString($element['id']);
 

@@ -89,6 +89,45 @@ final class DoctrineRelationRepository implements RelationRepositoryInterface
         );
     }
 
+    public function findAllVersionsByProject(string $projectId): array
+    {
+        /** @var list<array{
+         *     id: string, project_id: string, source_element_id: string, target_element_id: string,
+         *     status: string, realized_at_milestone_id: string|null,
+         *     created_at_milestone_id: string, deleted_at_milestone_id: string|null,
+         *     version_milestone_id: string, version_milestone_sort_order: int|string,
+         *     label: string|null, technology: string|null,
+         * }> $rows
+         */
+        $rows = $this->connection->fetchAllAssociative(
+            'SELECT r.id, r.project_id, r.source_element_id, r.target_element_id, r.status,
+                    r.realized_at_milestone_id, r.created_at_milestone_id, r.deleted_at_milestone_id,
+                    v.milestone_id AS version_milestone_id, m.sort_order AS version_milestone_sort_order,
+                    v.label, v.technology
+             FROM relation r
+             JOIN relation_version v ON v.relation_id = r.id
+             JOIN milestone m ON m.id = v.milestone_id
+             WHERE r.project_id = :project_id
+             ORDER BY r.seq ASC, m.sort_order ASC',
+            ['project_id' => $projectId],
+        );
+
+        return array_map(static fn (array $row): array => [
+            'id' => $row['id'],
+            'project_id' => $row['project_id'],
+            'source_element_id' => $row['source_element_id'],
+            'target_element_id' => $row['target_element_id'],
+            'status' => $row['status'],
+            'realized_at_milestone_id' => $row['realized_at_milestone_id'],
+            'created_at_milestone_id' => $row['created_at_milestone_id'],
+            'deleted_at_milestone_id' => $row['deleted_at_milestone_id'],
+            'version_milestone_id' => $row['version_milestone_id'],
+            'version_milestone_sort_order' => (int) $row['version_milestone_sort_order'],
+            'label' => $row['label'],
+            'technology' => $row['technology'],
+        ], $rows);
+    }
+
     private function assertElementBelongsToProject(Connection $conn, string $elementId, string $projectId): void
     {
         $elementProjectId = $conn->fetchOne('SELECT project_id FROM element WHERE id = :id', ['id' => $elementId]);
