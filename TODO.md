@@ -5,8 +5,8 @@ Prochaines étapes concrètes. Le détail produit/modèle de données reste dans
 ## En cours / prochain
 
 - [x] **`GraphController`** — `GET /api/projects/{projectId}/graph` (params `milestone_id`, `scope_element_id` optionnel). Câble `ElementRepositoryInterface`, `RelationRepositoryInterface`, `PositionRepositoryInterface`, `MilestoneRepositoryInterface` vers `GraphResolver::resolve()` et sérialise le `ResolvedGraph`. Tests fonctionnels dans `apps/api/tests/Functional/GraphControllerTest.php`.
-- [ ] **Endpoint de mise à jour de position** — expose `PositionRepositoryInterface::upsert()` en HTTP (ex. `PATCH /api/elements/{id}/position`). Le repo existe déjà (Doctrine + fake + tests), pas de route.
-- [ ] Tests fonctionnels pour l'endpoint ci-dessus (`apps/api/tests/Functional/`).
+- [x] **Endpoint de mise à jour de position** — `PositionController::upsert()`, route `PATCH /api/elements/{elementId}/position` (`api_elements_position_upsert`). Câble `PositionRepositoryInterface::upsert()` via un `PositionPayload` (`milestone_id` optionnel, `x`/`y` requis). Tests fonctionnels dans `apps/api/tests/Functional/PositionControllerTest.php`.
+- [x] Tests fonctionnels pour l'endpoint ci-dessus (`apps/api/tests/Functional/PositionControllerTest.php`).
 
 ## Frontend — premier canvas
 
