@@ -21,3 +21,9 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    # No controller consumes PositionRepositoryInterface yet, so autowiring never
+    # creates the usual interface-to-implementation alias and the compiler prunes
+    # the service as unused. Remove this override once a real consumer exists.
+    App\Repository\DoctrinePositionRepository:
+        public: true

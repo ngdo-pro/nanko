@@ -37,8 +37,9 @@ final class InMemoryElementRepositoryTest extends ElementRepositoryTestCase
         $milestoneRepository->registerProject($projectId);
         $milestone = $milestoneRepository->create($projectId, 'Test milestone', null);
         self::assertIsString($milestone['id']);
+        self::assertIsInt($milestone['sort_order']);
 
-        $this->inMemoryRepository->registerMilestone($milestone['id'], $projectId);
+        $this->inMemoryRepository->registerMilestone($milestone['id'], $projectId, $milestone['sort_order']);
 
         return $milestone['id'];
     }

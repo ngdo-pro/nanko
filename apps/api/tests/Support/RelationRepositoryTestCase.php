@@ -256,4 +256,50 @@ abstract class RelationRepositoryTestCase extends KernelTestCase
         $this->expectException(InvalidRelationElementException::class);
         $this->repository->create($projectId, $milestoneId, $sourceId, $foreignTargetId, null, null);
     }
+
+    #[Test]
+    public function a created relation single version appears in findAllVersionsByProject(): void
+    {
+        // GIVEN a relation was created
+        $projectId = $this->createProject();
+        $milestoneId = $this->createMilestone($projectId);
+        $sourceId = $this->createElement($projectId, $milestoneId);
+        $targetId = $this->createElement($projectId, $milestoneId);
+        $relation = $this->repository->create($projectId, $milestoneId, $sourceId, $targetId, 'reads/writes', 'HTTP');
+        self::assertIsString($relation['id']);
+
+        // WHEN listing raw version rows for the project
+        $rows = $this->repository->findAllVersionsByProject($projectId);
+
+        // THEN the relation's single version appears, carrying its creation and attribute data
+        self::assertCount(1, $rows);
+        self::assertSame($relation['id'], $rows[0]['id']);
+        self::assertSame($sourceId, $rows[0]['source_element_id']);
+        self::assertSame($targetId, $rows[0]['target_element_id']);
+        self::assertSame($milestoneId, $rows[0]['created_at_milestone_id']);
+        self::assertNull($rows[0]['deleted_at_milestone_id']);
+        self::assertSame($milestoneId, $rows[0]['version_milestone_id']);
+        self::assertSame('reads/writes', $rows[0]['label']);
+        self::assertSame('HTTP', $rows[0]['technology']);
+    }
+
+    #[Test]
+    public function findAllVersionsByProject rows are ordered by relation creation order(): void
+    {
+        // GIVEN three relations created in sequence
+        $projectId = $this->createProject();
+        $milestoneId = $this->createMilestone($projectId);
+        $a = $this->createElement($projectId, $milestoneId);
+        $b = $this->createElement($projectId, $milestoneId);
+        $c = $this->createElement($projectId, $milestoneId);
+        $this->repository->create($projectId, $milestoneId, $a, $b, 'first', null);
+        $this->repository->create($projectId, $milestoneId, $b, $c, 'second', null);
+        $this->repository->create($projectId, $milestoneId, $a, $c, 'third', null);
+
+        // WHEN listing raw version rows for the project
+        $rows = $this->repository->findAllVersionsByProject($projectId);
+
+        // THEN they come back in creation order
+        self::assertSame(['first', 'second', 'third'], array_column($rows, 'label'));
+    }
 }

@@ -249,4 +249,44 @@ abstract class ElementRepositoryTestCase extends KernelTestCase
             false,
         );
     }
+
+    #[Test]
+    public function a created element single version appears in findAllVersionsByProject(): void
+    {
+        // GIVEN an element was created
+        $projectId = $this->createProject();
+        $milestoneId = $this->createMilestone($projectId);
+        $element = $this->repository->create($projectId, $milestoneId, 'system', null, 'Booking', 'desc', 'Symfony', false);
+        self::assertIsString($element['id']);
+
+        // WHEN listing raw version rows for the project
+        $rows = $this->repository->findAllVersionsByProject($projectId);
+
+        // THEN the element's single version appears, carrying its creation and attribute data
+        self::assertCount(1, $rows);
+        self::assertSame($element['id'], $rows[0]['id']);
+        self::assertSame($milestoneId, $rows[0]['created_at_milestone_id']);
+        self::assertNull($rows[0]['deleted_at_milestone_id']);
+        self::assertSame($milestoneId, $rows[0]['version_milestone_id']);
+        self::assertSame('Booking', $rows[0]['name']);
+        self::assertSame('desc', $rows[0]['description']);
+        self::assertSame('Symfony', $rows[0]['technology']);
+    }
+
+    #[Test]
+    public function findAllVersionsByProject rows are ordered by element creation order(): void
+    {
+        // GIVEN three elements created in sequence
+        $projectId = $this->createProject();
+        $milestoneId = $this->createMilestone($projectId);
+        $this->repository->create($projectId, $milestoneId, 'system', null, 'First', null, null, false);
+        $this->repository->create($projectId, $milestoneId, 'system', null, 'Second', null, null, false);
+        $this->repository->create($projectId, $milestoneId, 'system', null, 'Third', null, null, false);
+
+        // WHEN listing raw version rows for the project
+        $rows = $this->repository->findAllVersionsByProject($projectId);
+
+        // THEN they come back in creation order
+        self::assertSame(['First', 'Second', 'Third'], array_column($rows, 'name'));
+    }
 }

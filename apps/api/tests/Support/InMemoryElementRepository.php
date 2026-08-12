@@ -18,10 +18,25 @@ final class InMemoryElementRepository implements ElementRepositoryInterface
     /** @var array<string, string> milestone id => project id */
     private array $milestoneProjectIds = [];
 
-    /** @var array<string, array<string, mixed>> keyed by element id */
+    /** @var array<string, int> milestone id => sort_order */
+    private array $milestoneSortOrders = [];
+
+    /**
+     * @var array<string, array{
+     *     id: string, project_id: string, parent_id: string|null, kind: string, is_external: bool,
+     *     milestone_id: string, name: string, description: string|null, technology: string|null,
+     *     created_at: string, updated_at: string,
+     * }> keyed by element id
+     */
     private array $elements = [];
 
-    /** @var array<string, list<array<string, mixed>>> keyed by project id, in creation order */
+    /**
+     * @var array<string, list<array{
+     *     id: string, project_id: string, parent_id: string|null, kind: string, is_external: bool,
+     *     milestone_id: string, name: string, description: string|null, technology: string|null,
+     *     created_at: string, updated_at: string,
+     * }>> keyed by project id, in creation order
+     */
     private array $elementsByProject = [];
 
     public function registerProject(string $projectId): void
@@ -29,9 +44,10 @@ final class InMemoryElementRepository implements ElementRepositoryInterface
         $this->projectIds[$projectId] = true;
     }
 
-    public function registerMilestone(string $milestoneId, string $projectId): void
+    public function registerMilestone(string $milestoneId, string $projectId, int $sortOrder = 0): void
     {
         $this->milestoneProjectIds[$milestoneId] = $projectId;
+        $this->milestoneSortOrders[$milestoneId] = $sortOrder;
     }
 
     public function create(
@@ -87,6 +103,32 @@ final class InMemoryElementRepository implements ElementRepositoryInterface
     public function findAllByProject(string $projectId): array
     {
         return $this->elementsByProject[$projectId] ?? [];
+    }
+
+    public function findAllVersionsByProject(string $projectId): array
+    {
+        $rows = [];
+
+        foreach ($this->elementsByProject[$projectId] ?? [] as $element) {
+            $milestoneId = $element['milestone_id'];
+
+            $rows[] = [
+                'id' => $element['id'],
+                'project_id' => $element['project_id'],
+                'parent_id' => $element['parent_id'],
+                'kind' => $element['kind'],
+                'is_external' => $element['is_external'],
+                'created_at_milestone_id' => $milestoneId,
+                'deleted_at_milestone_id' => null,
+                'version_milestone_id' => $milestoneId,
+                'version_milestone_sort_order' => $this->milestoneSortOrders[$milestoneId] ?? 0,
+                'name' => $element['name'],
+                'description' => $element['description'],
+                'technology' => $element['technology'],
+            ];
+        }
+
+        return $rows;
     }
 
     private static function uuidV4(): string
