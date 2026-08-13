@@ -1,6 +1,9 @@
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterEach } from "vitest";
 import "@testing-library/jest-dom/vitest";
+
+// Match the `data-qa` convention used across data-qa attributes and apps/e2e's testIdAttribute.
+configure({ testIdAttribute: "data-qa" });
 
 afterEach(cleanup);
 
