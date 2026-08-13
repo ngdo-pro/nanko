@@ -1,4 +1,4 @@
-import { Background, Controls, ReactFlow } from "@xyflow/react";
+import { Background, Controls, PanOnScrollMode, ReactFlow } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -87,7 +87,7 @@ function CanvasGraph({ graph }: { graph: Graph }) {
         edges={edges}
         fitView
         panOnScroll
-        panOnScrollMode="free"
+        panOnScrollMode={PanOnScrollMode.Free}
         zoomOnScroll={false}
         zoomOnPinch
         minZoom={0.1}
