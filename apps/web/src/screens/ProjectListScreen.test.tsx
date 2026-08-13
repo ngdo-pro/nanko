@@ -1,7 +1,16 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import App from "./App";
+import ProjectListScreen from "./ProjectListScreen";
+
+function renderScreen() {
+  return render(
+    <MemoryRouter>
+      <ProjectListScreen />
+    </MemoryRouter>,
+  );
+}
 
 type Project = {
   id: string;
@@ -33,7 +42,7 @@ function existingProject(overrides: Partial<Project> = {}): Project {
   };
 }
 
-describe("App", () => {
+describe("ProjectListScreen", () => {
   let fetchMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
@@ -54,7 +63,7 @@ describe("App", () => {
     });
 
     // WHEN the app mounts
-    render(<App />);
+    renderScreen();
 
     // THEN the project is rendered in the list
     expect(await screen.findByText("Nanko (nanko)")).toBeInTheDocument();
@@ -77,7 +86,7 @@ describe("App", () => {
       }
       throw new Error(`unexpected fetch: ${url}`);
     });
-    render(<App />);
+    renderScreen();
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(PROJECTS_URL));
 
     // WHEN filling and submitting the form
@@ -113,7 +122,7 @@ describe("App", () => {
       }
       throw new Error(`unexpected fetch: ${url}`);
     });
-    render(<App />);
+    renderScreen();
     expect(await screen.findByText("Nanko (nanko)")).toBeInTheDocument();
 
     // WHEN clicking delete
@@ -135,7 +144,7 @@ describe("App", () => {
       if (url === PROJECTS_URL) return Promise.resolve(jsonResponse([]));
       throw new Error(`unexpected fetch: ${url}`);
     });
-    render(<App />);
+    renderScreen();
     await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(PROJECTS_URL));
 
     // WHEN filling and submitting the form
