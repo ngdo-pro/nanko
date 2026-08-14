@@ -1,47 +1,97 @@
 import type { Edge, Node } from "@xyflow/react";
-import type { Graph } from "../api";
+import type { ElementArchetype, Graph } from "../api";
 
-export type SystemNodeData = {
-  // `label` is what React Flow's default node renderer displays.
+// Only ever set by the milestone-comparison overlay (graph/diff.ts) — absent
+// everywhere else, so the normal single-milestone canvas is unaffected.
+export type DiffStatus = "added" | "removed" | "modified" | "unchanged";
+
+export type ElementNodeData = {
   label: string;
   description: string | null;
   technology: string | null;
   isExternal: boolean;
+  archetype: ElementArchetype | null;
+  diffStatus?: DiffStatus;
+  // Only meaningful when diffStatus is "modified" — which of name/description/
+  // technology changed. Not rendered on the node itself (DiffPanel's list is
+  // where the detail belongs), carried here so DiffPanel can reuse the same
+  // merged node list CompareScreen already builds instead of re-deriving it.
+  changedFields?: string[];
 };
+export type ElementNode = Node<ElementNodeData, "element">;
+
+export type RelationEdgeData = {
+  label: string | null;
+  technology: string | null;
+  status: "derived" | "declared";
+  isUnrealized: boolean;
+  diffStatus?: DiffStatus;
+  changedFields?: string[];
+};
+export type RelationEdge = Edge<RelationEdgeData, "relation">;
+
+// One drill-down level of the C1 → C2 → C3 hierarchy. `parentId` is both the
+// `parent_id` elements at this level must have, and — for C2/C3 — the
+// `scope_element_id` the graph was fetched with (the drilled-into element).
+export type Level =
+  | { kind: "system"; parentId: null }
+  | { kind: "container"; parentId: string }
+  | { kind: "component"; parentId: string };
+
+export function levelFromParams(systemId?: string, containerId?: string): Level {
+  if (containerId) return { kind: "component", parentId: containerId };
+  if (systemId) return { kind: "container", parentId: systemId };
+  return { kind: "system", parentId: null };
+}
+
+const WARNING_UNREALIZED_DECLARED_RELATION = "unrealized_declared_relation";
 
 const GRID_COLUMNS = 4;
 const GRID_SPACING_X = 260;
 const GRID_SPACING_Y = 160;
 
-function fallbackPosition(index: number): { x: number; y: number } {
+export function fallbackPosition(index: number): { x: number; y: number } {
   return {
     x: (index % GRID_COLUMNS) * GRID_SPACING_X,
     y: Math.floor(index / GRID_COLUMNS) * GRID_SPACING_Y,
   };
 }
 
-export function toFlowGraph(graph: Graph): { nodes: Node<SystemNodeData>[]; edges: Edge[] } {
-  const systems = graph.elements.filter((element) => element.kind === "system");
-  const systemIds = new Set(systems.map((system) => system.id));
+export function toFlowGraph(graph: Graph, level: Level): { nodes: ElementNode[]; edges: RelationEdge[] } {
+  const visibleElements = graph.elements.filter((element) => element.kind === level.kind && element.parent_id === level.parentId);
+  const visibleIds = new Set(visibleElements.map((element) => element.id));
+  const unrealizedRelationIds = new Set(
+    graph.warnings
+      .filter((warning) => warning.type === WARNING_UNREALIZED_DECLARED_RELATION && warning.subject_id !== null)
+      .map((warning) => warning.subject_id),
+  );
 
-  const nodes: Node<SystemNodeData>[] = systems.map((system, index) => ({
-    id: system.id,
-    position: graph.positions[system.id] ?? fallbackPosition(index),
+  const nodes: ElementNode[] = visibleElements.map((element, index) => ({
+    id: element.id,
+    type: "element",
+    position: graph.positions[element.id] ?? fallbackPosition(index),
     data: {
-      label: system.name,
-      description: system.description,
-      technology: system.technology,
-      isExternal: system.is_external,
+      label: element.name,
+      description: element.description,
+      technology: element.technology,
+      isExternal: element.is_external,
+      archetype: element.archetype,
     },
   }));
 
-  const edges: Edge[] = graph.relations
-    .filter((relation) => systemIds.has(relation.source_element_id) && systemIds.has(relation.target_element_id))
+  const edges: RelationEdge[] = graph.relations
+    .filter((relation) => visibleIds.has(relation.source_element_id) && visibleIds.has(relation.target_element_id))
     .map((relation) => ({
       id: relation.id,
+      type: "relation",
       source: relation.source_element_id,
       target: relation.target_element_id,
-      label: relation.label ?? undefined,
+      data: {
+        label: relation.label,
+        technology: relation.technology,
+        status: relation.status === "derived" ? "derived" : "declared",
+        isUnrealized: unrealizedRelationIds.has(relation.id),
+      },
     }));
 
   return { nodes, edges };

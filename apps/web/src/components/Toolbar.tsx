@@ -1,6 +1,7 @@
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
-export function Toolbar() {
+export function Toolbar({ children }: { children?: ReactNode }) {
   return (
     <header
       data-qa="toolbar"
@@ -32,6 +33,7 @@ export function Toolbar() {
       >
         <HomeIcon />
       </Link>
+      {children}
     </header>
   );
 }
