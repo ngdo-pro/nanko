@@ -17,6 +17,6 @@ abstract class DatabaseTestCase extends WebTestCase
         parent::setUp();
 
         $this->client = static::createClient();
-        static::getContainer()->get(Connection::class)->executeStatement('TRUNCATE project, milestone, element, element_version, relation, relation_version, position RESTART IDENTITY');
+        static::getContainer()->get(Connection::class)->executeStatement('TRUNCATE project, milestone, element, element_version, relation, relation_version, position, annotation RESTART IDENTITY');
     }
 }

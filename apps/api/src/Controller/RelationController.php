@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Dto\CreateRelationPayload;
+use App\Dto\DeleteRelationPayload;
+use App\Dto\UpdateRelationPayload;
 use App\Repository\ElementNotFoundException;
 use App\Repository\InvalidRelationElementException;
 use App\Repository\MilestoneNotFoundException;
 use App\Repository\ProjectNotFoundException;
+use App\Repository\RelationNotFoundException;
 use App\Repository\RelationRepositoryInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
@@ -43,5 +46,33 @@ class RelationController
         }
 
         return new JsonResponse($relation, 201);
+    }
+
+    #[Route('/api/relations/{relationId}', name: 'api_relations_update', methods: ['PATCH'])]
+    public function update(string $relationId, #[MapRequestPayload] UpdateRelationPayload $payload): JsonResponse
+    {
+        try {
+            $relation = $this->relations->update($relationId, $payload->milestoneId, $payload->label, $payload->technology);
+        } catch (RelationNotFoundException) {
+            return new JsonResponse(['error' => 'relation not found'], 404);
+        } catch (MilestoneNotFoundException) {
+            return new JsonResponse(['error' => 'milestone not found'], 404);
+        }
+
+        return new JsonResponse($relation);
+    }
+
+    #[Route('/api/relations/{relationId}', name: 'api_relations_delete', methods: ['DELETE'])]
+    public function delete(string $relationId, #[MapRequestPayload] DeleteRelationPayload $payload): JsonResponse
+    {
+        try {
+            $this->relations->softDelete($relationId, $payload->milestoneId);
+        } catch (RelationNotFoundException) {
+            return new JsonResponse(['error' => 'relation not found'], 404);
+        } catch (MilestoneNotFoundException) {
+            return new JsonResponse(['error' => 'milestone not found'], 404);
+        }
+
+        return new JsonResponse(null, 204);
     }
 }

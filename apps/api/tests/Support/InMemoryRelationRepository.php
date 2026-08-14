@@ -8,6 +8,7 @@ use App\Repository\ElementNotFoundException;
 use App\Repository\InvalidRelationElementException;
 use App\Repository\MilestoneNotFoundException;
 use App\Repository\ProjectNotFoundException;
+use App\Repository\RelationNotFoundException;
 use App\Repository\RelationRepositoryInterface;
 
 final class InMemoryRelationRepository implements RelationRepositoryInterface
@@ -25,13 +26,22 @@ final class InMemoryRelationRepository implements RelationRepositoryInterface
     private array $elementProjectIds = [];
 
     /**
-     * @var array<string, list<array{
+     * @var array<string, array{
      *     id: string, project_id: string, source_element_id: string, target_element_id: string,
-     *     status: string, milestone_id: string, label: string|null, technology: string|null,
+     *     status: string, created_at_milestone_id: string, deleted_at_milestone_id: string|null,
      *     created_at: string,
-     * }>> keyed by project id, in creation order
+     * }> keyed by relation id
      */
-    private array $relationsByProject = [];
+    private array $relations = [];
+
+    /**
+     * @var array<string, array<string, array{label: string|null, technology: string|null}>>
+     * keyed by relation id, then by milestone id (insertion order = version history order)
+     */
+    private array $versionsByRelation = [];
+
+    /** @var array<string, list<string>> project id => relation ids, in creation order */
+    private array $relationIdsByProject = [];
 
     public function registerProject(string $projectId): void
     {
@@ -68,49 +78,106 @@ final class InMemoryRelationRepository implements RelationRepositoryInterface
         $this->assertElementBelongsToProject($sourceElementId, $projectId);
         $this->assertElementBelongsToProject($targetElementId, $projectId);
 
-        $relation = [
-            'id' => self::uuidV4(),
+        $id = self::uuidV4();
+
+        $this->relations[$id] = [
+            'id' => $id,
             'project_id' => $projectId,
             'source_element_id' => $sourceElementId,
             'target_element_id' => $targetElementId,
             'status' => 'declared',
-            'milestone_id' => $milestoneId,
-            'label' => $label,
-            'technology' => $technology,
+            'created_at_milestone_id' => $milestoneId,
+            'deleted_at_milestone_id' => null,
             'created_at' => (new \DateTimeImmutable())->format('Y-m-d\TH:i:s.uP'),
         ];
+        $this->versionsByRelation[$id][$milestoneId] = [
+            'label' => $label,
+            'technology' => $technology,
+        ];
+        $this->relationIdsByProject[$projectId][] = $id;
 
-        $this->relationsByProject[$projectId][] = $relation;
+        return array_merge($this->relations[$id], $this->versionsByRelation[$id][$milestoneId], ['milestone_id' => $milestoneId]);
+    }
 
-        return $relation;
+    public function update(
+        string $relationId,
+        string $milestoneId,
+        ?string $label,
+        ?string $technology,
+    ): array {
+        if (!isset($this->relations[$relationId])) {
+            throw new RelationNotFoundException($relationId);
+        }
+
+        $projectId = $this->relations[$relationId]['project_id'];
+
+        if (($this->milestoneProjectIds[$milestoneId] ?? null) !== $projectId) {
+            throw new MilestoneNotFoundException($milestoneId);
+        }
+
+        $this->versionsByRelation[$relationId][$milestoneId] = [
+            'label' => $label,
+            'technology' => $technology,
+        ];
+
+        return array_merge($this->relations[$relationId], $this->versionsByRelation[$relationId][$milestoneId], ['milestone_id' => $milestoneId]);
+    }
+
+    public function softDelete(string $relationId, string $milestoneId): array
+    {
+        if (!isset($this->relations[$relationId])) {
+            throw new RelationNotFoundException($relationId);
+        }
+
+        $projectId = $this->relations[$relationId]['project_id'];
+
+        if (($this->milestoneProjectIds[$milestoneId] ?? null) !== $projectId) {
+            throw new MilestoneNotFoundException($milestoneId);
+        }
+
+        $this->relations[$relationId]['deleted_at_milestone_id'] = $milestoneId;
+
+        return $this->relations[$relationId];
     }
 
     public function findAllByProject(string $projectId): array
     {
-        return $this->relationsByProject[$projectId] ?? [];
+        $rows = [];
+
+        foreach ($this->relationIdsByProject[$projectId] ?? [] as $id) {
+            $relation = $this->relations[$id];
+            $creationMilestoneId = $relation['created_at_milestone_id'];
+            $version = $this->versionsByRelation[$id][$creationMilestoneId];
+
+            $rows[] = array_merge($relation, $version, ['milestone_id' => $creationMilestoneId]);
+        }
+
+        return $rows;
     }
 
     public function findAllVersionsByProject(string $projectId): array
     {
         $rows = [];
 
-        foreach ($this->relationsByProject[$projectId] ?? [] as $relation) {
-            $milestoneId = $relation['milestone_id'];
+        foreach ($this->relationIdsByProject[$projectId] ?? [] as $id) {
+            $relation = $this->relations[$id];
 
-            $rows[] = [
-                'id' => $relation['id'],
-                'project_id' => $relation['project_id'],
-                'source_element_id' => $relation['source_element_id'],
-                'target_element_id' => $relation['target_element_id'],
-                'status' => $relation['status'],
-                'realized_at_milestone_id' => null,
-                'created_at_milestone_id' => $milestoneId,
-                'deleted_at_milestone_id' => null,
-                'version_milestone_id' => $milestoneId,
-                'version_milestone_sort_order' => $this->milestoneSortOrders[$milestoneId] ?? 0,
-                'label' => $relation['label'],
-                'technology' => $relation['technology'],
-            ];
+            foreach ($this->versionsByRelation[$id] as $versionMilestoneId => $version) {
+                $rows[] = [
+                    'id' => $relation['id'],
+                    'project_id' => $relation['project_id'],
+                    'source_element_id' => $relation['source_element_id'],
+                    'target_element_id' => $relation['target_element_id'],
+                    'status' => $relation['status'],
+                    'realized_at_milestone_id' => null,
+                    'created_at_milestone_id' => $relation['created_at_milestone_id'],
+                    'deleted_at_milestone_id' => $relation['deleted_at_milestone_id'],
+                    'version_milestone_id' => $versionMilestoneId,
+                    'version_milestone_sort_order' => $this->milestoneSortOrders[$versionMilestoneId] ?? 0,
+                    'label' => $version['label'],
+                    'technology' => $version['technology'],
+                ];
+            }
         }
 
         return $rows;

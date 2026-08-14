@@ -30,6 +30,9 @@ final class CreateElementPayload
     #[SerializedName('is_external')]
     public readonly bool $isExternal;
 
+    #[Assert\Choice(choices: ['service', 'database', 'queue'])]
+    public readonly ?string $archetype;
+
     public function __construct(
         string $milestoneId = '',
         string $kind = '',
@@ -38,6 +41,7 @@ final class CreateElementPayload
         ?string $description = null,
         ?string $technology = null,
         bool $isExternal = false,
+        ?string $archetype = null,
     ) {
         $this->milestoneId = trim($milestoneId);
         $this->kind = $kind;
@@ -54,5 +58,8 @@ final class CreateElementPayload
         $this->technology = $technology === '' ? null : $technology;
 
         $this->isExternal = $isExternal;
+
+        $archetype = $archetype !== null ? trim($archetype) : null;
+        $this->archetype = $archetype === '' ? null : $archetype;
     }
 }

@@ -73,6 +73,86 @@ final class DoctrineRelationRepository implements RelationRepositoryInterface
         });
     }
 
+    public function update(
+        string $relationId,
+        string $milestoneId,
+        ?string $label,
+        ?string $technology,
+    ): array {
+        /** @var array<string, mixed> */
+        return $this->connection->transactional(function (Connection $conn) use (
+            $relationId,
+            $milestoneId,
+            $label,
+            $technology,
+        ): array {
+            $projectId = $conn->fetchOne('SELECT project_id FROM relation WHERE id = :id', ['id' => $relationId]);
+
+            if ($projectId === false) {
+                throw new RelationNotFoundException($relationId);
+            }
+
+            if ($conn->fetchOne(
+                'SELECT 1 FROM milestone WHERE id = :id AND project_id = :project_id',
+                ['id' => $milestoneId, 'project_id' => $projectId],
+            ) === false) {
+                throw new MilestoneNotFoundException($milestoneId);
+            }
+
+            /** @var array<string, mixed> $relation */
+            $relation = $conn->fetchAssociative(
+                'SELECT id, project_id, source_element_id, target_element_id, status, created_at FROM relation WHERE id = :id',
+                ['id' => $relationId],
+            );
+
+            /** @var array<string, mixed> $version */
+            $version = $conn->fetchAssociative(
+                'INSERT INTO relation_version (relation_id, milestone_id, label, technology)
+                 VALUES (:relation_id, :milestone_id, :label, :technology)
+                 ON CONFLICT (relation_id, milestone_id) DO UPDATE
+                    SET label = EXCLUDED.label, technology = EXCLUDED.technology
+                 RETURNING label, technology',
+                [
+                    'relation_id' => $relationId,
+                    'milestone_id' => $milestoneId,
+                    'label' => $label,
+                    'technology' => $technology,
+                ],
+            );
+
+            return array_merge($relation, $version, ['milestone_id' => $milestoneId]);
+        });
+    }
+
+    public function softDelete(string $relationId, string $milestoneId): array
+    {
+        /** @var array<string, mixed> */
+        return $this->connection->transactional(function (Connection $conn) use ($relationId, $milestoneId): array {
+            $projectId = $conn->fetchOne('SELECT project_id FROM relation WHERE id = :id', ['id' => $relationId]);
+
+            if ($projectId === false) {
+                throw new RelationNotFoundException($relationId);
+            }
+
+            if ($conn->fetchOne(
+                'SELECT 1 FROM milestone WHERE id = :id AND project_id = :project_id',
+                ['id' => $milestoneId, 'project_id' => $projectId],
+            ) === false) {
+                throw new MilestoneNotFoundException($milestoneId);
+            }
+
+            /** @var array<string, mixed> $relation */
+            $relation = $conn->fetchAssociative(
+                'UPDATE relation SET deleted_at_milestone_id = :milestone_id WHERE id = :id
+                 RETURNING id, project_id, source_element_id, target_element_id, status,
+                           created_at_milestone_id, deleted_at_milestone_id, created_at',
+                ['id' => $relationId, 'milestone_id' => $milestoneId],
+            );
+
+            return $relation;
+        });
+    }
+
     public function findAllByProject(string $projectId): array
     {
         // Safe as a plain join only because every relation currently has exactly one version,
