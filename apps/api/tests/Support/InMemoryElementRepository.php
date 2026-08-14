@@ -24,20 +24,21 @@ final class InMemoryElementRepository implements ElementRepositoryInterface
     /**
      * @var array<string, array{
      *     id: string, project_id: string, parent_id: string|null, kind: string, is_external: bool,
-     *     milestone_id: string, name: string, description: string|null, technology: string|null,
+     *     archetype: string|null,
+     *     created_at_milestone_id: string, deleted_at_milestone_id: string|null,
      *     created_at: string, updated_at: string,
      * }> keyed by element id
      */
     private array $elements = [];
 
     /**
-     * @var array<string, list<array{
-     *     id: string, project_id: string, parent_id: string|null, kind: string, is_external: bool,
-     *     milestone_id: string, name: string, description: string|null, technology: string|null,
-     *     created_at: string, updated_at: string,
-     * }>> keyed by project id, in creation order
+     * @var array<string, array<string, array{name: string, description: string|null, technology: string|null}>>
+     * keyed by element id, then by milestone id (insertion order = version history order)
      */
-    private array $elementsByProject = [];
+    private array $versionsByElement = [];
+
+    /** @var array<string, list<string>> project id => element ids, in creation order */
+    private array $elementIdsByProject = [];
 
     public function registerProject(string $projectId): void
     {
@@ -59,6 +60,7 @@ final class InMemoryElementRepository implements ElementRepositoryInterface
         ?string $description,
         ?string $technology,
         bool $isExternal,
+        ?string $archetype = null,
     ): array {
         if (!isset($this->projectIds[$projectId])) {
             throw new ProjectNotFoundException($projectId);
@@ -79,53 +81,115 @@ final class InMemoryElementRepository implements ElementRepositoryInterface
         }
 
         $now = (new \DateTimeImmutable())->format('Y-m-d\TH:i:s.uP');
+        $id = self::uuidV4();
 
-        $element = [
-            'id' => self::uuidV4(),
+        $this->elements[$id] = [
+            'id' => $id,
             'project_id' => $projectId,
             'parent_id' => $parentId,
             'kind' => $kind,
             'is_external' => $isExternal,
-            'milestone_id' => $milestoneId,
-            'name' => $name,
-            'description' => $description,
-            'technology' => $technology,
+            'archetype' => $archetype,
+            'created_at_milestone_id' => $milestoneId,
+            'deleted_at_milestone_id' => null,
             'created_at' => $now,
             'updated_at' => $now,
         ];
+        $this->versionsByElement[$id][$milestoneId] = [
+            'name' => $name,
+            'description' => $description,
+            'technology' => $technology,
+        ];
+        $this->elementIdsByProject[$projectId][] = $id;
 
-        $this->elements[$element['id']] = $element;
-        $this->elementsByProject[$projectId][] = $element;
+        return array_merge($this->elements[$id], $this->versionsByElement[$id][$milestoneId], ['milestone_id' => $milestoneId]);
+    }
 
-        return $element;
+    public function update(
+        string $elementId,
+        string $milestoneId,
+        string $name,
+        ?string $description,
+        ?string $technology,
+        ?string $archetype = null,
+    ): array {
+        if (!isset($this->elements[$elementId])) {
+            throw new ElementNotFoundException($elementId);
+        }
+
+        $projectId = $this->elements[$elementId]['project_id'];
+
+        if (($this->milestoneProjectIds[$milestoneId] ?? null) !== $projectId) {
+            throw new MilestoneNotFoundException($milestoneId);
+        }
+
+        $this->versionsByElement[$elementId][$milestoneId] = [
+            'name' => $name,
+            'description' => $description,
+            'technology' => $technology,
+        ];
+        $this->elements[$elementId]['archetype'] = $archetype;
+        $this->elements[$elementId]['updated_at'] = (new \DateTimeImmutable())->format('Y-m-d\TH:i:s.uP');
+
+        return array_merge($this->elements[$elementId], $this->versionsByElement[$elementId][$milestoneId], ['milestone_id' => $milestoneId]);
+    }
+
+    public function softDelete(string $elementId, string $milestoneId): array
+    {
+        if (!isset($this->elements[$elementId])) {
+            throw new ElementNotFoundException($elementId);
+        }
+
+        $projectId = $this->elements[$elementId]['project_id'];
+
+        if (($this->milestoneProjectIds[$milestoneId] ?? null) !== $projectId) {
+            throw new MilestoneNotFoundException($milestoneId);
+        }
+
+        $this->elements[$elementId]['deleted_at_milestone_id'] = $milestoneId;
+
+        return $this->elements[$elementId];
     }
 
     public function findAllByProject(string $projectId): array
     {
-        return $this->elementsByProject[$projectId] ?? [];
+        $rows = [];
+
+        foreach ($this->elementIdsByProject[$projectId] ?? [] as $id) {
+            $element = $this->elements[$id];
+            $creationMilestoneId = $element['created_at_milestone_id'];
+            $version = $this->versionsByElement[$id][$creationMilestoneId];
+
+            $rows[] = array_merge($element, $version, ['milestone_id' => $creationMilestoneId]);
+        }
+
+        return $rows;
     }
 
     public function findAllVersionsByProject(string $projectId): array
     {
         $rows = [];
 
-        foreach ($this->elementsByProject[$projectId] ?? [] as $element) {
-            $milestoneId = $element['milestone_id'];
+        foreach ($this->elementIdsByProject[$projectId] ?? [] as $id) {
+            $element = $this->elements[$id];
 
-            $rows[] = [
-                'id' => $element['id'],
-                'project_id' => $element['project_id'],
-                'parent_id' => $element['parent_id'],
-                'kind' => $element['kind'],
-                'is_external' => $element['is_external'],
-                'created_at_milestone_id' => $milestoneId,
-                'deleted_at_milestone_id' => null,
-                'version_milestone_id' => $milestoneId,
-                'version_milestone_sort_order' => $this->milestoneSortOrders[$milestoneId] ?? 0,
-                'name' => $element['name'],
-                'description' => $element['description'],
-                'technology' => $element['technology'],
-            ];
+            foreach ($this->versionsByElement[$id] as $versionMilestoneId => $version) {
+                $rows[] = [
+                    'id' => $element['id'],
+                    'project_id' => $element['project_id'],
+                    'parent_id' => $element['parent_id'],
+                    'kind' => $element['kind'],
+                    'is_external' => $element['is_external'],
+                    'archetype' => $element['archetype'],
+                    'created_at_milestone_id' => $element['created_at_milestone_id'],
+                    'deleted_at_milestone_id' => $element['deleted_at_milestone_id'],
+                    'version_milestone_id' => $versionMilestoneId,
+                    'version_milestone_sort_order' => $this->milestoneSortOrders[$versionMilestoneId] ?? 0,
+                    'name' => $version['name'],
+                    'description' => $version['description'],
+                    'technology' => $version['technology'],
+                ];
+            }
         }
 
         return $rows;

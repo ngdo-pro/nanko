@@ -483,6 +483,7 @@ final class GraphResolverTest extends TestCase
         ?string $description = null,
         ?string $technology = null,
         bool $isExternal = false,
+        ?string $archetype = null,
     ): array {
         return [
             'id' => $id,
@@ -490,6 +491,7 @@ final class GraphResolverTest extends TestCase
             'parent_id' => $parentId,
             'kind' => $kind,
             'is_external' => $isExternal,
+            'archetype' => $archetype,
             'created_at_milestone_id' => $createdAtMilestoneId,
             'deleted_at_milestone_id' => $deletedAtMilestoneId,
             'version_milestone_id' => $versionMilestoneId,

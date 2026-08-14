@@ -4,23 +4,23 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Repository;
 
-use App\Repository\DoctrineRelationRepository;
-use App\Repository\RelationRepositoryInterface;
-use App\Tests\Support\RelationRepositoryTestCase;
+use App\Repository\AnnotationRepositoryInterface;
+use App\Repository\DoctrineAnnotationRepository;
+use App\Tests\Support\AnnotationRepositoryTestCase;
 use Doctrine\DBAL\Connection;
 
-final class DoctrineRelationRepositoryTest extends RelationRepositoryTestCase
+final class DoctrineAnnotationRepositoryTest extends AnnotationRepositoryTestCase
 {
     private Connection $connection;
 
-    protected function createRepository(): RelationRepositoryInterface
+    protected function createRepository(): AnnotationRepositoryInterface
     {
         self::bootKernel();
 
         $this->connection = static::getContainer()->get(Connection::class);
         $this->connection->executeStatement('TRUNCATE project, milestone, element, element_version, relation, relation_version, position, annotation RESTART IDENTITY');
 
-        return static::getContainer()->get(DoctrineRelationRepository::class);
+        return static::getContainer()->get(DoctrineAnnotationRepository::class);
     }
 
     protected function createProject(): string
@@ -60,6 +60,26 @@ final class DoctrineRelationRepositoryTest extends RelationRepositoryTestCase
              VALUES (:project_id, 'system', false, :milestone_id)
              RETURNING id",
             ['project_id' => $projectId, 'milestone_id' => $milestoneId],
+        );
+
+        self::assertIsString($row['id']);
+
+        return $row['id'];
+    }
+
+    protected function createRelation(string $projectId, string $milestoneId, string $sourceId, string $targetId): string
+    {
+        /** @var array<string, mixed> $row */
+        $row = $this->connection->fetchAssociative(
+            "INSERT INTO relation (project_id, source_element_id, target_element_id, created_at_milestone_id)
+             VALUES (:project_id, :source_id, :target_id, :milestone_id)
+             RETURNING id",
+            [
+                'project_id' => $projectId,
+                'source_id' => $sourceId,
+                'target_id' => $targetId,
+                'milestone_id' => $milestoneId,
+            ],
         );
 
         self::assertIsString($row['id']);

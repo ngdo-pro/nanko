@@ -136,6 +136,227 @@ final class ElementControllerTest extends DatabaseTestCase
         self::assertResponseStatusCodeSame(404);
     }
 
+    #[Test]
+    public function it returns the updated element(): void
+    {
+        // GIVEN an existing element
+        $projectId = $this->createProject('Nanko', 'nanko');
+        $milestoneId = $this->createMilestone($projectId, 'Launch');
+        $elementId = $this->createElement($projectId, $milestoneId, 'system', 'Booking');
+
+        // WHEN renaming it
+        $this->client->request('PATCH', "/api/elements/{$elementId}", server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'milestone_id' => $milestoneId,
+            'name' => 'Payments',
+            'description' => 'Handles payments',
+            'technology' => 'Symfony',
+        ], JSON_THROW_ON_ERROR));
+
+        // THEN the updated element is returned
+        self::assertResponseStatusCodeSame(200);
+        $updated = json_decode((string) $this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertIsArray($updated);
+        self::assertSame($elementId, $updated['id']);
+        self::assertSame($milestoneId, $updated['milestone_id']);
+        self::assertSame('Payments', $updated['name']);
+        self::assertSame('Handles payments', $updated['description']);
+        self::assertSame('Symfony', $updated['technology']);
+    }
+
+    #[Test]
+    public function it reflects the rename in the graph at that milestone(): void
+    {
+        // GIVEN an existing element
+        $projectId = $this->createProject('Nanko', 'nanko');
+        $milestoneId = $this->createMilestone($projectId, 'Launch');
+        $elementId = $this->createElement($projectId, $milestoneId, 'system', 'Booking');
+
+        // WHEN renaming it at the same milestone
+        $this->client->request('PATCH', "/api/elements/{$elementId}", server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'milestone_id' => $milestoneId,
+            'name' => 'Payments',
+        ], JSON_THROW_ON_ERROR));
+        self::assertResponseStatusCodeSame(200);
+
+        // THEN the graph at that milestone shows the new name
+        $this->client->request('GET', "/api/projects/{$projectId}/graph?milestone_id={$milestoneId}");
+        $graph = json_decode((string) $this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertIsArray($graph);
+        self::assertIsArray($graph['elements']);
+        self::assertIsArray($graph['elements'][0]);
+        self::assertSame('Payments', $graph['elements'][0]['name']);
+    }
+
+    #[Test]
+    public function it returns 404 when updating an unknown element(): void
+    {
+        // GIVEN a milestone that belongs to some real project
+        $projectId = $this->createProject('Nanko', 'nanko');
+        $milestoneId = $this->createMilestone($projectId, 'Launch');
+
+        // WHEN updating an unknown element
+        $this->client->request('PATCH', '/api/elements/00000000-0000-0000-0000-000000000000', server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'milestone_id' => $milestoneId,
+            'name' => 'Booking',
+        ], JSON_THROW_ON_ERROR));
+
+        // THEN the request is rejected with a 404
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    #[Test]
+    public function it returns 404 when updating an element with an unknown milestone(): void
+    {
+        // GIVEN an existing element
+        $projectId = $this->createProject('Nanko', 'nanko');
+        $milestoneId = $this->createMilestone($projectId, 'Launch');
+        $elementId = $this->createElement($projectId, $milestoneId, 'system', 'Booking');
+
+        // WHEN updating it with an unknown milestone id
+        $this->client->request('PATCH', "/api/elements/{$elementId}", server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'milestone_id' => '00000000-0000-0000-0000-000000000000',
+            'name' => 'Payments',
+        ], JSON_THROW_ON_ERROR));
+
+        // THEN the request is rejected with a 404
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    #[Test]
+    public function it returns 422 when the name is missing on update(): void
+    {
+        // GIVEN an existing element
+        $projectId = $this->createProject('Nanko', 'nanko');
+        $milestoneId = $this->createMilestone($projectId, 'Launch');
+        $elementId = $this->createElement($projectId, $milestoneId, 'system', 'Booking');
+
+        // WHEN updating it without a name
+        $this->client->request('PATCH', "/api/elements/{$elementId}", server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'milestone_id' => $milestoneId,
+        ], JSON_THROW_ON_ERROR));
+
+        // THEN the request is rejected
+        self::assertResponseStatusCodeSame(422);
+    }
+
+    #[Test]
+    public function it soft deletes the element(): void
+    {
+        // GIVEN an existing element
+        $projectId = $this->createProject('Nanko', 'nanko');
+        $milestoneId = $this->createMilestone($projectId, 'Launch');
+        $elementId = $this->createElement($projectId, $milestoneId, 'system', 'Booking');
+        $deleteMilestoneId = $this->createMilestone($projectId, 'Deprecation');
+
+        // WHEN deleting it at a later milestone
+        $this->client->request('DELETE', "/api/elements/{$elementId}", server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'milestone_id' => $deleteMilestoneId,
+        ], JSON_THROW_ON_ERROR));
+
+        // THEN the request succeeds with no content, and the element is no longer visible at that milestone
+        self::assertResponseStatusCodeSame(204);
+        $this->client->request('GET', "/api/projects/{$projectId}/graph?milestone_id={$deleteMilestoneId}");
+        $graph = json_decode((string) $this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertIsArray($graph);
+        self::assertIsArray($graph['elements']);
+        self::assertCount(0, $graph['elements']);
+    }
+
+    #[Test]
+    public function it returns 404 when deleting an unknown element(): void
+    {
+        // GIVEN a milestone that belongs to some real project
+        $projectId = $this->createProject('Nanko', 'nanko');
+        $milestoneId = $this->createMilestone($projectId, 'Launch');
+
+        // WHEN deleting an unknown element
+        $this->client->request('DELETE', '/api/elements/00000000-0000-0000-0000-000000000000', server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'milestone_id' => $milestoneId,
+        ], JSON_THROW_ON_ERROR));
+
+        // THEN the request is rejected with a 404
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    #[Test]
+    public function it returns 422 when milestone id is missing on delete(): void
+    {
+        // GIVEN an existing element
+        $projectId = $this->createProject('Nanko', 'nanko');
+        $milestoneId = $this->createMilestone($projectId, 'Launch');
+        $elementId = $this->createElement($projectId, $milestoneId, 'system', 'Booking');
+
+        // WHEN deleting it without a milestone_id
+        $this->client->request('DELETE', "/api/elements/{$elementId}", server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([], JSON_THROW_ON_ERROR));
+
+        // THEN the request is rejected
+        self::assertResponseStatusCodeSame(422);
+    }
+
+    #[Test]
+    public function it returns the given archetype on create(): void
+    {
+        // GIVEN a project and a milestone
+        $projectId = $this->createProject('Nanko', 'nanko');
+        $milestoneId = $this->createMilestone($projectId, 'Launch');
+
+        // WHEN creating a container tagged as a database
+        $this->client->request('POST', "/api/projects/{$projectId}/elements", server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'milestone_id' => $milestoneId,
+            'kind' => 'container',
+            'name' => 'Primary DB',
+            'technology' => 'Postgres',
+            'archetype' => 'database',
+        ], JSON_THROW_ON_ERROR));
+
+        // THEN the created element carries the given archetype
+        self::assertResponseStatusCodeSame(201);
+        $created = json_decode((string) $this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertIsArray($created);
+        self::assertSame('database', $created['archetype']);
+    }
+
+    #[Test]
+    public function it returns 422 when the archetype is not one of the known values(): void
+    {
+        // GIVEN a project and a milestone
+        $projectId = $this->createProject('Nanko', 'nanko');
+        $milestoneId = $this->createMilestone($projectId, 'Launch');
+
+        // WHEN creating an element with an unknown archetype
+        $this->client->request('POST', "/api/projects/{$projectId}/elements", server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'milestone_id' => $milestoneId,
+            'kind' => 'container',
+            'name' => 'Mystery',
+            'archetype' => 'spaceship',
+        ], JSON_THROW_ON_ERROR));
+
+        // THEN the request is rejected
+        self::assertResponseStatusCodeSame(422);
+    }
+
+    #[Test]
+    public function it updates the archetype(): void
+    {
+        // GIVEN an existing element with no archetype
+        $projectId = $this->createProject('Nanko', 'nanko');
+        $milestoneId = $this->createMilestone($projectId, 'Launch');
+        $elementId = $this->createElement($projectId, $milestoneId, 'container', 'Queue');
+
+        // WHEN updating it with an archetype
+        $this->client->request('PATCH', "/api/elements/{$elementId}", server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'milestone_id' => $milestoneId,
+            'name' => 'Queue',
+            'archetype' => 'queue',
+        ], JSON_THROW_ON_ERROR));
+
+        // THEN the updated element carries the new archetype
+        self::assertResponseStatusCodeSame(200);
+        $updated = json_decode((string) $this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertIsArray($updated);
+        self::assertSame('queue', $updated['archetype']);
+    }
+
     private function createProject(string $name, string $slug): string
     {
         $this->client->request('POST', '/api/projects', server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([

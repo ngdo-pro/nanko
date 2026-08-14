@@ -8,6 +8,7 @@ use App\Repository\ElementNotFoundException;
 use App\Repository\InvalidRelationElementException;
 use App\Repository\MilestoneNotFoundException;
 use App\Repository\ProjectNotFoundException;
+use App\Repository\RelationNotFoundException;
 use App\Repository\RelationRepositoryInterface;
 use PHPUnit\Framework\Attributes\Test;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
@@ -301,5 +302,199 @@ abstract class RelationRepositoryTestCase extends KernelTestCase
 
         // THEN they come back in creation order
         self::assertSame(['first', 'second', 'third'], array_column($rows, 'label'));
+    }
+
+    #[Test]
+    public function it applies the given label and technology when updating a relation(): void
+    {
+        // GIVEN an existing relation
+        $projectId = $this->createProject();
+        $milestoneId = $this->createMilestone($projectId);
+        $sourceId = $this->createElement($projectId, $milestoneId);
+        $targetId = $this->createElement($projectId, $milestoneId);
+        $relation = $this->repository->create($projectId, $milestoneId, $sourceId, $targetId, 'old label', 'old tech');
+        self::assertIsString($relation['id']);
+
+        // WHEN updating it at the same milestone
+        $updated = $this->repository->update($relation['id'], $milestoneId, 'new label', 'new tech');
+
+        // THEN the returned relation carries the new attributes
+        self::assertSame($relation['id'], $updated['id']);
+        self::assertSame($milestoneId, $updated['milestone_id']);
+        self::assertSame('new label', $updated['label']);
+        self::assertSame('new tech', $updated['technology']);
+    }
+
+    #[Test]
+    public function updating a relation at the same milestone twice keeps a single version for that milestone(): void
+    {
+        // GIVEN a relation updated once already at a milestone
+        $projectId = $this->createProject();
+        $milestoneId = $this->createMilestone($projectId);
+        $sourceId = $this->createElement($projectId, $milestoneId);
+        $targetId = $this->createElement($projectId, $milestoneId);
+        $relation = $this->repository->create($projectId, $milestoneId, $sourceId, $targetId, 'first', null);
+        self::assertIsString($relation['id']);
+        $this->repository->update($relation['id'], $milestoneId, 'second', null);
+
+        // WHEN updating it again at the same milestone
+        $this->repository->update($relation['id'], $milestoneId, 'third', null);
+
+        // THEN only one version row exists for that milestone, carrying the latest label
+        $rows = array_values(array_filter(
+            $this->repository->findAllVersionsByProject($projectId),
+            static fn (array $row): bool => $row['id'] === $relation['id'],
+        ));
+        self::assertCount(1, $rows);
+        self::assertSame('third', $rows[0]['label']);
+    }
+
+    #[Test]
+    public function updating a relation at a new milestone adds a version without touching the previous one(): void
+    {
+        // GIVEN a relation created at one milestone
+        $projectId = $this->createProject();
+        $firstMilestoneId = $this->createMilestone($projectId);
+        $sourceId = $this->createElement($projectId, $firstMilestoneId);
+        $targetId = $this->createElement($projectId, $firstMilestoneId);
+        $relation = $this->repository->create($projectId, $firstMilestoneId, $sourceId, $targetId, 'v1', null);
+        self::assertIsString($relation['id']);
+        $secondMilestoneId = $this->createMilestone($projectId);
+
+        // WHEN updating it at a later milestone
+        $this->repository->update($relation['id'], $secondMilestoneId, 'v2', null);
+
+        // THEN both versions are preserved, one per milestone
+        $rows = array_values(array_filter(
+            $this->repository->findAllVersionsByProject($projectId),
+            static fn (array $row): bool => $row['id'] === $relation['id'],
+        ));
+        self::assertCount(2, $rows);
+        $labels = array_column($rows, 'label', 'version_milestone_id');
+        self::assertSame('v1', $labels[$firstMilestoneId]);
+        self::assertSame('v2', $labels[$secondMilestoneId]);
+    }
+
+    #[Test]
+    public function updating an unknown relation throws(): void
+    {
+        // GIVEN a milestone that belongs to some real project
+        $projectId = $this->createProject();
+        $milestoneId = $this->createMilestone($projectId);
+
+        // WHEN updating an unknown relation
+        // THEN a RelationNotFoundException is thrown
+        $this->expectException(RelationNotFoundException::class);
+        $this->repository->update('00000000-0000-0000-0000-000000000000', $milestoneId, 'label', null);
+    }
+
+    #[Test]
+    public function updating a relation with an unknown milestone throws(): void
+    {
+        // GIVEN an existing relation
+        $projectId = $this->createProject();
+        $milestoneId = $this->createMilestone($projectId);
+        $sourceId = $this->createElement($projectId, $milestoneId);
+        $targetId = $this->createElement($projectId, $milestoneId);
+        $relation = $this->repository->create($projectId, $milestoneId, $sourceId, $targetId, null, null);
+        self::assertIsString($relation['id']);
+
+        // WHEN updating it with an unknown milestone id
+        // THEN a MilestoneNotFoundException is thrown
+        $this->expectException(MilestoneNotFoundException::class);
+        $this->repository->update($relation['id'], '00000000-0000-0000-0000-000000000000', 'label', null);
+    }
+
+    #[Test]
+    public function updating a relation with a milestone from a different project throws(): void
+    {
+        // GIVEN a relation and a milestone that belongs to a different project
+        $projectId = $this->createProject();
+        $milestoneId = $this->createMilestone($projectId);
+        $sourceId = $this->createElement($projectId, $milestoneId);
+        $targetId = $this->createElement($projectId, $milestoneId);
+        $relation = $this->repository->create($projectId, $milestoneId, $sourceId, $targetId, null, null);
+        self::assertIsString($relation['id']);
+        $otherProjectId = $this->createProject();
+        $otherMilestoneId = $this->createMilestone($otherProjectId);
+
+        // WHEN updating the relation using the other project's milestone
+        // THEN a MilestoneNotFoundException is thrown
+        $this->expectException(MilestoneNotFoundException::class);
+        $this->repository->update($relation['id'], $otherMilestoneId, 'label', null);
+    }
+
+    #[Test]
+    public function soft deleting a relation sets its deleted at milestone(): void
+    {
+        // GIVEN an existing relation
+        $projectId = $this->createProject();
+        $milestoneId = $this->createMilestone($projectId);
+        $sourceId = $this->createElement($projectId, $milestoneId);
+        $targetId = $this->createElement($projectId, $milestoneId);
+        $relation = $this->repository->create($projectId, $milestoneId, $sourceId, $targetId, null, null);
+        self::assertIsString($relation['id']);
+        $deleteMilestoneId = $this->createMilestone($projectId);
+
+        // WHEN soft deleting it at a later milestone
+        $deleted = $this->repository->softDelete($relation['id'], $deleteMilestoneId);
+
+        // THEN the relation carries the deletion milestone, not a physical removal
+        self::assertSame($deleteMilestoneId, $deleted['deleted_at_milestone_id']);
+        $rows = array_values(array_filter(
+            $this->repository->findAllVersionsByProject($projectId),
+            static fn (array $row): bool => $row['id'] === $relation['id'],
+        ));
+        self::assertNotEmpty($rows);
+        self::assertSame($deleteMilestoneId, $rows[0]['deleted_at_milestone_id']);
+    }
+
+    #[Test]
+    public function soft deleting an unknown relation throws(): void
+    {
+        // GIVEN a milestone that belongs to some real project
+        $projectId = $this->createProject();
+        $milestoneId = $this->createMilestone($projectId);
+
+        // WHEN soft deleting an unknown relation
+        // THEN a RelationNotFoundException is thrown
+        $this->expectException(RelationNotFoundException::class);
+        $this->repository->softDelete('00000000-0000-0000-0000-000000000000', $milestoneId);
+    }
+
+    #[Test]
+    public function soft deleting a relation with an unknown milestone throws(): void
+    {
+        // GIVEN an existing relation
+        $projectId = $this->createProject();
+        $milestoneId = $this->createMilestone($projectId);
+        $sourceId = $this->createElement($projectId, $milestoneId);
+        $targetId = $this->createElement($projectId, $milestoneId);
+        $relation = $this->repository->create($projectId, $milestoneId, $sourceId, $targetId, null, null);
+        self::assertIsString($relation['id']);
+
+        // WHEN soft deleting it with an unknown milestone id
+        // THEN a MilestoneNotFoundException is thrown
+        $this->expectException(MilestoneNotFoundException::class);
+        $this->repository->softDelete($relation['id'], '00000000-0000-0000-0000-000000000000');
+    }
+
+    #[Test]
+    public function soft deleting a relation with a milestone from a different project throws(): void
+    {
+        // GIVEN a relation and a milestone that belongs to a different project
+        $projectId = $this->createProject();
+        $milestoneId = $this->createMilestone($projectId);
+        $sourceId = $this->createElement($projectId, $milestoneId);
+        $targetId = $this->createElement($projectId, $milestoneId);
+        $relation = $this->repository->create($projectId, $milestoneId, $sourceId, $targetId, null, null);
+        self::assertIsString($relation['id']);
+        $otherProjectId = $this->createProject();
+        $otherMilestoneId = $this->createMilestone($otherProjectId);
+
+        // WHEN soft deleting the relation using the other project's milestone
+        // THEN a MilestoneNotFoundException is thrown
+        $this->expectException(MilestoneNotFoundException::class);
+        $this->repository->softDelete($relation['id'], $otherMilestoneId);
     }
 }

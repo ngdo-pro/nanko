@@ -141,6 +141,134 @@ final class RelationControllerTest extends DatabaseTestCase
         self::assertResponseStatusCodeSame(400);
     }
 
+    #[Test]
+    public function it returns the updated relation(): void
+    {
+        // GIVEN an existing relation
+        $projectId = $this->createProject('Nanko', 'nanko');
+        $milestoneId = $this->createMilestone($projectId, 'Launch');
+        $sourceId = $this->createElement($projectId, $milestoneId, 'Booking');
+        $targetId = $this->createElement($projectId, $milestoneId, 'Payment');
+        $this->client->request('POST', "/api/projects/{$projectId}/relations", server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'milestone_id' => $milestoneId,
+            'source_element_id' => $sourceId,
+            'target_element_id' => $targetId,
+        ], JSON_THROW_ON_ERROR));
+        $created = json_decode((string) $this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertIsArray($created);
+        $relationId = $created['id'];
+        self::assertIsString($relationId);
+
+        // WHEN updating its label and technology
+        $this->client->request('PATCH', "/api/relations/{$relationId}", server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'milestone_id' => $milestoneId,
+            'label' => 'reads/writes',
+            'technology' => 'HTTP',
+        ], JSON_THROW_ON_ERROR));
+
+        // THEN the updated relation is returned
+        self::assertResponseStatusCodeSame(200);
+        $updated = json_decode((string) $this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertIsArray($updated);
+        self::assertSame($relationId, $updated['id']);
+        self::assertSame($milestoneId, $updated['milestone_id']);
+        self::assertSame('reads/writes', $updated['label']);
+        self::assertSame('HTTP', $updated['technology']);
+    }
+
+    #[Test]
+    public function it returns 404 when updating an unknown relation(): void
+    {
+        // GIVEN a milestone that belongs to some real project
+        $projectId = $this->createProject('Nanko', 'nanko');
+        $milestoneId = $this->createMilestone($projectId, 'Launch');
+
+        // WHEN updating an unknown relation
+        $this->client->request('PATCH', '/api/relations/00000000-0000-0000-0000-000000000000', server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'milestone_id' => $milestoneId,
+            'label' => 'reads/writes',
+        ], JSON_THROW_ON_ERROR));
+
+        // THEN the request is rejected with a 404
+        self::assertResponseStatusCodeSame(404);
+    }
+
+    #[Test]
+    public function it returns 422 when milestone id is missing on update(): void
+    {
+        // GIVEN an existing relation
+        $projectId = $this->createProject('Nanko', 'nanko');
+        $milestoneId = $this->createMilestone($projectId, 'Launch');
+        $sourceId = $this->createElement($projectId, $milestoneId, 'Booking');
+        $targetId = $this->createElement($projectId, $milestoneId, 'Payment');
+        $this->client->request('POST', "/api/projects/{$projectId}/relations", server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'milestone_id' => $milestoneId,
+            'source_element_id' => $sourceId,
+            'target_element_id' => $targetId,
+        ], JSON_THROW_ON_ERROR));
+        $created = json_decode((string) $this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertIsArray($created);
+        $relationId = $created['id'];
+        self::assertIsString($relationId);
+
+        // WHEN updating it without a milestone_id
+        $this->client->request('PATCH', "/api/relations/{$relationId}", server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'label' => 'reads/writes',
+        ], JSON_THROW_ON_ERROR));
+
+        // THEN the request is rejected
+        self::assertResponseStatusCodeSame(422);
+    }
+
+    #[Test]
+    public function it soft deletes the relation(): void
+    {
+        // GIVEN an existing relation
+        $projectId = $this->createProject('Nanko', 'nanko');
+        $milestoneId = $this->createMilestone($projectId, 'Launch');
+        $sourceId = $this->createElement($projectId, $milestoneId, 'Booking');
+        $targetId = $this->createElement($projectId, $milestoneId, 'Payment');
+        $this->client->request('POST', "/api/projects/{$projectId}/relations", server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'milestone_id' => $milestoneId,
+            'source_element_id' => $sourceId,
+            'target_element_id' => $targetId,
+        ], JSON_THROW_ON_ERROR));
+        $created = json_decode((string) $this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertIsArray($created);
+        $relationId = $created['id'];
+        self::assertIsString($relationId);
+        $deleteMilestoneId = $this->createMilestone($projectId, 'Deprecation');
+
+        // WHEN deleting it at a later milestone
+        $this->client->request('DELETE', "/api/relations/{$relationId}", server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'milestone_id' => $deleteMilestoneId,
+        ], JSON_THROW_ON_ERROR));
+
+        // THEN the request succeeds with no content, and the relation is no longer visible at that milestone
+        self::assertResponseStatusCodeSame(204);
+        $this->client->request('GET', "/api/projects/{$projectId}/graph?milestone_id={$deleteMilestoneId}&scope_element_id={$sourceId}");
+        $graph = json_decode((string) $this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertIsArray($graph);
+        self::assertIsArray($graph['relations']);
+        self::assertCount(0, $graph['relations']);
+    }
+
+    #[Test]
+    public function it returns 404 when deleting an unknown relation(): void
+    {
+        // GIVEN a milestone that belongs to some real project
+        $projectId = $this->createProject('Nanko', 'nanko');
+        $milestoneId = $this->createMilestone($projectId, 'Launch');
+
+        // WHEN deleting an unknown relation
+        $this->client->request('DELETE', '/api/relations/00000000-0000-0000-0000-000000000000', server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'milestone_id' => $milestoneId,
+        ], JSON_THROW_ON_ERROR));
+
+        // THEN the request is rejected with a 404
+        self::assertResponseStatusCodeSame(404);
+    }
+
     private function createProject(string $name, string $slug): string
     {
         $this->client->request('POST', '/api/projects', server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([

@@ -24,6 +24,33 @@ interface RelationRepositoryInterface
     ): array;
 
     /**
+     * Upserts the relation's attributes at $milestoneId: a new relation_version
+     * row if this relation has no version yet at that milestone, otherwise the
+     * existing one is overwritten in place (same milestone edited twice).
+     *
+     * @return array<string, mixed>
+     *
+     * @throws RelationNotFoundException  if $relationId does not exist
+     * @throws MilestoneNotFoundException if $milestoneId does not exist for the relation's project
+     */
+    public function update(
+        string $relationId,
+        string $milestoneId,
+        ?string $label,
+        ?string $technology,
+    ): array;
+
+    /**
+     * Soft delete: sets deleted_at_milestone_id, never a physical DELETE.
+     *
+     * @return array<string, mixed>
+     *
+     * @throws RelationNotFoundException  if $relationId does not exist
+     * @throws MilestoneNotFoundException if $milestoneId does not exist for the relation's project
+     */
+    public function softDelete(string $relationId, string $milestoneId): array;
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function findAllByProject(string $projectId): array;
