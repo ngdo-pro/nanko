@@ -1,19 +1,9 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ElementArchetype, GraphElement } from "../api";
 import { KNOWN_TECHNOLOGIES, suggestedArchetype } from "../graph/technologyColor";
+import { dangerButtonStyle, INPUT_STYLE, LABEL_STYLE } from "../styles/controls";
 
 const AUTOSAVE_DEBOUNCE_MS = 400;
-
-const LABEL_STYLE: CSSProperties = { display: "flex", flexDirection: "column", gap: "4px", fontSize: "12px", color: "var(--text)" };
-const INPUT_STYLE: CSSProperties = {
-  font: "inherit",
-  fontSize: "13px",
-  padding: "6px 8px",
-  borderRadius: "6px",
-  border: "1px solid var(--border)",
-  background: "var(--bg)",
-  color: "var(--text-h)",
-};
 
 // Archetype only applies to containers/components — a C4 system (C1) is a
 // whole system, not a "service" or "database" in its own right.
@@ -167,16 +157,7 @@ export function ElementPanel({
         data-qa="element-panel-delete"
         onClick={() => (confirmingDelete ? onDelete() : setConfirmingDelete(true))}
         onBlur={() => setConfirmingDelete(false)}
-        style={{
-          marginTop: "8px",
-          padding: "8px",
-          borderRadius: "6px",
-          border: `1px solid ${confirmingDelete ? "var(--warning)" : "var(--border)"}`,
-          background: confirmingDelete ? "var(--warning-bg)" : "transparent",
-          color: confirmingDelete ? "var(--warning)" : "var(--text)",
-          cursor: "pointer",
-          fontSize: "13px",
-        }}
+        style={{ ...dangerButtonStyle(confirmingDelete), marginTop: "8px", padding: "8px", width: "100%" }}
       >
         {confirmingDelete ? "Confirm delete?" : "Delete"}
       </button>

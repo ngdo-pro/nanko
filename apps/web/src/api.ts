@@ -37,6 +37,8 @@ export type GraphElement = {
   technology: string | null;
 };
 
+export type RelationHandle = "top" | "right" | "bottom" | "left" | "center";
+
 export type GraphRelation = {
   id: string;
   source_element_id: string;
@@ -45,6 +47,8 @@ export type GraphRelation = {
   label: string | null;
   technology: string | null;
   realized_at_milestone_id: string | null;
+  source_handle: RelationHandle | null;
+  target_handle: RelationHandle | null;
 };
 
 export type GraphWarning = {
@@ -141,24 +145,39 @@ export function createRelation(
   milestoneId: string,
   sourceElementId: string,
   targetElementId: string,
+  sourceHandle: RelationHandle | null = null,
+  targetHandle: RelationHandle | null = null,
 ): Promise<Response> {
   return fetch(`${API_URL}/api/projects/${projectId}/relations`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ milestone_id: milestoneId, source_element_id: sourceElementId, target_element_id: targetElementId }),
+    body: JSON.stringify({
+      milestone_id: milestoneId,
+      source_element_id: sourceElementId,
+      target_element_id: targetElementId,
+      source_handle: sourceHandle,
+      target_handle: targetHandle,
+    }),
   });
 }
 
+// sourceHandle/targetHandle are required (not optional), same reasoning as
+// archetype in updateElement above: the backend overwrites relation_version
+// wholesale on every update, so omitting them here would silently clear the
+// anchor from this milestone onward — callers must always pass the current
+// value back explicitly.
 export function updateRelation(
   relationId: string,
   milestoneId: string,
   label: string | null,
   technology: string | null,
+  sourceHandle: RelationHandle | null,
+  targetHandle: RelationHandle | null,
 ): Promise<Response> {
   return fetch(`${API_URL}/api/relations/${relationId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ milestone_id: milestoneId, label, technology }),
+    body: JSON.stringify({ milestone_id: milestoneId, label, technology, source_handle: sourceHandle, target_handle: targetHandle }),
   });
 }
 
@@ -170,19 +189,42 @@ export function deleteRelation(relationId: string, milestoneId: string): Promise
   });
 }
 
+// One arrow from a note to a target it points at — an element, a relation
+// (via its synthetic canvas anchor), or another note. `id` is server-assigned
+// and churns on every update (the backend full-replaces a note's links by
+// delete+reinsert), so it's never sent back in a write payload — see
+// AnnotationLinkInput.
+export type AnnotationLink = {
+  id: string;
+  element_id: string | null;
+  relation_id: string | null;
+  target_annotation_id: string | null;
+  source_handle: RelationHandle | null;
+  target_handle: RelationHandle | null;
+};
+
+// The write-side shape of one link entry: exactly one of the three target
+// fields set (XOR, enforced server-side), no `id` (see AnnotationLink above).
+export type AnnotationLinkInput = {
+  element_id?: string;
+  relation_id?: string;
+  target_annotation_id?: string;
+  source_handle?: RelationHandle | null;
+  target_handle?: RelationHandle | null;
+};
+
 // A sticky note pinned at a canvas position — kept across milestones (not
-// versioned, never part of a diff), optionally pointing at one element or
-// relation via an arrow link.
+// versioned, never part of a diff), optionally pointing at several elements,
+// relations, and/or other notes via arrow links.
 export type Annotation = {
   id: string;
   project_id: string;
-  element_id: string | null;
-  relation_id: string | null;
   scope_element_id: string | null;
   x: number;
   y: number;
   author_name: string;
   body: string;
+  links: AnnotationLink[];
   created_at: string;
   updated_at: string;
 };
@@ -194,31 +236,46 @@ export function createAnnotation(
   y: number,
   authorName: string,
   body: string,
-  elementId: string | null = null,
+  links: AnnotationLinkInput[] = [],
 ): Promise<Response> {
   return fetch(`${API_URL}/api/projects/${projectId}/annotations`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ scope_element_id: scopeElementId, x, y, author_name: authorName, body, element_id: elementId }),
+    body: JSON.stringify({
+      scope_element_id: scopeElementId,
+      x,
+      y,
+      author_name: authorName,
+      body,
+      links,
+    }),
   });
 }
 
-// Wholesale update (text + position + link) — mirrors updateElement's
+// Wholesale update (text + position + links) — mirrors updateElement's
 // archetype handling: callers always pass every field back, even the ones
-// that didn't change. Passing null for both elementId/relationId clears any link.
+// that didn't change. `links` is not defaulted (unlike createAnnotation's,
+// where a brand-new note legitimately starts with none) — the backend
+// full-replaces the link set on every update, so an omitted array here would
+// silently clear every existing link. Pass `[]` explicitly to clear all.
 export function updateAnnotation(
   annotationId: string,
   authorName: string,
   body: string,
   x: number,
   y: number,
-  elementId: string | null = null,
-  relationId: string | null = null,
+  links: AnnotationLinkInput[],
 ): Promise<Response> {
   return fetch(`${API_URL}/api/annotations/${annotationId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ author_name: authorName, body, x, y, element_id: elementId, relation_id: relationId }),
+    body: JSON.stringify({
+      author_name: authorName,
+      body,
+      x,
+      y,
+      links,
+    }),
   });
 }
 

@@ -1,19 +1,9 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
-import type { GraphRelation } from "../api";
+import { useEffect, useRef, useState } from "react";
+import type { GraphRelation, RelationHandle } from "../api";
 import { KNOWN_TECHNOLOGIES } from "../graph/technologyColor";
+import { dangerButtonStyle, INPUT_STYLE, LABEL_STYLE } from "../styles/controls";
 
 const AUTOSAVE_DEBOUNCE_MS = 400;
-
-const LABEL_STYLE: CSSProperties = { display: "flex", flexDirection: "column", gap: "4px", fontSize: "12px", color: "var(--text)" };
-const INPUT_STYLE: CSSProperties = {
-  font: "inherit",
-  fontSize: "13px",
-  padding: "6px 8px",
-  borderRadius: "6px",
-  border: "1px solid var(--border)",
-  background: "var(--bg)",
-  color: "var(--text-h)",
-};
 
 export function RelationPanel({
   relation,
@@ -22,7 +12,7 @@ export function RelationPanel({
   onClose,
 }: {
   relation: GraphRelation;
-  onSave: (label: string | null, technology: string | null) => void;
+  onSave: (label: string | null, technology: string | null, sourceHandle: RelationHandle | null, targetHandle: RelationHandle | null) => void;
   onDelete: () => void;
   onClose: () => void;
 }) {
@@ -32,6 +22,12 @@ export function RelationPanel({
   const skipNextSave = useRef(true);
   const onSaveRef = useRef(onSave);
   onSaveRef.current = onSave;
+  // Not user-editable here (no anchor picker in this panel yet) — carried
+  // forward as-is on every save so autosaving label/technology doesn't
+  // silently reset the anchor at this milestone (see updateRelation's comment
+  // in api.ts for why the backend requires it to be passed back explicitly).
+  const handlesRef = useRef({ source: relation.source_handle, target: relation.target_handle });
+  handlesRef.current = { source: relation.source_handle, target: relation.target_handle };
 
   // A different relation got selected: reset the form to its own values,
   // and skip the autosave effect that reset would otherwise trigger.
@@ -54,7 +50,7 @@ export function RelationPanel({
     }
 
     const timeout = setTimeout(() => {
-      onSaveRef.current(label.trim() || null, technology.trim() || null);
+      onSaveRef.current(label.trim() || null, technology.trim() || null, handlesRef.current.source, handlesRef.current.target);
     }, AUTOSAVE_DEBOUNCE_MS);
 
     return () => clearTimeout(timeout);
@@ -114,16 +110,7 @@ export function RelationPanel({
         data-qa="relation-panel-delete"
         onClick={() => (confirmingDelete ? onDelete() : setConfirmingDelete(true))}
         onBlur={() => setConfirmingDelete(false)}
-        style={{
-          marginTop: "8px",
-          padding: "8px",
-          borderRadius: "6px",
-          border: `1px solid ${confirmingDelete ? "var(--warning)" : "var(--border)"}`,
-          background: confirmingDelete ? "var(--warning-bg)" : "transparent",
-          color: confirmingDelete ? "var(--warning)" : "var(--text)",
-          cursor: "pointer",
-          fontSize: "13px",
-        }}
+        style={{ ...dangerButtonStyle(confirmingDelete), marginTop: "8px", padding: "8px", width: "100%" }}
       >
         {confirmingDelete ? "Confirm delete?" : "Delete"}
       </button>

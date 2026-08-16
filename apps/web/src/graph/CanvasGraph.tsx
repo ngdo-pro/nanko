@@ -2,20 +2,19 @@ import {
   applyNodeChanges,
   Background,
   Controls,
-  MarkerType,
   Panel,
   PanOnScrollMode,
   ReactFlow,
   type Connection,
-  type Edge,
   type EdgeTypes,
   type NodeTypes,
   type ReactFlowInstance,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   type Annotation,
+  type AnnotationLinkInput,
   createAnnotation,
   createElement,
   createRelation,
@@ -25,6 +24,7 @@ import {
   type Graph,
   type GraphElement,
   type GraphRelation,
+  type RelationHandle,
   updateAnnotation,
   updateElement,
   updateRelation,
@@ -34,16 +34,27 @@ import { AnnotationComposer } from "../components/AnnotationComposer";
 import { ElementPanel } from "../components/ElementPanel";
 import { RelationPanel } from "../components/RelationPanel";
 import { useAnnotations } from "../hooks/useAnnotations";
+import { AnnotationLinkEdge, type AnnotationLinkEdge as AnnotationLinkEdgeType } from "./AnnotationLinkEdge";
+import { resolveAnnotationConnection, toAnnotationLinkEdges, toLinkPayload } from "./annotationLinks";
 import { AnnotationNode } from "./AnnotationNode";
 import { ElementNode } from "./ElementNode";
+import { RelationAnchorNode } from "./RelationAnchorNode";
+import { toRelationAnchorNodes, type RelationAnchorNode as RelationAnchorNodeType } from "./relationAnchors";
 import { RelationEdge } from "./RelationEdge";
-import { fallbackPosition, toFlowGraph, type ElementNode as ElementNodeType, type Level, type RelationEdge as RelationEdgeType } from "./toFlowGraph";
-import { toAnnotationNodes, type AnnotationNode as AnnotationNodeType } from "./toAnnotationNodes";
+import {
+  fallbackPosition,
+  resolveRelationHandles,
+  toFlowGraph,
+  type ElementNode as ElementNodeType,
+  type Level,
+  type RelationEdge as RelationEdgeType,
+} from "./toFlowGraph";
+import { toAnnotationNodes, type AnnotationNode as AnnotationNodeType, type AnnotationNodeLink } from "./toAnnotationNodes";
 
 // Defined outside the component: React Flow warns and re-renders every node/edge
 // if nodeTypes/edgeTypes are recreated on each render.
-const NODE_TYPES: NodeTypes = { element: ElementNode, annotation: AnnotationNode };
-const EDGE_TYPES: EdgeTypes = { relation: RelationEdge };
+const NODE_TYPES: NodeTypes = { element: ElementNode, annotation: AnnotationNode, relationAnchor: RelationAnchorNode };
+const EDGE_TYPES: EdgeTypes = { relation: RelationEdge, annotationLink: AnnotationLinkEdge };
 
 const CREATE_BUTTON_STYLE = {
   padding: "6px 10px",
@@ -67,7 +78,6 @@ type ComposerState =
       screenY: number;
       initialAuthorName: string;
       initialBody: string;
-      elementId: string | null;
     };
 
 function emptyLevelMessage(level: Level): string {
@@ -113,7 +123,10 @@ export function CanvasGraph({
   const [selection, setSelection] = useState<Selection | null>(null);
   const [composer, setComposer] = useState<ComposerState | null>(null);
   const [editingAnnotationId, setEditingAnnotationId] = useState<string | null>(null);
-  const reactFlowInstanceRef = useRef<ReactFlowInstance<ElementNodeType | AnnotationNodeType, RelationEdgeType | Edge> | null>(null);
+  const reactFlowInstanceRef = useRef<ReactFlowInstance<
+    ElementNodeType | AnnotationNodeType | RelationAnchorNodeType,
+    RelationEdgeType | AnnotationLinkEdgeType
+  > | null>(null);
 
   // Sticky notes are board metadata, not part of the resolved graph — never
   // diffed, kept across milestones. Disabled entirely in read-only contexts
@@ -145,9 +158,14 @@ export function CanvasGraph({
         })
         .catch((err) => console.error("Failed to create annotation", err));
     } else {
-      const { annotationId, elementId } = composer;
-      const position = annotationNodes.find((n) => n.id === annotationId)?.position ?? { x: 0, y: 0 };
-      updateAnnotation(annotationId, authorName, body, position.x, position.y, elementId, null)
+      // The composer is display+unlink only for links (creation stays
+      // drag-only) — its save path never touches `links`, just carries the
+      // note's current ones back unchanged, same convention as archetype/
+      // relation handles elsewhere in this file.
+      const { annotationId } = composer;
+      const current = annotationNodes.find((n) => n.id === annotationId);
+      const position = current?.position ?? { x: 0, y: 0 };
+      updateAnnotation(annotationId, authorName, body, position.x, position.y, toLinkPayload(current?.data.links ?? []))
         .then((res) => res.json())
         .then((updated: Annotation) => {
           const [updatedNode] = toAnnotationNodes([updated]);
@@ -168,34 +186,34 @@ export function CanvasGraph({
     setComposer(null);
   }
 
-  function handleUnlinkComposerAnnotation() {
-    if (!composer || composer.mode !== "edit") return;
-    const { annotationId } = composer;
+  // Shared by every write that only touches a note's link set (append one,
+  // remove one by id) — full-replace semantics, same PATCH shape either way.
+  function patchAnnotationLinks(annotationId: string, links: AnnotationLinkInput[]) {
     const current = annotationNodes.find((n) => n.id === annotationId);
     if (!current) return;
 
-    updateAnnotation(annotationId, current.data.authorName, current.data.body, current.position.x, current.position.y, null, null)
+    updateAnnotation(annotationId, current.data.authorName, current.data.body, current.position.x, current.position.y, links)
       .then((res) => res.json())
       .then((updated: Annotation) => {
         const [updatedNode] = toAnnotationNodes([updated]);
         setAnnotationNodes((nds) => nds.map((n) => (n.id === annotationId ? updatedNode : n)));
       })
-      .catch((err) => console.error(`Failed to unlink annotation ${annotationId}`, err));
-
-    setComposer((state) => (state?.mode === "edit" ? { ...state, elementId: null } : state));
+      .catch((err) => console.error(`Failed to update links for annotation ${annotationId}`, err));
   }
 
-  function handleLinkAnnotationToElement(annotationId: string, elementId: string) {
+  function handleAppendAnnotationLink(annotationId: string, link: AnnotationLinkInput) {
     const current = annotationNodes.find((n) => n.id === annotationId);
     if (!current) return;
+    patchAnnotationLinks(annotationId, [...toLinkPayload(current.data.links), link]);
+  }
 
-    updateAnnotation(annotationId, current.data.authorName, current.data.body, current.position.x, current.position.y, elementId, null)
-      .then((res) => res.json())
-      .then((updated: Annotation) => {
-        const [updatedNode] = toAnnotationNodes([updated]);
-        setAnnotationNodes((nds) => nds.map((n) => (n.id === annotationId ? updatedNode : n)));
-      })
-      .catch((err) => console.error(`Failed to link annotation ${annotationId} to element ${elementId}`, err));
+  function handleRemoveAnnotationLink(annotationId: string, linkId: string) {
+    const current = annotationNodes.find((n) => n.id === annotationId);
+    if (!current) return;
+    patchAnnotationLinks(
+      annotationId,
+      toLinkPayload(current.data.links.filter((l) => l.id !== linkId)),
+    );
   }
 
   function handleCommitInlineEdit(annotationId: string, newBody: string) {
@@ -204,21 +222,26 @@ export function CanvasGraph({
     const current = annotationNodes.find((n) => n.id === annotationId);
     if (!current || trimmed === "" || trimmed === current.data.body) return;
 
-    updateAnnotation(
-      annotationId,
-      current.data.authorName,
-      trimmed,
-      current.position.x,
-      current.position.y,
-      current.data.elementId,
-      current.data.relationId,
-    )
+    updateAnnotation(annotationId, current.data.authorName, trimmed, current.position.x, current.position.y, toLinkPayload(current.data.links))
       .then((res) => res.json())
       .then((updated: Annotation) => {
         const [updatedNode] = toAnnotationNodes([updated]);
         setAnnotationNodes((nds) => nds.map((n) => (n.id === annotationId ? updatedNode : n)));
       })
       .catch((err) => console.error(`Failed to update annotation ${annotationId}`, err));
+  }
+
+  // Element name / relation label / target note's author — the composer
+  // shows one label per link, resolved from whichever of nodes/edges/
+  // annotationNodes the link's non-null target field points into.
+  function annotationLinkLabel(link: AnnotationNodeLink): string {
+    if (link.elementId !== null) return nodes.find((n) => n.id === link.elementId)?.data.label ?? "an element";
+    if (link.relationId !== null) return edges.find((e) => e.id === link.relationId)?.data?.label ?? "a relation";
+    if (link.targetAnnotationId !== null) {
+      const target = annotationNodes.find((n) => n.id === link.targetAnnotationId);
+      return target ? `note by ${target.data.authorName}` : "a note";
+    }
+    return "an unknown link";
   }
 
   function handleCreate() {
@@ -260,15 +283,25 @@ export function CanvasGraph({
     if (!connection.source || !connection.target) return;
 
     // A connection dragged out of a post-it's handle links it to the target
-    // element (the arrow) rather than creating a relation between two elements.
-    if (annotationNodes.some((n) => n.id === connection.source)) {
-      handleLinkAnnotationToElement(connection.source, connection.target);
+    // (element, another note, or a relation via its synthetic anchor) rather
+    // than creating a relation between two elements. Rejects a drag whose
+    // target is a note but whose source isn't (notes only ever point
+    // outward) and silently dedupes a re-dragged existing link.
+    const resolution = resolveAnnotationConnection(connection, annotationNodes);
+    if (resolution.kind === "reject" || resolution.kind === "noop") return;
+    if (resolution.kind === "append") {
+      handleAppendAnnotationLink(resolution.annotationId, resolution.link);
       return;
     }
 
-    createRelation(projectId, milestoneId, connection.source, connection.target)
+    const sourceHandle = (connection.sourceHandle ?? null) as RelationHandle | null;
+    const targetHandle = (connection.targetHandle ?? null) as RelationHandle | null;
+
+    createRelation(projectId, milestoneId, connection.source, connection.target, sourceHandle, targetHandle)
       .then((res) => res.json())
       .then((created: GraphRelation) => {
+        const resolvedHandles = resolveRelationHandles(created);
+
         setEdges((eds) => [
           ...eds,
           {
@@ -276,11 +309,14 @@ export function CanvasGraph({
             type: "relation",
             source: created.source_element_id,
             target: created.target_element_id,
+            sourceHandle: resolvedHandles.sourceHandle,
+            targetHandle: resolvedHandles.targetHandle,
             data: {
               label: created.label,
               technology: created.technology,
               status: created.status === "derived" ? "derived" : "declared",
               isUnrealized: false,
+              ...resolvedHandles,
             },
           },
         ]);
@@ -302,19 +338,23 @@ export function CanvasGraph({
     },
   }));
 
-  // A dashed arrow per linked note — decorative only (not part of `edges`
-  // state, never selectable, never a real relation).
-  const linkEdges: Edge[] = annotationNodes
-    .filter((node) => node.data.elementId !== null)
-    .map((node) => ({
-      id: `annotation-link-${node.id}`,
-      source: node.id,
-      target: node.data.elementId as string,
-      type: "straight",
-      selectable: false,
-      style: { stroke: "var(--note-border)", strokeDasharray: "4 4" },
-      markerEnd: { type: MarkerType.ArrowClosed, color: "var(--note-border)" },
-    }));
+  // A dashed arrow per link entry, fanning out from its note — decorative
+  // only (not part of `edges` state, never selectable, never a real relation).
+  const linkEdges: AnnotationLinkEdgeType[] = toAnnotationLinkEdges(annotationNodes);
+
+  // One invisible synthetic node per relation, positioned at its midpoint, so
+  // a note can drag-link to a relation (edges aren't valid drop targets).
+  // Memoized (unlike annotationNodesForRender/linkEdges above) because xyflow
+  // treats a new node object identity as unmeasured, holding it at
+  // `visibility: hidden` — including for hit-testing — until a ResizeObserver
+  // round-trip completes; recomputing a fresh array every render never lets
+  // that round-trip land, so the anchor's connect handle silently never
+  // becomes droppable. A stable reference across renders that don't change
+  // `nodes`/`edges` lets the measurement stick.
+  const relationAnchorNodes: RelationAnchorNodeType[] = useMemo(
+    () => toRelationAnchorNodes(nodes, edges),
+    [nodes, edges],
+  );
 
   return (
     <div data-qa={dataQa} style={{ flex: 1, display: "flex", minHeight: 0 }}>
@@ -328,7 +368,7 @@ export function CanvasGraph({
           </p>
         )}
         <ReactFlow
-          nodes={[...nodes, ...annotationNodesForRender]}
+          nodes={[...nodes, ...annotationNodesForRender, ...relationAnchorNodes]}
           onInit={(instance) => {
             reactFlowInstanceRef.current = instance;
           }}
@@ -341,6 +381,10 @@ export function CanvasGraph({
             readOnly
               ? undefined
               : (_event, node) => {
+                  // A relation anchor is invisible/non-draggable, so this
+                  // shouldn't fire for one — guarded anyway, defensively.
+                  if (node.type === "relationAnchor") return;
+
                   if (node.type === "annotation") {
                     const current = annotationNodes.find((n) => n.id === node.id);
                     if (!current) return;
@@ -350,8 +394,7 @@ export function CanvasGraph({
                       current.data.body,
                       node.position.x,
                       node.position.y,
-                      current.data.elementId,
-                      current.data.relationId,
+                      toLinkPayload(current.data.links),
                     ).catch((err) => {
                       console.error(`Failed to save position for annotation ${node.id}`, err);
                     });
@@ -367,6 +410,8 @@ export function CanvasGraph({
             readOnly
               ? undefined
               : (event, node) => {
+                  if (node.type === "relationAnchor") return;
+
                   if (node.type === "annotation") {
                     const current = annotationNodes.find((n) => n.id === node.id);
                     if (!current) return;
@@ -377,7 +422,6 @@ export function CanvasGraph({
                       screenY: event.clientY,
                       initialAuthorName: current.data.authorName,
                       initialBody: current.data.body,
-                      elementId: current.data.elementId,
                     });
                     return;
                   }
@@ -389,6 +433,8 @@ export function CanvasGraph({
             readOnly
               ? undefined
               : (_event, node) => {
+                  if (node.type === "relationAnchor") return;
+
                   if (node.type === "annotation") {
                     // Closes any composer a preceding click may have just opened
                     // (a real double-click fires click then dblclick) — the end
@@ -466,14 +512,16 @@ export function CanvasGraph({
             y={composer.screenY}
             initialAuthorName={composer.mode === "edit" ? composer.initialAuthorName : undefined}
             initialBody={composer.mode === "edit" ? composer.initialBody : undefined}
-            linkedElementLabel={
-              composer.mode === "edit" && composer.elementId !== null
-                ? (nodes.find((node) => node.id === composer.elementId)?.data.label ?? "an element")
-                : null
+            links={
+              composer.mode === "edit"
+                ? (annotationNodes.find((node) => node.id === composer.annotationId)?.data.links ?? []).map((link) => ({
+                    label: annotationLinkLabel(link),
+                    onUnlink: () => handleRemoveAnnotationLink(composer.annotationId, link.id),
+                  }))
+                : []
             }
             onSave={handleSaveComposer}
             onDelete={composer.mode === "edit" ? handleDeleteComposerAnnotation : undefined}
-            onUnlink={composer.mode === "edit" ? handleUnlinkComposerAnnotation : undefined}
             onClose={() => setComposer(null)}
           />
         )}
@@ -526,9 +574,11 @@ export function CanvasGraph({
             label: selectedEdge.data?.label ?? null,
             technology: selectedEdge.data?.technology ?? null,
             realized_at_milestone_id: null,
+            source_handle: selectedEdge.data?.sourceHandle ?? null,
+            target_handle: selectedEdge.data?.targetHandle ?? null,
           }}
-          onSave={(label, technology) => {
-            updateRelation(selectedEdge.id, milestoneId, label, technology).catch((err) => {
+          onSave={(label, technology, sourceHandle, targetHandle) => {
+            updateRelation(selectedEdge.id, milestoneId, label, technology, sourceHandle, targetHandle).catch((err) => {
               console.error(`Failed to save relation ${selectedEdge.id}`, err);
             });
             setEdges((eds) =>
@@ -536,7 +586,16 @@ export function CanvasGraph({
                 edge.id === selectedEdge.id
                   ? {
                       ...edge,
-                      data: { label, technology, status: edge.data?.status ?? "declared", isUnrealized: edge.data?.isUnrealized ?? false },
+                      sourceHandle: sourceHandle ?? edge.sourceHandle,
+                      targetHandle: targetHandle ?? edge.targetHandle,
+                      data: {
+                        label,
+                        technology,
+                        status: edge.data?.status ?? "declared",
+                        isUnrealized: edge.data?.isUnrealized ?? false,
+                        sourceHandle: sourceHandle ?? edge.data?.sourceHandle ?? "bottom",
+                        targetHandle: targetHandle ?? edge.data?.targetHandle ?? "top",
+                      },
                     }
                   : edge,
               ),

@@ -28,6 +28,8 @@ function relation(overrides: Partial<GraphRelation> = {}): GraphRelation {
     label: null,
     technology: null,
     realized_at_milestone_id: null,
+    source_handle: null,
+    target_handle: null,
     ...overrides,
   };
 }
@@ -175,9 +177,57 @@ describe("toFlowGraph", () => {
         type: "relation",
         source: "system-1",
         target: "system-2",
-        data: { label: "calls", technology: null, status: "declared", isUnrealized: false },
+        sourceHandle: "bottom",
+        targetHandle: "top",
+        data: {
+          label: "calls",
+          technology: null,
+          status: "declared",
+          isUnrealized: false,
+          sourceHandle: "bottom",
+          targetHandle: "top",
+        },
       },
     ]);
+  });
+
+  it("defaults a relation with no stored anchor to the pre-existing bottom/top pair", () => {
+    // GIVEN a relation predating the anchor feature (no handle in the database)
+    const input = graph({
+      elements: [element({ id: "system-1" }), element({ id: "system-2" })],
+      relations: [relation({ id: "relation-1", source_element_id: "system-1", target_element_id: "system-2" })],
+    });
+
+    // WHEN mapping to a flow graph
+    const { edges } = toFlowGraph(input, ROOT_LEVEL);
+
+    // THEN it renders exactly as it always did, so no existing diagram re-arranges on deploy
+    expect(edges[0].sourceHandle).toBe("bottom");
+    expect(edges[0].targetHandle).toBe("top");
+  });
+
+  it("carries an explicit stored anchor onto the edge", () => {
+    // GIVEN a relation anchored from the source's left edge to the target's center
+    const input = graph({
+      elements: [element({ id: "system-1" }), element({ id: "system-2" })],
+      relations: [
+        relation({
+          id: "relation-1",
+          source_element_id: "system-1",
+          target_element_id: "system-2",
+          source_handle: "left",
+          target_handle: "center",
+        }),
+      ],
+    });
+
+    // WHEN mapping to a flow graph
+    const { edges } = toFlowGraph(input, ROOT_LEVEL);
+
+    // THEN the stored anchor is used as-is, both at the top level and in edge data
+    expect(edges[0].sourceHandle).toBe("left");
+    expect(edges[0].targetHandle).toBe("center");
+    expect(edges[0].data).toMatchObject({ sourceHandle: "left", targetHandle: "center" });
   });
 
   it("carries the relation's technology onto the edge", () => {

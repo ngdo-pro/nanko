@@ -12,6 +12,7 @@ import { useDiff } from "../hooks/useDiff";
 import { useGraph } from "../hooks/useGraph";
 import { useMilestones } from "../hooks/useMilestones";
 import { routes } from "../routes";
+import { COMPACT_INPUT_STYLE, ERROR_TEXT_STYLE, STATE_CONTAINER_STYLE, toggleButtonStyle } from "../styles/controls";
 
 // Milestone comparison is scoped to C1 (the whole system landscape) in v1 —
 // drilling into a system/container while comparing is a possible future
@@ -19,29 +20,6 @@ import { routes } from "../routes";
 const ROOT_LEVEL: Level = { kind: "system", parentId: null };
 
 type Mode = "side-by-side" | "overlay";
-
-const SELECT_STYLE = {
-  font: "inherit",
-  fontSize: "13px",
-  padding: "4px 6px",
-  borderRadius: "6px",
-  border: "1px solid var(--border)",
-  background: "var(--bg)",
-  color: "var(--text-h)",
-};
-
-function modeButtonStyle(active: boolean) {
-  return {
-    font: "inherit",
-    fontSize: "13px",
-    padding: "4px 10px",
-    borderRadius: "6px",
-    border: `1px solid ${active ? "var(--accent)" : "var(--border)"}`,
-    background: active ? "var(--accent-bg)" : "var(--bg)",
-    color: active ? "var(--accent)" : "var(--text-h)",
-    cursor: "pointer",
-  };
-}
 
 function milestoneLabel(milestones: Milestone[], milestoneId: string): string {
   return milestones.find((m) => m.id === milestoneId)?.label ?? milestoneId;
@@ -87,7 +65,7 @@ function CompareScreen() {
               From
               <select
                 data-qa="compare-from-select"
-                style={SELECT_STYLE}
+                style={COMPACT_INPUT_STYLE}
                 value={fromId ?? ""}
                 onChange={(e) => setFromId(e.target.value || null)}
               >
@@ -100,7 +78,7 @@ function CompareScreen() {
             </label>
             <label style={{ display: "flex", gap: "4px", alignItems: "center" }}>
               To
-              <select data-qa="compare-to-select" style={SELECT_STYLE} value={toId ?? ""} onChange={(e) => setToId(e.target.value || null)}>
+              <select data-qa="compare-to-select" style={COMPACT_INPUT_STYLE} value={toId ?? ""} onChange={(e) => setToId(e.target.value || null)}>
                 {milestonesState.milestones.map((milestone) => (
                   <option key={milestone.id} value={milestone.id}>
                     {milestone.label}
@@ -109,10 +87,20 @@ function CompareScreen() {
               </select>
             </label>
             <div style={{ display: "flex", gap: "4px" }}>
-              <button type="button" data-qa="compare-mode-side-by-side" style={modeButtonStyle(mode === "side-by-side")} onClick={() => setMode("side-by-side")}>
+              <button
+                type="button"
+                data-qa="compare-mode-side-by-side"
+                style={{ ...toggleButtonStyle(mode === "side-by-side"), padding: "4px 10px" }}
+                onClick={() => setMode("side-by-side")}
+              >
                 Side-by-side
               </button>
-              <button type="button" data-qa="compare-mode-overlay" style={modeButtonStyle(mode === "overlay")} onClick={() => setMode("overlay")}>
+              <button
+                type="button"
+                data-qa="compare-mode-overlay"
+                style={{ ...toggleButtonStyle(mode === "overlay"), padding: "4px 10px" }}
+                onClick={() => setMode("overlay")}
+              >
                 Overlay
               </button>
             </div>
@@ -121,15 +109,25 @@ function CompareScreen() {
         )}
       </Toolbar>
 
-      {milestonesState.status === "loading" && <p data-qa="compare-loading">loading...</p>}
-      {milestonesState.status === "no-milestone" && <p data-qa="compare-no-milestone">This project has no milestone yet.</p>}
+      {milestonesState.status === "loading" && (
+        <p data-qa="compare-loading" style={STATE_CONTAINER_STYLE}>
+          loading...
+        </p>
+      )}
+      {milestonesState.status === "no-milestone" && (
+        <p data-qa="compare-no-milestone" style={STATE_CONTAINER_STYLE}>
+          This project has no milestone yet.
+        </p>
+      )}
       {milestonesState.status === "error" && (
-        <p data-qa="compare-error" style={{ color: "red" }}>
+        <p data-qa="compare-error" style={{ ...STATE_CONTAINER_STYLE, ...ERROR_TEXT_STYLE }}>
           {milestonesState.message}
         </p>
       )}
       {milestonesState.status === "loaded" && milestonesState.milestones.length < 2 && (
-        <p data-qa="compare-not-enough-milestones">This project needs at least two milestones to compare.</p>
+        <p data-qa="compare-not-enough-milestones" style={STATE_CONTAINER_STYLE}>
+          This project needs at least two milestones to compare.
+        </p>
       )}
 
       {milestonesState.status === "loaded" && fromId && toId && projectId && mode === "side-by-side" && (
@@ -139,7 +137,9 @@ function CompareScreen() {
             {fromGraph.status === "ready" ? (
               <CanvasGraph readOnly dataQa="compare-canvas-from" projectId={projectId} graph={fromGraph.graph} level={ROOT_LEVEL} milestoneId={fromId} />
             ) : (
-              <p data-qa="compare-loading">loading...</p>
+              <p data-qa="compare-loading" style={STATE_CONTAINER_STYLE}>
+                loading...
+              </p>
             )}
           </div>
           <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
@@ -147,7 +147,9 @@ function CompareScreen() {
             {toGraph.status === "ready" ? (
               <CanvasGraph readOnly dataQa="compare-canvas-to" projectId={projectId} graph={toGraph.graph} level={ROOT_LEVEL} milestoneId={toId} />
             ) : (
-              <p data-qa="compare-loading">loading...</p>
+              <p data-qa="compare-loading" style={STATE_CONTAINER_STYLE}>
+                loading...
+              </p>
             )}
           </div>
         </div>
@@ -158,7 +160,7 @@ function CompareScreen() {
           {fromGraph.status === "ready" && toGraph.status === "ready" && diffState.status === "ready" ? (
             <OverlayView fromGraph={fromGraph.graph} toGraph={toGraph.graph} diff={diffState.diff} />
           ) : diffState.status === "error" ? (
-            <p data-qa="compare-error" style={{ color: "red" }}>
+            <p data-qa="compare-error" style={{ ...STATE_CONTAINER_STYLE, ...ERROR_TEXT_STYLE }}>
               {diffState.message}
             </p>
           ) : (

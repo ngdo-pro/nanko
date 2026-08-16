@@ -13,6 +13,8 @@ function relation(overrides: Partial<GraphRelation> = {}): GraphRelation {
     label: null,
     technology: null,
     realized_at_milestone_id: null,
+    source_handle: null,
+    target_handle: null,
     ...overrides,
   };
 }
@@ -51,7 +53,27 @@ describe("RelationPanel", () => {
 
     // AND it is called once the debounce delay has elapsed
     await vi.advanceTimersByTimeAsync(400);
-    expect(onSave).toHaveBeenCalledWith("reads/writes", null);
+    expect(onSave).toHaveBeenCalledWith("reads/writes", null, null, null);
+  });
+
+  it("carries the relation's current anchor along with an unrelated save, unedited", async () => {
+    // GIVEN a relation already anchored left→center (no anchor picker in this panel)
+    const onSave = vi.fn();
+    render(
+      <RelationPanel
+        relation={relation({ source_handle: "left", target_handle: "center" })}
+        onSave={onSave}
+        onDelete={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+
+    // WHEN only the label is edited
+    fireEvent.change(screen.getByTestId("relation-panel-label"), { target: { value: "reads/writes" } });
+    await vi.advanceTimersByTimeAsync(400);
+
+    // THEN the save carries the existing anchor back unchanged, so it isn't silently cleared
+    expect(onSave).toHaveBeenCalledWith("reads/writes", null, "left", "center");
   });
 
   it("saves null when a field is cleared, unlike the element panel's required name", async () => {
@@ -64,7 +86,7 @@ describe("RelationPanel", () => {
     await vi.advanceTimersByTimeAsync(400);
 
     // THEN the save still goes through, with a null label
-    expect(onSave).toHaveBeenCalledWith(null, null);
+    expect(onSave).toHaveBeenCalledWith(null, null, null, null);
   });
 
   it("keeps a pending edit when the relation prop is recreated with the same id", async () => {
@@ -82,7 +104,7 @@ describe("RelationPanel", () => {
     await vi.advanceTimersByTimeAsync(400);
 
     // THEN the pending edit is still saved, not silently discarded
-    expect(onSave).toHaveBeenCalledWith("reads/writes", null);
+    expect(onSave).toHaveBeenCalledWith("reads/writes", null, null, null);
   });
 
   it("does not save when switching to a different relation", async () => {

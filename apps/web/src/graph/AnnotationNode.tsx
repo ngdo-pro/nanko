@@ -1,14 +1,51 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import type { AnnotationNode as AnnotationNodeType } from "./toAnnotationNodes";
 
 const HANDLE_STYLE = { background: "var(--note-border)", width: 8, height: 8, border: "none" };
 
+const CENTER_HANDLE_STYLE: CSSProperties = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 20,
+  height: 20,
+  background: "transparent",
+  border: "none",
+  opacity: 0,
+};
+
+// One handle id per edge midpoint — same ids as ElementNode's, shared
+// verbatim with the backend's source_handle values.
+const ANCHORS: { id: "top" | "right" | "bottom" | "left"; position: Position }[] = [
+  { id: "top", position: Position.Top },
+  { id: "right", position: Position.Right },
+  { id: "bottom", position: Position.Bottom },
+  { id: "left", position: Position.Left },
+];
+
+// Both a target and a source handle at the same point, sharing one id — same
+// shape as ElementNode's AnchorHandles, and for the same reason: target first,
+// source second, so the source handle sits on top in the DOM and is the one
+// that reacts to an outgoing drag, while the target underneath stays reachable
+// for an incoming one (xyflow's drop detection is distance-based, not a strict
+// DOM hit-test).
+function AnchorHandles({ id, position, style }: { id: string; position: Position; style: CSSProperties }) {
+  return (
+    <>
+      <Handle type="target" position={position} id={id} style={style} />
+      <Handle type="source" position={position} id={id} style={style} />
+    </>
+  );
+}
+
 // A sticky note — deliberately plain (no rotation/tape/pin decoration), same
 // "plain box" philosophy already applied to ElementNode: the payoff of extra
-// visual flourish here is unproven and not worth the fiddliness. Source-only
-// handle (no target): a note can point AT an element, nothing can point INTO
-// a note — dragging a relation onto one is simply not a valid connection.
+// visual flourish here is unproven and not worth the fiddliness. Both target
+// and source handles: a note can point AT an element, a relation, or another
+// note, and can itself receive a link dragged from another note.
 export function AnnotationNode({ data, selected }: NodeProps<AnnotationNodeType>) {
   const [draft, setDraft] = useState(data.body);
 
@@ -22,6 +59,7 @@ export function AnnotationNode({ data, selected }: NodeProps<AnnotationNodeType>
     <div
       data-qa="annotation-node"
       style={{
+        position: "relative",
         display: "flex",
         flexDirection: "column",
         gap: "6px",
@@ -66,7 +104,10 @@ export function AnnotationNode({ data, selected }: NodeProps<AnnotationNodeType>
 
       <span style={{ fontSize: "11px", opacity: 0.75, alignSelf: "flex-end" }}>— {data.authorName}</span>
 
-      <Handle type="source" position={Position.Bottom} style={HANDLE_STYLE} />
+      {ANCHORS.map((anchor) => (
+        <AnchorHandles key={anchor.id} id={anchor.id} position={anchor.position} style={HANDLE_STYLE} />
+      ))}
+      <AnchorHandles id="center" position={Position.Top} style={CENTER_HANDLE_STYLE} />
     </div>
   );
 }

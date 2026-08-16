@@ -29,6 +29,8 @@ function relation(overrides: Partial<GraphRelation> = {}): GraphRelation {
     label: null,
     technology: null,
     realized_at_milestone_id: null,
+    source_handle: null,
+    target_handle: null,
     ...overrides,
   };
 }
