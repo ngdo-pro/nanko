@@ -16,7 +16,7 @@ final class DoctrineProjectRepositoryTest extends ProjectRepositoryTestCase
         self::bootKernel();
 
         $connection = static::getContainer()->get(Connection::class);
-        $connection->executeStatement('TRUNCATE project, milestone, element, element_version, relation, relation_version, position, annotation RESTART IDENTITY');
+        $connection->executeStatement('TRUNCATE project, milestone, element, element_version, relation, relation_version, position, annotation, annotation_link RESTART IDENTITY');
 
         return static::getContainer()->get(DoctrineProjectRepository::class);
     }

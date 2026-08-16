@@ -169,6 +169,25 @@ final class GraphResolverTest extends TestCase
         self::assertSame(GraphResolver::WARNING_DANGLING_RELATION, $graph->warnings[0]['type']);
     }
 
+    #[Test]
+    public function it resolves a relation anchor from its latest version(): void
+    {
+        // GIVEN a relation whose version carries a left/center anchor
+        $milestones = [$this->milestone('m1', 0)];
+        $elements = [
+            $this->elementRow('e1', 'p1', null, 'system', 'm1', null, 'm1', 0, 'Source'),
+            $this->elementRow('e2', 'p1', null, 'system', 'm1', null, 'm1', 0, 'Target'),
+        ];
+        $relations = [$this->relationRow('r1', 'e1', 'e2', 'declared', 'm1', null, 'm1', 0, null, null, null, 'left', 'center')];
+
+        // WHEN resolving the graph
+        $graph = $this->resolver->resolve($elements, $relations, [], $milestones, 'm1', 'scope');
+
+        // THEN the resolved relation carries the anchor from its best version
+        self::assertSame('left', $graph->relations[0]['source_handle']);
+        self::assertSame('center', $graph->relations[0]['target_handle']);
+    }
+
     // --- C1 derived projection -------------------------------------------
 
     #[Test]
@@ -192,6 +211,9 @@ final class GraphResolverTest extends TestCase
         self::assertSame('sysA', $graph->relations[0]['source_element_id']);
         self::assertSame('sysB', $graph->relations[0]['target_element_id']);
         self::assertSame('derived', $graph->relations[0]['status']);
+        // AND it carries no anchor — it connects two projected systems, not real handles
+        self::assertNull($graph->relations[0]['source_handle']);
+        self::assertNull($graph->relations[0]['target_handle']);
     }
 
     #[Test]
@@ -517,6 +539,8 @@ final class GraphResolverTest extends TestCase
         ?string $label = null,
         ?string $technology = null,
         ?string $realizedAtMilestoneId = null,
+        ?string $sourceHandle = null,
+        ?string $targetHandle = null,
     ): array {
         return [
             'id' => $id,
@@ -531,6 +555,8 @@ final class GraphResolverTest extends TestCase
             'version_milestone_sort_order' => $versionMilestoneSortOrder,
             'label' => $label,
             'technology' => $technology,
+            'source_handle' => $sourceHandle,
+            'target_handle' => $targetHandle,
         ];
     }
 

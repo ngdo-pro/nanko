@@ -19,6 +19,8 @@ final class DoctrineRelationRepository implements RelationRepositoryInterface
         string $targetElementId,
         ?string $label,
         ?string $technology,
+        ?string $sourceHandle = null,
+        ?string $targetHandle = null,
     ): array {
         /** @var array<string, mixed> */
         return $this->connection->transactional(function (Connection $conn) use (
@@ -28,6 +30,8 @@ final class DoctrineRelationRepository implements RelationRepositoryInterface
             $targetElementId,
             $label,
             $technology,
+            $sourceHandle,
+            $targetHandle,
         ): array {
             if ($conn->fetchOne('SELECT 1 FROM project WHERE id = :id', ['id' => $projectId]) === false) {
                 throw new ProjectNotFoundException($projectId);
@@ -58,14 +62,16 @@ final class DoctrineRelationRepository implements RelationRepositoryInterface
 
             /** @var array<string, mixed> $version */
             $version = $conn->fetchAssociative(
-                'INSERT INTO relation_version (relation_id, milestone_id, label, technology)
-                 VALUES (:relation_id, :milestone_id, :label, :technology)
-                 RETURNING label, technology',
+                'INSERT INTO relation_version (relation_id, milestone_id, label, technology, source_handle, target_handle)
+                 VALUES (:relation_id, :milestone_id, :label, :technology, :source_handle, :target_handle)
+                 RETURNING label, technology, source_handle, target_handle',
                 [
                     'relation_id' => $relation['id'],
                     'milestone_id' => $milestoneId,
                     'label' => $label,
                     'technology' => $technology,
+                    'source_handle' => $sourceHandle,
+                    'target_handle' => $targetHandle,
                 ],
             );
 
@@ -78,6 +84,8 @@ final class DoctrineRelationRepository implements RelationRepositoryInterface
         string $milestoneId,
         ?string $label,
         ?string $technology,
+        ?string $sourceHandle = null,
+        ?string $targetHandle = null,
     ): array {
         /** @var array<string, mixed> */
         return $this->connection->transactional(function (Connection $conn) use (
@@ -85,6 +93,8 @@ final class DoctrineRelationRepository implements RelationRepositoryInterface
             $milestoneId,
             $label,
             $technology,
+            $sourceHandle,
+            $targetHandle,
         ): array {
             $projectId = $conn->fetchOne('SELECT project_id FROM relation WHERE id = :id', ['id' => $relationId]);
 
@@ -107,16 +117,19 @@ final class DoctrineRelationRepository implements RelationRepositoryInterface
 
             /** @var array<string, mixed> $version */
             $version = $conn->fetchAssociative(
-                'INSERT INTO relation_version (relation_id, milestone_id, label, technology)
-                 VALUES (:relation_id, :milestone_id, :label, :technology)
+                'INSERT INTO relation_version (relation_id, milestone_id, label, technology, source_handle, target_handle)
+                 VALUES (:relation_id, :milestone_id, :label, :technology, :source_handle, :target_handle)
                  ON CONFLICT (relation_id, milestone_id) DO UPDATE
-                    SET label = EXCLUDED.label, technology = EXCLUDED.technology
-                 RETURNING label, technology',
+                    SET label = EXCLUDED.label, technology = EXCLUDED.technology,
+                        source_handle = EXCLUDED.source_handle, target_handle = EXCLUDED.target_handle
+                 RETURNING label, technology, source_handle, target_handle',
                 [
                     'relation_id' => $relationId,
                     'milestone_id' => $milestoneId,
                     'label' => $label,
                     'technology' => $technology,
+                    'source_handle' => $sourceHandle,
+                    'target_handle' => $targetHandle,
                 ],
             );
 
@@ -160,7 +173,7 @@ final class DoctrineRelationRepository implements RelationRepositoryInterface
         return $this->connection->fetchAllAssociative(
             'SELECT r.id, r.project_id, r.source_element_id, r.target_element_id, r.status,
                     r.created_at_milestone_id AS milestone_id,
-                    v.label, v.technology, r.created_at
+                    v.label, v.technology, v.source_handle, v.target_handle, r.created_at
              FROM relation r
              JOIN relation_version v ON v.relation_id = r.id
              WHERE r.project_id = :project_id
@@ -177,13 +190,14 @@ final class DoctrineRelationRepository implements RelationRepositoryInterface
          *     created_at_milestone_id: string, deleted_at_milestone_id: string|null,
          *     version_milestone_id: string, version_milestone_sort_order: int|string,
          *     label: string|null, technology: string|null,
+         *     source_handle: string|null, target_handle: string|null,
          * }> $rows
          */
         $rows = $this->connection->fetchAllAssociative(
             'SELECT r.id, r.project_id, r.source_element_id, r.target_element_id, r.status,
                     r.realized_at_milestone_id, r.created_at_milestone_id, r.deleted_at_milestone_id,
                     v.milestone_id AS version_milestone_id, m.sort_order AS version_milestone_sort_order,
-                    v.label, v.technology
+                    v.label, v.technology, v.source_handle, v.target_handle
              FROM relation r
              JOIN relation_version v ON v.relation_id = r.id
              JOIN milestone m ON m.id = v.milestone_id
@@ -205,6 +219,8 @@ final class DoctrineRelationRepository implements RelationRepositoryInterface
             'version_milestone_sort_order' => (int) $row['version_milestone_sort_order'],
             'label' => $row['label'],
             'technology' => $row['technology'],
+            'source_handle' => $row['source_handle'],
+            'target_handle' => $row['target_handle'],
         ], $rows);
     }
 

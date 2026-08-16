@@ -17,10 +17,22 @@ final class UpdateRelationPayload
 
     public readonly ?string $technology;
 
+    private const HANDLES = ['top', 'right', 'bottom', 'left', 'center'];
+
+    #[SerializedName('source_handle')]
+    #[Assert\Choice(choices: self::HANDLES)]
+    public readonly ?string $sourceHandle;
+
+    #[SerializedName('target_handle')]
+    #[Assert\Choice(choices: self::HANDLES)]
+    public readonly ?string $targetHandle;
+
     public function __construct(
         string $milestoneId = '',
         ?string $label = null,
         ?string $technology = null,
+        ?string $sourceHandle = null,
+        ?string $targetHandle = null,
     ) {
         $this->milestoneId = trim($milestoneId);
 
@@ -29,5 +41,8 @@ final class UpdateRelationPayload
 
         $technology = $technology !== null ? trim($technology) : null;
         $this->technology = $technology === '' ? null : $technology;
+
+        $this->sourceHandle = $sourceHandle;
+        $this->targetHandle = $targetHandle;
     }
 }

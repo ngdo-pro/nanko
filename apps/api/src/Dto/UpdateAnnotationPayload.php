@@ -24,41 +24,64 @@ final class UpdateAnnotationPayload
     #[Assert\NotNull]
     public readonly ?float $y;
 
-    #[SerializedName('element_id')]
-    public readonly ?string $elementId;
+    private const HANDLES = ['top', 'right', 'bottom', 'left', 'center'];
 
-    #[SerializedName('relation_id')]
-    public readonly ?string $relationId;
+    /**
+     * @var list<array{element_id?: string, relation_id?: string, target_annotation_id?: string, source_handle?: ?string, target_handle?: ?string}>
+     */
+    public readonly array $links;
 
+    /**
+     * @param list<array{element_id?: string, relation_id?: string, target_annotation_id?: string, source_handle?: ?string, target_handle?: ?string}> $links
+     */
     public function __construct(
         string $authorName = '',
         string $body = '',
         ?float $x = null,
         ?float $y = null,
-        ?string $elementId = null,
-        ?string $relationId = null,
+        array $links = [],
     ) {
         $this->authorName = trim($authorName);
         $this->body = trim($body);
         $this->x = $x;
         $this->y = $y;
 
-        $elementId = $elementId !== null ? trim($elementId) : null;
-        $this->elementId = $elementId === '' ? null : $elementId;
-
-        $relationId = $relationId !== null ? trim($relationId) : null;
-        $this->relationId = $relationId === '' ? null : $relationId;
+        $this->links = $links;
     }
 
     public function validate(ExecutionContextInterface $context): void
     {
-        // A note may point at an element or a relation (for the arrow link),
-        // but never both — mirrors the database's CHECK constraint, enforced
-        // here first so a mismatch is a 422, not a raw DB failure.
-        if ($this->elementId !== null && $this->relationId !== null) {
-            $context->buildViolation('an annotation cannot be linked to both an element and a relation')
-                ->atPath('element_id')
-                ->addViolation();
+        // Self-link (target_annotation_id equal to the annotation's own id) can't be checked
+        // here — this DTO has no id field (consistent with existing precedent) — the repository
+        // checks it instead, since it has the id.
+        foreach ($this->links as $index => $link) {
+            $elementId = $link['element_id'] ?? null;
+            $relationId = $link['relation_id'] ?? null;
+            $targetAnnotationId = $link['target_annotation_id'] ?? null;
+
+            $targetCount = ($elementId !== null ? 1 : 0)
+                + ($relationId !== null ? 1 : 0)
+                + ($targetAnnotationId !== null ? 1 : 0);
+
+            if ($targetCount !== 1) {
+                $context->buildViolation('each link must reference exactly one of element_id, relation_id, or target_annotation_id')
+                    ->atPath("links[{$index}]")
+                    ->addViolation();
+            }
+
+            $sourceHandle = $link['source_handle'] ?? null;
+            if ($sourceHandle !== null && !in_array($sourceHandle, self::HANDLES, true)) {
+                $context->buildViolation('invalid source_handle')
+                    ->atPath("links[{$index}].source_handle")
+                    ->addViolation();
+            }
+
+            $targetHandle = $link['target_handle'] ?? null;
+            if ($targetHandle !== null && !in_array($targetHandle, self::HANDLES, true)) {
+                $context->buildViolation('invalid target_handle')
+                    ->atPath("links[{$index}].target_handle")
+                    ->addViolation();
+            }
         }
     }
 }

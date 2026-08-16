@@ -32,7 +32,7 @@ Nanko est un outil de modélisation d'architecture C4 (Context/Container/Compone
 - Diff visuel entre deux milestones, en deux modes togglables : overlay coloré sur un seul canvas, et side-by-side avant/après.
 - Relations C2 saisies manuellement ; relations C1 dérivées automatiquement des relations C2, avec possibilité de déclarer une relation C1 à la main (statut `derived` vs `declared`, avertissement visuel si une relation `declared` n'est jamais "réalisée").
 - Positions de noeuds sauvegardées, avec possibilité de surcharge par milestone.
-- Annotations simples : notes textuelles épinglées sur un élément, une relation, ou une zone du canvas, avec auteur en texte libre et horodatage. Pas de threads de discussion.
+- Annotations simples : notes textuelles épinglées sur le canvas, avec auteur en texte libre et horodatage. Une note peut être liée à plusieurs éléments, relations, et/ou autres notes simultanément (liens multiples, pas seulement un ancrage unique) ; les liens sont rendus par des flèches courbées. Pas de threads de discussion.
 - Aucune authentification (instance locale/self-host de confiance).
 
 ### Hors scope V1 (reporté V2/V3)
@@ -206,6 +206,8 @@ CREATE TABLE annotation (
   )
 );
 ```
+
+> **Note (2026-08-14)** : ce schéma conceptuel (`annotation_anchor` enum, ancrage unique par note) a divergé du modèle réellement implémenté dès la première migration (`element_id`/`relation_id` nullables + `CHECK` d'exclusion mutuelle, sans enum ni cas `canvas_zone` — une note a toujours `x`/`y`), puis à nouveau avec le passage aux liens multiples : une note peut désormais pointer vers plusieurs éléments, relations, et/ou autres notes. Le modèle réel est une table de jointure `annotation_link(annotation_id, element_id?, relation_id?, target_annotation_id?, source_handle?, target_handle?)` avec une contrainte d'exclusion à trois voies par ligne (exactement une des trois cibles) plutôt qu'un ancrage unique porté par `annotation` elle-même — voir `apps/api/migrations/Version20260814180000.php`.
 
 **Notes de choix documentées (propositions, pas des décisions déjà validées) :**
 - Ajout de `person` et `is_external` dans `kind` : le C4 Context standard inclut des acteurs humains et des systèmes externes ; l'énoncé ne les mentionne pas explicitement mais la logique "ne pas fermer la porte" appliquée à `code`/`system_landscape` s'applique symétriquement ici, à un coût quasi nul aujourd'hui. **À confirmer avec Nicolas** (voir Questions ouvertes).

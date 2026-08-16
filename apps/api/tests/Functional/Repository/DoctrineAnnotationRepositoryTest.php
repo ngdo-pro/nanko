@@ -18,7 +18,7 @@ final class DoctrineAnnotationRepositoryTest extends AnnotationRepositoryTestCas
         self::bootKernel();
 
         $this->connection = static::getContainer()->get(Connection::class);
-        $this->connection->executeStatement('TRUNCATE project, milestone, element, element_version, relation, relation_version, position, annotation RESTART IDENTITY');
+        $this->connection->executeStatement('TRUNCATE project, milestone, element, element_version, relation, relation_version, position, annotation, annotation_link RESTART IDENTITY');
 
         return static::getContainer()->get(DoctrineAnnotationRepository::class);
     }

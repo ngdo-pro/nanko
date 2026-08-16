@@ -35,7 +35,10 @@ final class InMemoryRelationRepository implements RelationRepositoryInterface
     private array $relations = [];
 
     /**
-     * @var array<string, array<string, array{label: string|null, technology: string|null}>>
+     * @var array<string, array<string, array{
+     *     label: string|null, technology: string|null,
+     *     source_handle: string|null, target_handle: string|null,
+     * }>>
      * keyed by relation id, then by milestone id (insertion order = version history order)
      */
     private array $versionsByRelation = [];
@@ -66,6 +69,8 @@ final class InMemoryRelationRepository implements RelationRepositoryInterface
         string $targetElementId,
         ?string $label,
         ?string $technology,
+        ?string $sourceHandle = null,
+        ?string $targetHandle = null,
     ): array {
         if (!isset($this->projectIds[$projectId])) {
             throw new ProjectNotFoundException($projectId);
@@ -93,6 +98,8 @@ final class InMemoryRelationRepository implements RelationRepositoryInterface
         $this->versionsByRelation[$id][$milestoneId] = [
             'label' => $label,
             'technology' => $technology,
+            'source_handle' => $sourceHandle,
+            'target_handle' => $targetHandle,
         ];
         $this->relationIdsByProject[$projectId][] = $id;
 
@@ -104,6 +111,8 @@ final class InMemoryRelationRepository implements RelationRepositoryInterface
         string $milestoneId,
         ?string $label,
         ?string $technology,
+        ?string $sourceHandle = null,
+        ?string $targetHandle = null,
     ): array {
         if (!isset($this->relations[$relationId])) {
             throw new RelationNotFoundException($relationId);
@@ -118,6 +127,8 @@ final class InMemoryRelationRepository implements RelationRepositoryInterface
         $this->versionsByRelation[$relationId][$milestoneId] = [
             'label' => $label,
             'technology' => $technology,
+            'source_handle' => $sourceHandle,
+            'target_handle' => $targetHandle,
         ];
 
         return array_merge($this->relations[$relationId], $this->versionsByRelation[$relationId][$milestoneId], ['milestone_id' => $milestoneId]);
@@ -176,6 +187,8 @@ final class InMemoryRelationRepository implements RelationRepositoryInterface
                     'version_milestone_sort_order' => $this->milestoneSortOrders[$versionMilestoneId] ?? 0,
                     'label' => $version['label'],
                     'technology' => $version['technology'],
+                    'source_handle' => $version['source_handle'],
+                    'target_handle' => $version['target_handle'],
                 ];
             }
         }

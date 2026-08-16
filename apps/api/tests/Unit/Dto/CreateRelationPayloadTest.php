@@ -100,4 +100,60 @@ final class CreateRelationPayloadTest extends TestCase
         self::assertNull($payload->label);
         self::assertNull($payload->technology);
     }
+
+    #[Test]
+    public function it accepts a payload with no anchor(): void
+    {
+        // GIVEN a payload that does not specify an anchor
+        $payload = new CreateRelationPayload(
+            milestoneId: self::MILESTONE_ID,
+            sourceElementId: self::SOURCE_ELEMENT_ID,
+            targetElementId: self::TARGET_ELEMENT_ID,
+        );
+
+        // WHEN validating it
+        $violations = $this->validator->validate($payload);
+
+        // THEN it is accepted, and the anchor fields stay null
+        self::assertCount(0, $violations);
+        self::assertNull($payload->sourceHandle);
+        self::assertNull($payload->targetHandle);
+    }
+
+    #[Test]
+    public function it accepts a payload with a valid anchor on each end(): void
+    {
+        // GIVEN a payload anchored from the source's left edge to the target's center
+        $payload = new CreateRelationPayload(
+            milestoneId: self::MILESTONE_ID,
+            sourceElementId: self::SOURCE_ELEMENT_ID,
+            targetElementId: self::TARGET_ELEMENT_ID,
+            sourceHandle: 'left',
+            targetHandle: 'center',
+        );
+
+        // WHEN validating it
+        $violations = $this->validator->validate($payload);
+
+        // THEN it is accepted
+        self::assertCount(0, $violations);
+    }
+
+    #[Test]
+    public function it rejects a payload with an unknown anchor value(): void
+    {
+        // GIVEN a payload with a nonsensical anchor
+        $payload = new CreateRelationPayload(
+            milestoneId: self::MILESTONE_ID,
+            sourceElementId: self::SOURCE_ELEMENT_ID,
+            targetElementId: self::TARGET_ELEMENT_ID,
+            sourceHandle: 'diagonal',
+        );
+
+        // WHEN validating it
+        $violations = $this->validator->validate($payload);
+
+        // THEN it is rejected
+        self::assertGreaterThan(0, $violations->count());
+    }
 }

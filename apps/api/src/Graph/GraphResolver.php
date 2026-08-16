@@ -60,6 +60,8 @@ namespace App\Graph;
  *     version_milestone_sort_order: int,
  *     label: string|null,
  *     technology: string|null,
+ *     source_handle: string|null,
+ *     target_handle: string|null,
  * }
  * @phpstan-type PositionRow array{
  *     id: string,
@@ -96,6 +98,8 @@ namespace App\Graph;
  *     label: string|null,
  *     technology: string|null,
  *     realized_at_milestone_id: string|null,
+ *     source_handle: string|null,
+ *     target_handle: string|null,
  * }
  * @phpstan-type DerivedRelation array{
  *     id: string,
@@ -107,6 +111,8 @@ namespace App\Graph;
  *     realized: bool,
  *     declared_relation_id: string|null,
  *     realized_at_milestone_id: string|null,
+ *     source_handle: string|null,
+ *     target_handle: string|null,
  * }
  * @phpstan-type Warning array{type: string, subject_id: string|null, message: string}
  */
@@ -302,6 +308,8 @@ final class GraphResolver
                 'label' => $bestVersion['label'],
                 'technology' => $bestVersion['technology'],
                 'realized_at_milestone_id' => $meta['realized_at_milestone_id'],
+                'source_handle' => $bestVersion['source_handle'],
+                'target_handle' => $bestVersion['target_handle'],
             ];
         }
 
@@ -387,6 +395,8 @@ final class GraphResolver
                 'realized' => false,
                 'declared_relation_id' => null,
                 'realized_at_milestone_id' => null,
+                'source_handle' => null,
+                'target_handle' => null,
             ];
         }
 
