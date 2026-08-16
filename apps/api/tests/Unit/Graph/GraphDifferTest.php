@@ -160,6 +160,28 @@ final class GraphDifferTest extends TestCase
         self::assertSame([['id' => 'derived:a->b', 'status' => 'unchanged', 'changed_fields' => []]], $diff['relations']);
     }
 
+    #[Test]
+    public function a relation whose anchor alone differs is unchanged not modified(): void
+    {
+        // GIVEN the same relation id and label across two milestones, but a different anchor —
+        // the anchor is deliberately excluded from this comparison, same as status/realized_at
+        $from = $this->relation('r1', 'reads/writes');
+        $from['source_handle'] = 'left';
+        $from['target_handle'] = 'top';
+        $to = $this->relation('r1', 'reads/writes');
+        $to['source_handle'] = 'right';
+        $to['target_handle'] = 'center';
+
+        $fromGraph = $this->resolvedGraph(relations: [$from]);
+        $toGraph = $this->resolvedGraph(relations: [$to]);
+
+        // WHEN diffing the two graphs
+        $diff = $this->differ->diff($fromGraph, $toGraph);
+
+        // THEN the anchor change is not surfaced as a modification
+        self::assertSame([['id' => 'r1', 'status' => 'unchanged', 'changed_fields' => []]], $diff['relations']);
+    }
+
     /**
      * @param list<array<string, mixed>> $elements
      * @param list<array<string, mixed>> $relations

@@ -1,4 +1,4 @@
-import { Position, ReactFlowProvider } from "@xyflow/react";
+import { getBezierPath, getStraightPath, Position, ReactFlowProvider } from "@xyflow/react";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { RelationEdge } from "./RelationEdge";
@@ -10,6 +10,8 @@ function renderEdge(overrides: Partial<RelationEdgeData> = {}, selected = false)
     technology: null,
     status: "declared",
     isUnrealized: false,
+    sourceHandle: "bottom",
+    targetHandle: "top",
     ...overrides,
   };
 
@@ -129,5 +131,38 @@ describe("RelationEdge", () => {
     // WHEN the edge renders
     // THEN it looks like a normal declared relation
     expect(path.getAttribute("style")).toContain("stroke: var(--text)");
+  });
+
+  describe("center anchor geometry", () => {
+    const GEOMETRY = { sourceX: 0, sourceY: 0, targetX: 100, targetY: 100 };
+    const [straightPath] = getStraightPath(GEOMETRY);
+    const [bezierPath] = getBezierPath({ ...GEOMETRY, sourcePosition: Position.Bottom, targetPosition: Position.Top });
+
+    it("draws a straight line when the source is center-anchored", () => {
+      // GIVEN a relation anchored at the source's center — no side, so no bezier control point
+      // direction describes it (ElementNode assigns it Position.Top arbitrarily, which would
+      // otherwise curve the path as if leaving from the top, kinking it as it exits the node)
+      const path = renderEdgePath({ sourceHandle: "center", targetHandle: "top" });
+
+      // THEN the path is a straight line, not the (wrongly directional) bezier curve
+      expect(path.getAttribute("d")).toBe(straightPath);
+      expect(path.getAttribute("d")).not.toBe(bezierPath);
+    });
+
+    it("draws a straight line when the target is center-anchored", () => {
+      // GIVEN a relation anchored at the target's center
+      const path = renderEdgePath({ sourceHandle: "bottom", targetHandle: "center" });
+
+      // THEN the path is a straight line
+      expect(path.getAttribute("d")).toBe(straightPath);
+    });
+
+    it("draws the normal bezier curve when neither end is center-anchored", () => {
+      // GIVEN a relation anchored bottom-to-top, as it always used to be
+      const path = renderEdgePath({ sourceHandle: "bottom", targetHandle: "top" });
+
+      // THEN the path is the bezier curve, unchanged from before the anchor feature
+      expect(path.getAttribute("d")).toBe(bezierPath);
+    });
   });
 });

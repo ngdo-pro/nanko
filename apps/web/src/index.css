@@ -6,9 +6,10 @@
   --code-bg: #f4f3ec;
   --accent: #aa3bff;
   --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
   --warning: #b45309;
   --warning-bg: rgba(180, 83, 9, 0.12);
+  --error: #dc2626;
+  --error-bg: rgba(220, 38, 38, 0.1);
   --diff-added: #15803d;
   --diff-added-bg: rgba(21, 128, 61, 0.1);
   --diff-removed: #dc2626;
@@ -18,7 +19,6 @@
   --note-bg: #fff3b0;
   --note-border: #e6d288;
   --note-text: #4a3f00;
-  --social-bg: rgba(244, 243, 236, 0.5);
   --shadow: rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
   --sans: system-ui, "Segoe UI", Roboto, sans-serif;
@@ -49,24 +49,25 @@
     --code-bg: #1f2028;
     --accent: #c084fc;
     --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
     --warning: #fbbf24;
     --warning-bg: rgba(251, 191, 36, 0.15);
+    --error: #f87171;
+    --error-bg: rgba(248, 113, 113, 0.15);
     --diff-added: #4ade80;
     --diff-added-bg: rgba(74, 222, 128, 0.15);
     --diff-removed: #f87171;
     --diff-removed-bg: rgba(248, 113, 113, 0.15);
     --diff-modified: #60a5fa;
     --diff-modified-bg: rgba(96, 165, 250, 0.15);
-    --note-bg: #4a3f00;
-    --note-border: #7a6a00;
-    --note-text: #fff3b0;
-    --social-bg: rgba(47, 48, 58, 0.5);
+    /* Yellow has no good "dark" version — shifting it straight down in
+       lightness (like the old #4a3f00) just reads as muddy olive/brown, a
+       known quirk of the hue rather than a bad pick. Same fix as the
+       warning/diff colors above: keep the hue itself bright (gold border +
+       pale gold text) and let a neutral dark surface carry the card. */
+    --note-bg: #26211a;
+    --note-border: #a3760a;
+    --note-text: #fde68a;
     --shadow: rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
   }
 }
 
@@ -85,6 +86,19 @@ body {
   background: var(--accent-bg);
 }
 
+/* Every interactive element gets the same accent-colored ring on
+   keyboard focus — buttons/links previously fell back to each browser's
+   own default outline, which looked inconsistent from one control to the
+   next and didn't match the app's rounded, accent-driven visual language. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 h1,
 h2 {
   font-family: var(--heading);
@@ -93,19 +107,15 @@ h2 {
 }
 
 h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
+  font-size: 22px;
+  letter-spacing: -0.22px;
+  margin: 0;
 }
 h2 {
   font-size: 24px;
   line-height: 118%;
   letter-spacing: -0.24px;
-  margin: 0 0 8px;
+  margin: 0;
   @media (max-width: 1024px) {
     font-size: 20px;
   }
@@ -114,15 +124,11 @@ p {
   margin: 0;
 }
 
-code,
-.counter {
+code {
   font-family: var(--mono);
   display: inline-flex;
   border-radius: 4px;
   color: var(--text-h);
-}
-
-code {
   font-size: 15px;
   line-height: 135%;
   padding: 4px 8px;

@@ -1,11 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  createAnnotation,
   createElement,
   createMilestone,
   createRelation,
   deleteElement,
   deleteRelation,
   reorderMilestones,
+  updateAnnotation,
   updateElement,
   updateMilestone,
   updateRelation,
@@ -178,29 +180,60 @@ describe("api", () => {
   describe("createRelation", () => {
     it("POSTs the new relation scoped to the given project and milestone", async () => {
       // GIVEN a project, the active milestone, and two elements
-      // WHEN creating a relation between them
+      // WHEN creating a relation between them, with no anchor specified
       await createRelation("project-1", "milestone-1", "element-1", "element-2");
 
-      // THEN a POST is sent with the given endpoints
+      // THEN a POST is sent with the given endpoints and a null anchor
       expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/projects/project-1/relations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ milestone_id: "milestone-1", source_element_id: "element-1", target_element_id: "element-2" }),
+        body: JSON.stringify({
+          milestone_id: "milestone-1",
+          source_element_id: "element-1",
+          target_element_id: "element-2",
+          source_handle: null,
+          target_handle: null,
+        }),
+      });
+    });
+
+    it("POSTs the given anchor", async () => {
+      // GIVEN a project, the active milestone, and two elements
+      // WHEN creating a relation anchored from the source's left edge to the target's center
+      await createRelation("project-1", "milestone-1", "element-1", "element-2", "left", "center");
+
+      // THEN the POST body carries the given anchor
+      expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/projects/project-1/relations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          milestone_id: "milestone-1",
+          source_element_id: "element-1",
+          target_element_id: "element-2",
+          source_handle: "left",
+          target_handle: "center",
+        }),
       });
     });
   });
 
   describe("updateRelation", () => {
-    it("PATCHes the relation's label and technology scoped to the given milestone", async () => {
+    it("PATCHes the relation's label, technology, and anchor scoped to the given milestone", async () => {
       // GIVEN an existing relation and the active milestone
-      // WHEN updating its label and technology
-      await updateRelation("relation-1", "milestone-1", "reads/writes", "HTTP");
+      // WHEN updating its label and technology, carrying the current anchor back unchanged
+      await updateRelation("relation-1", "milestone-1", "reads/writes", "HTTP", "left", "center");
 
-      // THEN a PATCH is sent with the new attributes
+      // THEN a PATCH is sent with the new attributes and the anchor
       expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/relations/relation-1", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ milestone_id: "milestone-1", label: "reads/writes", technology: "HTTP" }),
+        body: JSON.stringify({
+          milestone_id: "milestone-1",
+          label: "reads/writes",
+          technology: "HTTP",
+          source_handle: "left",
+          target_handle: "center",
+        }),
       });
     });
   });
@@ -216,6 +249,88 @@ describe("api", () => {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ milestone_id: "milestone-1" }),
+      });
+    });
+  });
+
+  describe("createAnnotation", () => {
+    it("POSTs the given links", async () => {
+      // GIVEN a project and an element
+      // WHEN creating a note linked to that element, anchored from the note's right edge to the element's center
+      await createAnnotation("project-1", null, 10, 20, "Nicolas", "note", [{ element_id: "element-1", source_handle: "right", target_handle: "center" }]);
+
+      // THEN the POST body carries the given links array
+      expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/projects/project-1/annotations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          scope_element_id: null,
+          x: 10,
+          y: 20,
+          author_name: "Nicolas",
+          body: "note",
+          links: [{ element_id: "element-1", source_handle: "right", target_handle: "center" }],
+        }),
+      });
+    });
+
+    it("defaults to no links when none are given", async () => {
+      // GIVEN a project, no links (a brand-new unlinked note)
+      // WHEN creating it
+      await createAnnotation("project-1", null, 10, 20, "Nicolas", "note");
+
+      // THEN the POST body carries an empty links array
+      expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/projects/project-1/annotations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          scope_element_id: null,
+          x: 10,
+          y: 20,
+          author_name: "Nicolas",
+          body: "note",
+          links: [],
+        }),
+      });
+    });
+  });
+
+  describe("updateAnnotation", () => {
+    it("PATCHes the given links", async () => {
+      // GIVEN an existing note linked to an element
+      // WHEN updating it, carrying its current links back unchanged
+      await updateAnnotation("annotation-1", "Nicolas", "note", 10, 20, [{ element_id: "element-1", source_handle: "right", target_handle: "center" }]);
+
+      // THEN the PATCH body carries the given links array
+      expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/annotations/annotation-1", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          author_name: "Nicolas",
+          body: "note",
+          x: 10,
+          y: 20,
+          links: [{ element_id: "element-1", source_handle: "right", target_handle: "center" }],
+        }),
+      });
+    });
+
+    it("PATCHes an empty links array to clear every link", async () => {
+      // GIVEN an existing note with links
+      // WHEN updating it with an empty links array
+      await updateAnnotation("annotation-1", "Nicolas", "note", 10, 20, []);
+
+      // THEN the PATCH body carries an empty links array
+      expect(fetchMock).toHaveBeenCalledWith("http://localhost:8000/api/annotations/annotation-1", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          author_name: "Nicolas",
+          body: "note",
+          x: 10,
+          y: 20,
+          links: [],
+        }),
       });
     });
   });

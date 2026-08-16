@@ -1,15 +1,5 @@
-import { useState, type CSSProperties } from "react";
-
-const LABEL_STYLE: CSSProperties = { display: "flex", flexDirection: "column", gap: "4px", fontSize: "12px", color: "var(--text)" };
-const INPUT_STYLE: CSSProperties = {
-  font: "inherit",
-  fontSize: "13px",
-  padding: "6px 8px",
-  borderRadius: "6px",
-  border: "1px solid var(--border)",
-  background: "var(--bg)",
-  color: "var(--text-h)",
-};
+import { useState } from "react";
+import { dangerButtonStyle, GHOST_BUTTON_STYLE, INPUT_STYLE, LABEL_STYLE, PRIMARY_BUTTON_STYLE } from "../styles/controls";
 
 // A minimal popover for creating (right-click on empty canvas) or editing
 // (click an existing note) a sticky note — "auteur en texte libre" (PLAN.md):
@@ -20,27 +10,27 @@ export function AnnotationComposer({
   y,
   initialAuthorName = "",
   initialBody = "",
-  linkedElementLabel = null,
+  links = [],
   onSave,
   onDelete,
-  onUnlink,
   onClose,
 }: {
   x: number;
   y: number;
   initialAuthorName?: string;
   initialBody?: string;
-  // The element this note currently points an arrow at, by name — null when
-  // there is no link. Drag a connection out of the note on the canvas to set
-  // one; this popover can only show/clear it, not create it.
-  linkedElementLabel?: string | null;
+  // One row per target this note currently points an arrow at (element,
+  // relation, or another note), each with its own label and unlink handler —
+  // empty when there are no links. Drag a connection out of the note on the
+  // canvas to add one; this popover can only show/remove them, not create one.
+  links?: { label: string; onUnlink: () => void }[];
   onSave: (authorName: string, body: string) => void;
   onDelete?: () => void;
-  onUnlink?: () => void;
   onClose: () => void;
 }) {
   const [authorName, setAuthorName] = useState(initialAuthorName);
   const [body, setBody] = useState(initialBody);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const isEditing = onDelete !== undefined;
 
   return (
@@ -85,31 +75,35 @@ export function AnnotationComposer({
         />
       </label>
 
-      {linkedElementLabel !== null && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "12px", color: "var(--text)" }}>
-          <span data-qa="annotation-composer-link">
-            Linked to <strong style={{ color: "var(--text-h)" }}>{linkedElementLabel}</strong>
+      {links.map((link, index) => (
+        <div
+          key={index}
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "12px", color: "var(--text)" }}
+        >
+          <span data-qa={`annotation-composer-link-${index}`}>
+            Linked to <strong style={{ color: "var(--text-h)" }}>{link.label}</strong>
           </span>
           <button
             type="button"
-            data-qa="annotation-composer-unlink"
-            onClick={onUnlink}
+            data-qa={`annotation-composer-unlink-${index}`}
+            onClick={link.onUnlink}
             style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: "12px", padding: 0 }}
           >
             Unlink
           </button>
         </div>
-      )}
+      ))}
 
       <div style={{ display: "flex", gap: "6px", justifyContent: "space-between" }}>
         {onDelete && (
           <button
             type="button"
             data-qa="annotation-composer-delete"
-            onClick={onDelete}
-            style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--warning)", background: "var(--warning-bg)", color: "var(--warning)", cursor: "pointer", fontSize: "12px" }}
+            onClick={() => (confirmingDelete ? onDelete() : setConfirmingDelete(true))}
+            onBlur={() => setConfirmingDelete(false)}
+            style={{ ...dangerButtonStyle(confirmingDelete), padding: "6px 10px", fontSize: "12px" }}
           >
-            Delete
+            {confirmingDelete ? "Confirm delete?" : "Delete"}
           </button>
         )}
         <div style={{ display: "flex", gap: "6px", marginLeft: "auto" }}>
@@ -117,7 +111,7 @@ export function AnnotationComposer({
             type="button"
             data-qa="annotation-composer-cancel"
             onClick={onClose}
-            style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--text)", cursor: "pointer", fontSize: "12px" }}
+            style={{ ...GHOST_BUTTON_STYLE, padding: "6px 10px", fontSize: "12px" }}
           >
             Cancel
           </button>
@@ -126,15 +120,7 @@ export function AnnotationComposer({
             data-qa="annotation-composer-save"
             disabled={authorName.trim() === "" || body.trim() === ""}
             onClick={() => onSave(authorName.trim(), body.trim())}
-            style={{
-              padding: "6px 10px",
-              borderRadius: "6px",
-              border: "1px solid var(--accent)",
-              background: "var(--accent-bg)",
-              color: "var(--accent)",
-              cursor: "pointer",
-              fontSize: "12px",
-            }}
+            style={{ ...PRIMARY_BUTTON_STYLE, padding: "6px 10px", fontSize: "12px" }}
           >
             Save
           </button>

@@ -9,6 +9,7 @@ import { levelFromParams, type Level } from "../graph/toFlowGraph";
 import { useGraph } from "../hooks/useGraph";
 import { useMilestones } from "../hooks/useMilestones";
 import { routes } from "../routes";
+import { ERROR_TEXT_STYLE, PRIMARY_BUTTON_STYLE, STATE_CONTAINER_STYLE } from "../styles/controls";
 
 // A double-click on a node drills one level down; `null` at the component
 // level (C3), the deepest level in V1 — there is nothing further to open.
@@ -114,18 +115,48 @@ function CanvasScreen() {
         )}
       </Toolbar>
 
-      {milestonesState.status === "loading" && <p data-qa="canvas-loading">loading...</p>}
-      {milestonesState.status === "no-milestone" && <p data-qa="canvas-no-milestone">This project has no milestone yet.</p>}
+      {milestonesState.status === "loading" && (
+        <p data-qa="canvas-loading" style={STATE_CONTAINER_STYLE}>
+          loading...
+        </p>
+      )}
+      {milestonesState.status === "no-milestone" && (
+        <div data-qa="canvas-no-milestone" style={STATE_CONTAINER_STYLE}>
+          <p>This project has no milestone yet.</p>
+          <button
+            type="button"
+            data-qa="canvas-create-first-milestone"
+            style={PRIMARY_BUTTON_STYLE}
+            onClick={() => {
+              if (!projectId) return;
+
+              createMilestone(projectId, "New milestone", null)
+                .then((res) => res.json())
+                .then((created: Milestone) => {
+                  setMilestonesState({ status: "loaded", milestones: [created] });
+                  setMilestoneId(created.id);
+                })
+                .catch((err) => console.error("Failed to create milestone", err));
+            }}
+          >
+            Create first milestone
+          </button>
+        </div>
+      )}
       {milestonesState.status === "error" && (
-        <p data-qa="canvas-error" style={{ color: "red" }}>
+        <p data-qa="canvas-error" style={{ ...STATE_CONTAINER_STYLE, ...ERROR_TEXT_STYLE }}>
           {milestonesState.message}
         </p>
       )}
       {milestonesState.status === "loaded" && milestoneId && (
         <>
-          {graphState.status === "loading" && <p data-qa="canvas-loading">loading...</p>}
+          {graphState.status === "loading" && (
+            <p data-qa="canvas-loading" style={STATE_CONTAINER_STYLE}>
+              loading...
+            </p>
+          )}
           {graphState.status === "error" && (
-            <p data-qa="canvas-error" style={{ color: "red" }}>
+            <p data-qa="canvas-error" style={{ ...STATE_CONTAINER_STYLE, ...ERROR_TEXT_STYLE }}>
               {graphState.message}
             </p>
           )}

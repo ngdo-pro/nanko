@@ -21,6 +21,8 @@ interface RelationRepositoryInterface
         string $targetElementId,
         ?string $label,
         ?string $technology,
+        ?string $sourceHandle = null,
+        ?string $targetHandle = null,
     ): array;
 
     /**
@@ -38,6 +40,8 @@ interface RelationRepositoryInterface
         string $milestoneId,
         ?string $label,
         ?string $technology,
+        ?string $sourceHandle = null,
+        ?string $targetHandle = null,
     ): array;
 
     /**
@@ -74,6 +78,8 @@ interface RelationRepositoryInterface
      *     version_milestone_sort_order: int,
      *     label: ?string,
      *     technology: ?string,
+     *     source_handle: ?string,
+     *     target_handle: ?string,
      * }>
      */
     public function findAllVersionsByProject(string $projectId): array;

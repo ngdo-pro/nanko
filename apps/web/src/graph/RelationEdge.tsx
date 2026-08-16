@@ -1,10 +1,37 @@
-import { BaseEdge, EdgeLabelRenderer, getBezierPath, type EdgeProps } from "@xyflow/react";
+import { BaseEdge, EdgeLabelRenderer, getBezierPath, getStraightPath, type EdgeProps } from "@xyflow/react";
 import { diffStatusMeta } from "./diffStatus";
 import { relationLabelText } from "./relationLabelText";
 import type { RelationEdge as RelationEdgeType } from "./toFlowGraph";
+import { useAnchoredEdgeEndpoints } from "./useAnchoredEdgeEndpoints";
 
-export function RelationEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, data, selected }: EdgeProps<RelationEdgeType>) {
-  const [path, labelX, labelY] = getBezierPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition });
+export function RelationEdge({
+  id,
+  source,
+  target,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  data,
+  selected,
+}: EdgeProps<RelationEdgeType>) {
+  const {
+    sourceX: effectiveSourceX,
+    sourceY: effectiveSourceY,
+    targetX: effectiveTargetX,
+    targetY: effectiveTargetY,
+    isCenterAnchored,
+  } = useAnchoredEdgeEndpoints(source, target, data?.sourceHandle, data?.targetHandle, sourceX, sourceY, targetX, targetY);
+
+  // The center anchor has no real side, so no `Position` reliably describes it — routing it
+  // through getBezierPath would still curve the path as if leaving from Position.Top, kinking it
+  // as it exits the node. A straight line has no such directional bias, so it's the only shape
+  // that looks right here.
+  const [path, labelX, labelY] = isCenterAnchored
+    ? getStraightPath({ sourceX: effectiveSourceX, sourceY: effectiveSourceY, targetX: effectiveTargetX, targetY: effectiveTargetY })
+    : getBezierPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition });
   const diff = diffStatusMeta(data?.diffStatus);
 
   const isUnrealized = data?.isUnrealized ?? false;

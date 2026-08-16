@@ -11,12 +11,6 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 #[Assert\Callback('validate')]
 final class CreateAnnotationPayload
 {
-    #[SerializedName('element_id')]
-    public readonly ?string $elementId;
-
-    #[SerializedName('relation_id')]
-    public readonly ?string $relationId;
-
     #[SerializedName('scope_element_id')]
     public readonly ?string $scopeElementId;
 
@@ -33,21 +27,24 @@ final class CreateAnnotationPayload
     #[Assert\NotBlank]
     public readonly string $body;
 
+    private const HANDLES = ['top', 'right', 'bottom', 'left', 'center'];
+
+    /**
+     * @var list<array{element_id?: string, relation_id?: string, target_annotation_id?: string, source_handle?: ?string, target_handle?: ?string}>
+     */
+    public readonly array $links;
+
+    /**
+     * @param list<array{element_id?: string, relation_id?: string, target_annotation_id?: string, source_handle?: ?string, target_handle?: ?string}> $links
+     */
     public function __construct(
-        ?string $elementId = null,
-        ?string $relationId = null,
         ?string $scopeElementId = null,
         ?float $x = null,
         ?float $y = null,
         string $authorName = '',
         string $body = '',
+        array $links = [],
     ) {
-        $elementId = $elementId !== null ? trim($elementId) : null;
-        $this->elementId = $elementId === '' ? null : $elementId;
-
-        $relationId = $relationId !== null ? trim($relationId) : null;
-        $this->relationId = $relationId === '' ? null : $relationId;
-
         $scopeElementId = $scopeElementId !== null ? trim($scopeElementId) : null;
         $this->scopeElementId = $scopeElementId === '' ? null : $scopeElementId;
 
@@ -56,17 +53,40 @@ final class CreateAnnotationPayload
 
         $this->authorName = trim($authorName);
         $this->body = trim($body);
+
+        $this->links = $links;
     }
 
     public function validate(ExecutionContextInterface $context): void
     {
-        // A note may point at an element or a relation (for a future arrow
-        // link), but never both — mirrors the database's CHECK constraint,
-        // enforced here first so a mismatch is a 422, not a raw DB failure.
-        if ($this->elementId !== null && $this->relationId !== null) {
-            $context->buildViolation('an annotation cannot be linked to both an element and a relation')
-                ->atPath('element_id')
-                ->addViolation();
+        foreach ($this->links as $index => $link) {
+            $elementId = $link['element_id'] ?? null;
+            $relationId = $link['relation_id'] ?? null;
+            $targetAnnotationId = $link['target_annotation_id'] ?? null;
+
+            $targetCount = ($elementId !== null ? 1 : 0)
+                + ($relationId !== null ? 1 : 0)
+                + ($targetAnnotationId !== null ? 1 : 0);
+
+            if ($targetCount !== 1) {
+                $context->buildViolation('each link must reference exactly one of element_id, relation_id, or target_annotation_id')
+                    ->atPath("links[{$index}]")
+                    ->addViolation();
+            }
+
+            $sourceHandle = $link['source_handle'] ?? null;
+            if ($sourceHandle !== null && !in_array($sourceHandle, self::HANDLES, true)) {
+                $context->buildViolation('invalid source_handle')
+                    ->atPath("links[{$index}].source_handle")
+                    ->addViolation();
+            }
+
+            $targetHandle = $link['target_handle'] ?? null;
+            if ($targetHandle !== null && !in_array($targetHandle, self::HANDLES, true)) {
+                $context->buildViolation('invalid target_handle')
+                    ->atPath("links[{$index}].target_handle")
+                    ->addViolation();
+            }
         }
     }
 }

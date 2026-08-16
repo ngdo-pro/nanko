@@ -8,8 +8,7 @@ function renderNode(overrides: Partial<AnnotationNodeData> = {}, selected = fals
   const data: AnnotationNodeData = {
     authorName: "Nicolas",
     body: "Needs a data owner",
-    elementId: null,
-    relationId: null,
+    links: [],
     ...overrides,
   };
 
@@ -86,5 +85,52 @@ describe("AnnotationNode", () => {
     // THEN editing is cancelled, nothing is committed
     expect(onCancelEdit).toHaveBeenCalled();
     expect(onCommitEdit).not.toHaveBeenCalled();
+  });
+
+  describe("relation anchors", () => {
+    it("renders a target and a source handle at each of the 4 edges plus the center", () => {
+      // GIVEN a standard note
+      const { container } = renderNode();
+
+      // WHEN it renders
+      // THEN every anchor (top/right/bottom/left/center) has both a target and a source handle —
+      // a note can point AT a target, and can itself receive a link dragged from another note
+      for (const id of ["top", "right", "bottom", "left", "center"]) {
+        const handles = container.querySelectorAll(`[data-handleid="${id}"]`);
+        expect(handles).toHaveLength(2);
+        const types = Array.from(handles).map((h) => (h.classList.contains("target") ? "target" : "source"));
+        expect(types.sort()).toEqual(["source", "target"]);
+      }
+    });
+
+    it("positions the 4 edge handles on their matching side", () => {
+      // GIVEN a standard note
+      const { container } = renderNode();
+
+      // WHEN it renders
+      // THEN each edge handle's xyflow position matches its id
+      for (const position of ["top", "right", "bottom", "left"]) {
+        const handles = container.querySelectorAll(`[data-handleid="${position}"]`);
+        for (const handle of Array.from(handles)) {
+          expect(handle.getAttribute("data-handlepos")).toBe(position);
+        }
+      }
+    });
+
+    it("keeps the center handle invisible but still hit-testable", () => {
+      // GIVEN a standard note
+      const { container } = renderNode();
+
+      // WHEN it renders
+      // THEN both center handles have zero opacity but are not removed from hit-testing
+      const centerHandles = container.querySelectorAll('[data-handleid="center"]');
+      expect(centerHandles).toHaveLength(2);
+      for (const handle of Array.from(centerHandles)) {
+        const style = (handle as HTMLElement).style;
+        expect(style.opacity).toBe("0");
+        expect(style.visibility).not.toBe("hidden");
+        expect(style.display).not.toBe("none");
+      }
+    });
   });
 });

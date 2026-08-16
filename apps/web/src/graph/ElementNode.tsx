@@ -1,11 +1,50 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { ElementArchetype } from "../api";
 import { diffStatusMeta } from "./diffStatus";
 import { technologyColor } from "./technologyColor";
 import type { ElementNode as ElementNodeType } from "./toFlowGraph";
 
 const HANDLE_STYLE = { background: "var(--border)", width: 8, height: 8, border: "none" };
+
+// One handle id per edge midpoint, shared verbatim with the backend's
+// source_handle/target_handle values (RelationHandle in api.ts) — no mapping
+// table to keep in sync. `position` only steers which way a connected edge's
+// curve initially bows (xyflow has no true "center" position); Top is an
+// arbitrary but consistent choice for the center anchor.
+const EDGE_ANCHORS: { id: "top" | "right" | "bottom" | "left"; position: Position }[] = [
+  { id: "top", position: Position.Top },
+  { id: "right", position: Position.Right },
+  { id: "bottom", position: Position.Bottom },
+  { id: "left", position: Position.Left },
+];
+
+const CENTER_HANDLE_STYLE: CSSProperties = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 20,
+  height: 20,
+  background: "transparent",
+  border: "none",
+  opacity: 0,
+};
+
+// Both a target and a source handle at the same point, sharing one id — a
+// node can be dragged FROM or dropped ONTO any of its own anchors. Order
+// matters: target first, source second, so the source handle sits on top in
+// the DOM and is the one that reacts to an outgoing drag (xyflow's drop
+// detection is distance-based, not a strict DOM hit-test, so the target
+// handle underneath stays reachable as a drop target).
+function AnchorHandles({ id, position, style }: { id: string; position: Position; style: CSSProperties }) {
+  return (
+    <>
+      <Handle type="target" position={position} id={id} style={style} />
+      <Handle type="source" position={position} id={id} style={style} />
+    </>
+  );
+}
 
 // database/queue are distinguished by an icon and the technology's brand
 // color, not by a custom card shape — kept deliberately plain (a cylinder/
@@ -51,7 +90,10 @@ export function ElementNode({ data, selected }: NodeProps<ElementNodeType>) {
     >
       {diff && <DiffBadge meta={diff} />}
 
-      <Handle type="target" position={Position.Top} style={HANDLE_STYLE} />
+      {EDGE_ANCHORS.map((anchor) => (
+        <AnchorHandles key={anchor.id} id={anchor.id} position={anchor.position} style={HANDLE_STYLE} />
+      ))}
+      <AnchorHandles id="center" position={Position.Top} style={CENTER_HANDLE_STYLE} />
 
       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
         <ArchetypeIcon archetype={data.archetype} color={techColor} />
@@ -66,8 +108,6 @@ export function ElementNode({ data, selected }: NodeProps<ElementNodeType>) {
           {data.isExternal && <Badge>External</Badge>}
         </div>
       )}
-
-      <Handle type="source" position={Position.Bottom} style={HANDLE_STYLE} />
     </div>
   );
 }

@@ -125,8 +125,9 @@ describe("ProjectListScreen", () => {
     renderScreen();
     expect(await screen.findByText("Nanko (nanko)")).toBeInTheDocument();
 
-    // WHEN clicking delete
+    // WHEN clicking delete twice (the second click confirms the destructive action)
     await user.click(screen.getByRole("button", { name: "delete" }));
+    await user.click(screen.getByRole("button", { name: "Confirm delete?" }));
 
     // THEN the project is removed from the list
     await waitFor(() => expect(screen.queryByText("Nanko (nanko)")).not.toBeInTheDocument());

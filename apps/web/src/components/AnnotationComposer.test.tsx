@@ -21,34 +21,70 @@ describe("AnnotationComposer", () => {
     expect(screen.getByText("Edit note")).toBeInTheDocument();
   });
 
-  it("does not show a link row when there is no link", () => {
-    // GIVEN a composer with no linked element
+  it("does not show a link row when there are no links", () => {
+    // GIVEN a composer with no links
     render(<AnnotationComposer x={0} y={0} onSave={() => {}} onClose={() => {}} />);
 
     // WHEN it renders
     // THEN no link row appears
-    expect(screen.queryByTestId("annotation-composer-link")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("annotation-composer-link-0")).not.toBeInTheDocument();
   });
 
-  it("shows the linked element's name when linked", () => {
-    // GIVEN a composer linked to an element
-    render(<AnnotationComposer x={0} y={0} linkedElementLabel="Booking" onSave={() => {}} onClose={() => {}} />);
+  it("shows the linked target's label when linked", () => {
+    // GIVEN a composer linked to one element
+    render(<AnnotationComposer x={0} y={0} links={[{ label: "Booking", onUnlink: () => {} }]} onSave={() => {}} onClose={() => {}} />);
 
     // WHEN it renders
-    // THEN the link row names the element
-    expect(screen.getByTestId("annotation-composer-link")).toHaveTextContent("Linked to Booking");
+    // THEN the link row names the target
+    expect(screen.getByTestId("annotation-composer-link-0")).toHaveTextContent("Linked to Booking");
   });
 
-  it("calls onUnlink when Unlink is clicked", () => {
-    // GIVEN a composer linked to an element
-    const onUnlink = vi.fn();
-    render(<AnnotationComposer x={0} y={0} linkedElementLabel="Booking" onUnlink={onUnlink} onSave={() => {}} onClose={() => {}} />);
+  it("shows one row per link when linked to several targets", () => {
+    // GIVEN a composer linked to two elements and a note
+    render(
+      <AnnotationComposer
+        x={0}
+        y={0}
+        links={[
+          { label: "Booking", onUnlink: () => {} },
+          { label: "Payments", onUnlink: () => {} },
+          { label: "note by Nicolas", onUnlink: () => {} },
+        ]}
+        onSave={() => {}}
+        onClose={() => {}}
+      />,
+    );
 
-    // WHEN clicking Unlink
-    fireEvent.click(screen.getByTestId("annotation-composer-unlink"));
+    // WHEN it renders
+    // THEN each link gets its own row, in order
+    expect(screen.getByTestId("annotation-composer-link-0")).toHaveTextContent("Linked to Booking");
+    expect(screen.getByTestId("annotation-composer-link-1")).toHaveTextContent("Linked to Payments");
+    expect(screen.getByTestId("annotation-composer-link-2")).toHaveTextContent("Linked to note by Nicolas");
+  });
 
-    // THEN the handler is called
-    expect(onUnlink).toHaveBeenCalled();
+  it("calls the link's own onUnlink when its Unlink is clicked", () => {
+    // GIVEN a composer linked to two elements
+    const onUnlinkBooking = vi.fn();
+    const onUnlinkPayments = vi.fn();
+    render(
+      <AnnotationComposer
+        x={0}
+        y={0}
+        links={[
+          { label: "Booking", onUnlink: onUnlinkBooking },
+          { label: "Payments", onUnlink: onUnlinkPayments },
+        ]}
+        onSave={() => {}}
+        onClose={() => {}}
+      />,
+    );
+
+    // WHEN clicking the second row's Unlink
+    fireEvent.click(screen.getByTestId("annotation-composer-unlink-1"));
+
+    // THEN only that link's handler is called
+    expect(onUnlinkPayments).toHaveBeenCalled();
+    expect(onUnlinkBooking).not.toHaveBeenCalled();
   });
 
   it("calls onSave with the trimmed author and body", () => {

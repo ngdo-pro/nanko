@@ -177,6 +177,49 @@ final class RelationControllerTest extends DatabaseTestCase
     }
 
     #[Test]
+    public function it persists the anchor through creation and update(): void
+    {
+        // GIVEN a project, a milestone, and two elements
+        $projectId = $this->createProject('Nanko', 'nanko');
+        $milestoneId = $this->createMilestone($projectId, 'Launch');
+        $sourceId = $this->createElement($projectId, $milestoneId, 'Booking');
+        $targetId = $this->createElement($projectId, $milestoneId, 'Payment');
+
+        // WHEN creating a relation anchored from the source's left edge to the target's center
+        $this->client->request('POST', "/api/projects/{$projectId}/relations", server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'milestone_id' => $milestoneId,
+            'source_element_id' => $sourceId,
+            'target_element_id' => $targetId,
+            'source_handle' => 'left',
+            'target_handle' => 'center',
+        ], JSON_THROW_ON_ERROR));
+
+        // THEN the created relation carries the given anchor
+        self::assertResponseStatusCodeSame(201);
+        $created = json_decode((string) $this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertIsArray($created);
+        self::assertSame('left', $created['source_handle']);
+        self::assertSame('center', $created['target_handle']);
+        $relationId = $created['id'];
+        self::assertIsString($relationId);
+
+        // WHEN updating it at a later milestone, passing a different anchor
+        $laterMilestoneId = $this->createMilestone($projectId, 'v2');
+        $this->client->request('PATCH', "/api/relations/{$relationId}", server: ['CONTENT_TYPE' => 'application/json'], content: json_encode([
+            'milestone_id' => $laterMilestoneId,
+            'source_handle' => 'right',
+            'target_handle' => 'bottom',
+        ], JSON_THROW_ON_ERROR));
+
+        // THEN the updated relation carries the new anchor
+        self::assertResponseStatusCodeSame(200);
+        $updated = json_decode((string) $this->client->getResponse()->getContent(), true, flags: JSON_THROW_ON_ERROR);
+        self::assertIsArray($updated);
+        self::assertSame('right', $updated['source_handle']);
+        self::assertSame('bottom', $updated['target_handle']);
+    }
+
+    #[Test]
     public function it returns 404 when updating an unknown relation(): void
     {
         // GIVEN a milestone that belongs to some real project

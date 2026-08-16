@@ -83,6 +83,75 @@ abstract class RelationRepositoryTestCase extends KernelTestCase
     }
 
     #[Test]
+    public function it persists the given anchor when creating a relation(): void
+    {
+        // GIVEN a project, a milestone, and two elements
+        $projectId = $this->createProject();
+        $milestoneId = $this->createMilestone($projectId);
+        $sourceId = $this->createElement($projectId, $milestoneId);
+        $targetId = $this->createElement($projectId, $milestoneId);
+
+        // WHEN creating a relation anchored from the source's left edge to the target's right edge
+        $relation = $this->repository->create(
+            $projectId,
+            $milestoneId,
+            $sourceId,
+            $targetId,
+            null,
+            null,
+            'left',
+            'right',
+        );
+
+        // THEN the created relation carries the given anchor
+        self::assertSame('left', $relation['source_handle']);
+        self::assertSame('right', $relation['target_handle']);
+    }
+
+    #[Test]
+    public function it persists a center anchor when creating a relation(): void
+    {
+        // GIVEN a project, a milestone, and two elements
+        $projectId = $this->createProject();
+        $milestoneId = $this->createMilestone($projectId);
+        $sourceId = $this->createElement($projectId, $milestoneId);
+        $targetId = $this->createElement($projectId, $milestoneId);
+
+        // WHEN creating a relation anchored at the center of both elements
+        $relation = $this->repository->create(
+            $projectId,
+            $milestoneId,
+            $sourceId,
+            $targetId,
+            null,
+            null,
+            'center',
+            'center',
+        );
+
+        // THEN the created relation carries the center anchor on both ends
+        self::assertSame('center', $relation['source_handle']);
+        self::assertSame('center', $relation['target_handle']);
+    }
+
+    #[Test]
+    public function it leaves the anchor null when creating a relation without one(): void
+    {
+        // GIVEN a project, a milestone, and two elements
+        $projectId = $this->createProject();
+        $milestoneId = $this->createMilestone($projectId);
+        $sourceId = $this->createElement($projectId, $milestoneId);
+        $targetId = $this->createElement($projectId, $milestoneId);
+
+        // WHEN creating a relation without specifying an anchor
+        $relation = $this->repository->create($projectId, $milestoneId, $sourceId, $targetId, null, null);
+
+        // THEN no anchor is persisted
+        self::assertNull($relation['source_handle']);
+        self::assertNull($relation['target_handle']);
+    }
+
+    #[Test]
     public function a created relation appears in the project list(): void
     {
         // GIVEN a relation was created
@@ -99,6 +168,26 @@ abstract class RelationRepositoryTestCase extends KernelTestCase
         self::assertCount(1, $relations);
         self::assertSame($sourceId, $relations[0]['source_element_id']);
         self::assertSame($targetId, $relations[0]['target_element_id']);
+    }
+
+    #[Test]
+    public function a created relation anchor appears in the project list(): void
+    {
+        // GIVEN a relation created with an anchor
+        $projectId = $this->createProject();
+        $milestoneId = $this->createMilestone($projectId);
+        $sourceId = $this->createElement($projectId, $milestoneId);
+        $targetId = $this->createElement($projectId, $milestoneId);
+        $this->repository->create($projectId, $milestoneId, $sourceId, $targetId, null, null, 'left', 'right');
+
+        // WHEN listing relations for the project
+        $relations = $this->repository->findAllByProject($projectId);
+
+        // THEN the anchor appears in the listed relation too — this list must stay in sync with
+        // findAllVersionsByProject's shape, not silently drop fields the other query carries
+        self::assertCount(1, $relations);
+        self::assertSame('left', $relations[0]['source_handle']);
+        self::assertSame('right', $relations[0]['target_handle']);
     }
 
     #[Test]
@@ -305,6 +394,34 @@ abstract class RelationRepositoryTestCase extends KernelTestCase
     }
 
     #[Test]
+    public function findAllVersionsByProject returns the anchor for each version(): void
+    {
+        // GIVEN a relation created with an anchor, then updated at a new milestone with a different one
+        $projectId = $this->createProject();
+        $firstMilestoneId = $this->createMilestone($projectId);
+        $sourceId = $this->createElement($projectId, $firstMilestoneId);
+        $targetId = $this->createElement($projectId, $firstMilestoneId);
+        $relation = $this->repository->create($projectId, $firstMilestoneId, $sourceId, $targetId, null, null, 'top', 'bottom');
+        self::assertIsString($relation['id']);
+        $secondMilestoneId = $this->createMilestone($projectId);
+        $this->repository->update($relation['id'], $secondMilestoneId, null, null, 'right', 'left');
+
+        // WHEN listing raw version rows for the project
+        $rows = array_values(array_filter(
+            $this->repository->findAllVersionsByProject($projectId),
+            static fn (array $row): bool => $row['id'] === $relation['id'],
+        ));
+
+        // THEN each version carries its own anchor
+        $handlesByMilestone = [];
+        foreach ($rows as $row) {
+            $handlesByMilestone[$row['version_milestone_id']] = [$row['source_handle'], $row['target_handle']];
+        }
+        self::assertSame(['top', 'bottom'], $handlesByMilestone[$firstMilestoneId]);
+        self::assertSame(['right', 'left'], $handlesByMilestone[$secondMilestoneId]);
+    }
+
+    #[Test]
     public function it applies the given label and technology when updating a relation(): void
     {
         // GIVEN an existing relation
@@ -373,6 +490,27 @@ abstract class RelationRepositoryTestCase extends KernelTestCase
         $labels = array_column($rows, 'label', 'version_milestone_id');
         self::assertSame('v1', $labels[$firstMilestoneId]);
         self::assertSame('v2', $labels[$secondMilestoneId]);
+    }
+
+    #[Test]
+    public function updating a relation at a new milestone preserves the anchor explicitly passed to it(): void
+    {
+        // GIVEN a relation created with an anchor at one milestone
+        $projectId = $this->createProject();
+        $firstMilestoneId = $this->createMilestone($projectId);
+        $sourceId = $this->createElement($projectId, $firstMilestoneId);
+        $targetId = $this->createElement($projectId, $firstMilestoneId);
+        $relation = $this->repository->create($projectId, $firstMilestoneId, $sourceId, $targetId, 'v1', null, 'left', 'center');
+        self::assertIsString($relation['id']);
+        $secondMilestoneId = $this->createMilestone($projectId);
+
+        // WHEN updating only the label at a later milestone, passing the anchor back unchanged
+        $updated = $this->repository->update($relation['id'], $secondMilestoneId, 'v2', null, 'left', 'center');
+
+        // THEN the anchor survives at the new milestone — the repository does what it's asked
+        // (never inventing a carry-forward on its own; that responsibility belongs to the caller)
+        self::assertSame('left', $updated['source_handle']);
+        self::assertSame('center', $updated['target_handle']);
     }
 
     #[Test]

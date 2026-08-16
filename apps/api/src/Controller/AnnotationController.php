@@ -9,6 +9,7 @@ use App\Dto\UpdateAnnotationPayload;
 use App\Repository\AnnotationNotFoundException;
 use App\Repository\AnnotationRepositoryInterface;
 use App\Repository\ElementNotFoundException;
+use App\Repository\InvalidAnnotationLinkException;
 use App\Repository\ProjectNotFoundException;
 use App\Repository\RelationNotFoundException;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -40,13 +41,12 @@ class AnnotationController
         try {
             $annotation = $this->annotations->create(
                 $projectId,
-                $payload->elementId,
-                $payload->relationId,
                 $payload->scopeElementId,
                 $x,
                 $y,
                 $payload->authorName,
                 $payload->body,
+                $payload->links,
             );
         } catch (ProjectNotFoundException) {
             return new JsonResponse(['error' => 'project not found'], 404);
@@ -54,6 +54,8 @@ class AnnotationController
             return new JsonResponse(['error' => 'element not found'], 404);
         } catch (RelationNotFoundException) {
             return new JsonResponse(['error' => 'relation not found'], 404);
+        } catch (InvalidAnnotationLinkException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], 422);
         }
 
         return new JsonResponse($annotation, 201);
@@ -73,8 +75,7 @@ class AnnotationController
                 $payload->body,
                 $x,
                 $y,
-                $payload->elementId,
-                $payload->relationId,
+                $payload->links,
             );
         } catch (AnnotationNotFoundException) {
             return new JsonResponse(['error' => 'annotation not found'], 404);
@@ -82,6 +83,8 @@ class AnnotationController
             return new JsonResponse(['error' => 'element not found'], 404);
         } catch (RelationNotFoundException) {
             return new JsonResponse(['error' => 'relation not found'], 404);
+        } catch (InvalidAnnotationLinkException $e) {
+            return new JsonResponse(['error' => $e->getMessage()], 422);
         }
 
         return new JsonResponse($annotation);

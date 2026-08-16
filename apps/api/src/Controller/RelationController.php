@@ -34,6 +34,8 @@ class RelationController
                 $payload->targetElementId,
                 $payload->label,
                 $payload->technology,
+                $payload->sourceHandle,
+                $payload->targetHandle,
             );
         } catch (ProjectNotFoundException) {
             return new JsonResponse(['error' => 'project not found'], 404);
@@ -52,7 +54,14 @@ class RelationController
     public function update(string $relationId, #[MapRequestPayload] UpdateRelationPayload $payload): JsonResponse
     {
         try {
-            $relation = $this->relations->update($relationId, $payload->milestoneId, $payload->label, $payload->technology);
+            $relation = $this->relations->update(
+                $relationId,
+                $payload->milestoneId,
+                $payload->label,
+                $payload->technology,
+                $payload->sourceHandle,
+                $payload->targetHandle,
+            );
         } catch (RelationNotFoundException) {
             return new JsonResponse(['error' => 'relation not found'], 404);
         } catch (MilestoneNotFoundException) {

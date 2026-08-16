@@ -1,5 +1,5 @@
 import type { Graph } from "../api";
-import { fallbackPosition, type DiffStatus, type ElementNode, type Level, type RelationEdge } from "./toFlowGraph";
+import { fallbackPosition, resolveRelationHandles, type DiffStatus, type ElementNode, type Level, type RelationEdge } from "./toFlowGraph";
 
 export type DiffEntry = { id: string; status: DiffStatus; changed_fields: string[] };
 export type DiffResult = { elements: DiffEntry[]; relations: DiffEntry[] };
@@ -113,17 +113,22 @@ export function toOverlayFlowGraph(fromGraph: Graph, toGraph: Graph, diff: DiffR
     const entry = relationDiffById.get(id);
     const status = entry?.status ?? "unchanged";
     const relation = pickVersion(status, fromRelationsById, toRelationsById, id);
+    const { sourceHandle, targetHandle } = resolveRelationHandles(relation);
 
     return {
       id,
       type: "relation",
       source: relation.source_element_id,
       target: relation.target_element_id,
+      sourceHandle,
+      targetHandle,
       data: {
         label: relation.label,
         technology: relation.technology,
         status: relation.status === "derived" ? "derived" : "declared",
         isUnrealized: false,
+        sourceHandle,
+        targetHandle,
         diffStatus: status,
         changedFields: entry?.changed_fields ?? [],
       },

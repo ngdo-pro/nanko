@@ -23,6 +23,8 @@ function edge(id: string, source: string, target: string, dataOverrides: Partial
     technology: null,
     status: "declared",
     isUnrealized: false,
+    sourceHandle: "bottom",
+    targetHandle: "top",
     diffStatus: "unchanged",
     ...dataOverrides,
   };
