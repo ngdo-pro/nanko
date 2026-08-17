@@ -1,6 +1,8 @@
-# Plan d'implémentation — Nanko
+# Référence technique — Nanko
 
-> **Note (2026-08-09)** : le stack d'implémentation a pivoté de Next.js vers un monorepo Symfony (+ Mercure) / React SPA (voir `apps/`, AGENTS.md). La section "Plan technique" ci-dessous (stack, Route Handlers, roadmap d'implémentation — env. lignes 73-78, 252, 337+) décrit encore l'ancien stack Next.js et n'a pas été mise à jour ; à retraiter avant de s'y fier. Le reste (produit, scope, modèle de données conceptuel) reste valide indépendamment du stack.
+> Ce document est une spec de référence (scope, modèle de données, logique métier, API), consultée en codant — pas un doc de pilotage. Pour "où on en est", les décisions en attente et les prochaines étapes, voir `PRODUCT_STATUS.md`. Pour le journal détaillé d'implémentation (pièges, bugs, revirements), voir `ENGINEERING_LOG.md`.
+
+> **Note (2026-08-09)** : le stack d'implémentation a pivoté de Next.js vers un monorepo Symfony (+ Mercure) / React SPA (voir `apps/`, `AGENTS.md`). La section "Plan technique" ci-dessous (stack, Route Handlers, roadmap d'implémentation — env. lignes en dessous de "Architecture générale") décrit encore l'ancien stack Next.js et n'a pas été mise à jour ; à retraiter avant de s'y fier. Le reste (produit, scope, modèle de données conceptuel) reste valide indépendamment du stack.
 
 ## Résumé
 
@@ -55,7 +57,7 @@ Ce n'est pas un vernis appliqué à la fin. Engagements concrets, vérifiables, 
 - Palette de commandes (Cmd/Ctrl+K) pour rechercher un élément ou un projet, raccourcis clavier de base (suppression, déplacement au clavier des noeuds sélectionnés, échap pour désélectionner).
 - États vides et de chargement soignés (illustrations légères, skeletons), pas d'écrans blancs.
 - Accessibilité du diff overlay : ne pas reposer uniquement sur rouge/vert (ajout d'icônes +/-/~ et de style de trait, pour rester lisible en cas de daltonisme).
-- Mode sombre : recommandé mais non bloquant pour la V1 (à trancher en phase de polish, voir Questions ouvertes).
+- Mode sombre : recommandé mais non bloquant pour la V1 (à trancher en phase de polish — voir `PRODUCT_STATUS.md` § Décisions en attente).
 
 ### Parcours utilisateur et écrans principaux
 
@@ -79,6 +81,8 @@ Ce n'est pas un vernis appliqué à la fin. Engagements concrets, vérifiables, 
 - **État client** : TanStack Query pour l'état serveur (fetch, mutations optimistes, cache par projet/milestone), Zustand pour l'état d'UI local (sélection courante, viewport React Flow, milestone actif, mode diff).
 - **API** : Route Handlers Next.js (`app/api/...`), **choix exclusif** face aux Server Actions — cohérence avec l'objectif commercial à terme (surface HTTP stable, réutilisable par un futur client externe ou par des clients temps réel), et pour éviter de mélanger deux mécanismes de mutation.
 - **Autosave** : chaque mutation (création/édition/suppression d'élément, de relation, de position, d'annotation) déclenche un appel `PATCH`/`POST`/`DELETE` immédiat ou débouncé (position : ~300-500ms de debounce ; champs texte : sur `blur` ou debounce court ; changements structurels : immédiats), avec mise à jour optimiste côté client.
+
+> Note : cette section décrit encore le stack Next.js abandonné — se référer à `AGENTS.md` pour le stack réel (Symfony + Mercure / React SPA).
 
 ### Modèle de données
 
@@ -210,7 +214,7 @@ CREATE TABLE annotation (
 > **Note (2026-08-14)** : ce schéma conceptuel (`annotation_anchor` enum, ancrage unique par note) a divergé du modèle réellement implémenté dès la première migration (`element_id`/`relation_id` nullables + `CHECK` d'exclusion mutuelle, sans enum ni cas `canvas_zone` — une note a toujours `x`/`y`), puis à nouveau avec le passage aux liens multiples : une note peut désormais pointer vers plusieurs éléments, relations, et/ou autres notes. Le modèle réel est une table de jointure `annotation_link(annotation_id, element_id?, relation_id?, target_annotation_id?, source_handle?, target_handle?)` avec une contrainte d'exclusion à trois voies par ligne (exactement une des trois cibles) plutôt qu'un ancrage unique porté par `annotation` elle-même — voir `apps/api/migrations/Version20260814180000.php`.
 
 **Notes de choix documentées (propositions, pas des décisions déjà validées) :**
-- Ajout de `person` et `is_external` dans `kind` : le C4 Context standard inclut des acteurs humains et des systèmes externes ; l'énoncé ne les mentionne pas explicitement mais la logique "ne pas fermer la porte" appliquée à `code`/`system_landscape` s'applique symétriquement ici, à un coût quasi nul aujourd'hui. **À confirmer avec Nicolas** (voir Questions ouvertes).
+- Ajout de `person` et `is_external` dans `kind` : le C4 Context standard inclut des acteurs humains et des systèmes externes ; l'énoncé ne les mentionne pas explicitement mais la logique "ne pas fermer la porte" appliquée à `code`/`system_landscape` s'applique symétriquement ici, à un coût quasi nul aujourd'hui. **À confirmer avec Nicolas** — voir `PRODUCT_STATUS.md` § Décisions en attente.
 - Colonne `seq` (bigserial) sur `element` et `relation` : n'a pas d'usage direct en V1 (aucun tri UI n'en dépend) ; elle est posée dès maintenant en prévision de la sérialisation DSL déterministe en V2 (trier par `id` UUID serait non lisible et non stable dans le temps perçu, trier par `created_at` est fragile en cas d'import en masse au même instant). Coût nul à ajouter maintenant, migration en moins plus tard.
 - `realized_at_milestone_id` sur `relation` : matérialise qu'une relation C1 `declared` a été "réalisée" par une relation C2 correspondante à un milestone donné, sans supprimer la ligne `declared` (traçabilité + réapparition de l'avertissement si la relation C2 est supprimée ensuite).
 
@@ -335,36 +339,38 @@ Opérateurs proposés dans les blocs `milestone` : `+` (création), `-` (suppres
 
 Si l'exemple obtenu est illisible, ambigu, ou nécessite des règles de désambiguïsation non triviales (ex: collision de noms, chemins profonds peu lisibles), **revenir vers Nicolas avec l'exemple concret plutôt que trancher seul** — ne pas figer le parser sur une grammaire non validée.
 
-## TODOs
+## TODOs (roadmap détaillée par phase)
+
+> Statut d'ensemble et prochaine priorité : voir `PRODUCT_STATUS.md` § Objectifs actuels / Next steps. Cette liste reste le détail canonique des 20 items par phase.
 
 **Phase 0 — Setup**
-1. Initialiser le repo (Next.js + TypeScript + Tailwind), configuration Drizzle + Postgres local (Docker Compose), CI minimale (lint, typecheck, tests).
+1. ✅ Initialiser le repo (stack réel : Symfony + Mercure / React SPA, pas Next.js — voir note en tête de fichier), configuration Postgres local (Docker Compose), CI minimale (lint, typecheck, tests).
 
 **Phase 1 — Modèle de données**
-2. Écrire le schéma Drizzle (`element`, `element_version`, `relation`, `relation_version`, `milestone`, `position`, `annotation`, `project`) et les migrations, avec les contraintes d'unicité (index partiels position).
-3. Implémenter `resolveGraph(projectId, milestoneId)` avec tests unitaires couvrant : visibilité (création/suppression), résolution d'attributs multi-milestones, projection C1 dérivée, dédoublonnage de boucle interne, fusion declared/derived.
-4. Implémenter `diff(projectId, from, to)` au-dessus de `resolveGraph`, avec tests sur les cas validés (ajout, suppression, modification, re-ciblage traité comme suppression+ajout, position ignorée).
+2. ✅ Écrire le schéma et les migrations (`element`, `element_version`, `relation`, `relation_version`, `milestone`, `position`, `annotation`/`annotation_link`, `project`), avec les contraintes d'unicité (index partiels position).
+3. ✅ Implémenter `resolveGraph(projectId, milestoneId)` avec tests unitaires couvrant : visibilité (création/suppression), résolution d'attributs multi-milestones, projection C1 dérivée, dédoublonnage de boucle interne, fusion declared/derived.
+4. ✅ Implémenter `diff(projectId, from, to)` au-dessus de `resolveGraph`, avec tests sur les cas validés (ajout, suppression, modification, re-ciblage traité comme suppression+ajout, position ignorée).
 
 **Phase 2 — API**
-5. Implémenter les Route Handlers CRUD pour projets, éléments, relations (dont `retarget`), positions, milestones.
-6. Implémenter les endpoints `graph` et `diff`.
+5. ✅ Implémenter les endpoints CRUD pour projets, éléments, relations (dont `retarget`), positions, milestones.
+6. ✅ Implémenter les endpoints `graph` et `diff`.
 
 **Phase 3 — Canvas et navigation**
-7. Composants React Flow custom (noeuds par `kind`, arêtes stylées, styles `derived`/`declared`/`realized`/avertissement).
-8. Vue C1 statique branchée sur `GET /graph`, sélecteur de milestone avec marqueur "aujourd'hui".
-9. Drill-down (double-clic) / breadcrumb (remontée), avec transition animée.
-10. Édition inline (créer/renommer/supprimer élément et relation) avec autosave optimiste (TanStack Query), positions draggables persistées.
+7. ✅ Composants React Flow custom (noeuds par `kind`, arêtes stylées, styles `derived`/`declared`/`realized`/avertissement).
+8. ✅ Vue C1 statique branchée sur `GET /graph`, sélecteur de milestone avec marqueur "aujourd'hui".
+9. ✅ Drill-down (double-clic) / breadcrumb (remontée) — transition animée (Framer Motion) : à vérifier, voir `PRODUCT_STATUS.md`.
+10. ✅ Édition inline (créer/renommer/supprimer élément et relation) avec autosave optimiste, positions draggables persistées.
 
 **Phase 4 — Milestones et diff**
-11. UI de gestion des milestones (créer, réordonner, positionner dans le passé/futur).
-12. Application de la règle "édition = milestone actif" dans toute l'UI d'édition.
-13. UI de diff : sélecteur de paire de milestones, toggle overlay/side-by-side, légende.
+11. ✅ UI de gestion des milestones (créer, réordonner, positionner dans le passé/futur).
+12. ✅ Application de la règle "édition = milestone actif" dans toute l'UI d'édition.
+13. ✅ UI de diff : sélecteur de paire de milestones, toggle overlay/side-by-side, légende.
 
 **Phase 5 — Annotations**
-14. Ajout/édition/suppression d'annotation sur élément, relation, zone libre du canvas, avec `scope_element_id` pour l'ancrage par diagramme.
+14. ✅ Ajout/édition/suppression d'annotation sur le canvas (post-it libre, liens multiples vers éléments/relations/autres notes).
 
-**Phase 6 — Multi-projets et polish**
-15. Écran liste de projets, création/suppression, garde-fous (confirmation avant suppression).
+**Phase 6 — Multi-projets et polish** *(phase active — voir `PRODUCT_STATUS.md`)*
+15. Écran liste de projets (fait), garde-fous de suppression (à vérifier).
 16. Passe de polish visuel (design tokens, transitions, accessibilité du diff, empty states, palette de commandes).
 17. Documentation de déploiement self-host (Docker Compose, variables d'environnement, sauvegarde Postgres).
 
@@ -372,10 +378,3 @@ Si l'exemple obtenu est illisible, ambigu, ou nécessite des règles de désambi
 18. Stress-test de la grammaire DSL (exercice papier), puis parser/serializer avec tests de round-trip, puis UI d'import/export et endpoints `export`/`import`.
 19. Vue split DSL texte + canvas en édition live bidirectionnelle.
 20. Collaboration temps réel (CRDT/Yjs), animations de flux, niveau C4 Code.
-
-## Questions ouvertes
-
-- **Ajout de `person`/`is_external`** dans le modèle d'éléments : proposition faite dans ce plan pour rester fidèle au C4 standard, mais non explicitement demandée par Nicolas — à confirmer avant de l'exposer en UI.
-- **Concurrence d'édition sans CRDT** : avec 2-3 personnes éditant potentiellement le même projet en V1 sans lock ni CRDT, il existe un risque de "dernier écrivain gagne" silencieux sur un même élément. Aucune demande explicite de garde-fou n'a été faite ; à minima, envisager un `updated_at`/version de contrôle optimiste (409 en cas de conflit détecté) — décision à valider, sans bloquer la V1 si jugé superflu à cette échelle d'équipe.
-- **Mode sombre** : non demandé explicitement ; mentionné ici comme option de polish cohérente avec l'exigence "beau et ergonomique", à confirmer en priorité ou à repousser.
-- **Hébergement self-host exact** : Docker Compose local supposé par défaut ; aucune précision donnée sur l'infrastructure cible (poste local, VM interne, etc.) — sans impact sur le modèle de données mais à clarifier avant la phase de déploiement (Phase 6, tâche 17).

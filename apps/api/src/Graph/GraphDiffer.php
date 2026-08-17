@@ -9,7 +9,7 @@ namespace App\Graph;
  * element/relation id. Pure computation, mirroring GraphResolver's own
  * pure-function design — no I/O, callers resolve both graphs first.
  *
- * Design decisions not spelled out by PLAN.md, made explicit here:
+ * Design decisions not spelled out by TECHNICAL_REFERENCE.md, made explicit here:
  *
  * 1. Only `name`/`description`/`technology` are compared for elements, and
  *    only `label`/`technology` for relations — `status`/`realized_at_milestone_id`

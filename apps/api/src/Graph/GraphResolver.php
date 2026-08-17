@@ -10,7 +10,7 @@ namespace App\Graph;
  * no repository dependency — so the temporal/projection rules (the hardest
  * part of this feature) are unit-testable with plain array fixtures.
  *
- * Design decisions not spelled out by PLAN.md, made explicit here:
+ * Design decisions not spelled out by TECHNICAL_REFERENCE.md, made explicit here:
  *
  * 1. Scope: `$scopeElementId === null` means "resolving at C1 root" — the only
  *    condition under which C1 derived-projection and declared/derived fusion

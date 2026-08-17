@@ -1,6 +1,6 @@
 # Nanko
 
-Outil de modélisation d'architecture C4 (Context/Container/Component). Voir [PLAN.md](./PLAN.md) pour le contexte produit (la section technique de ce document décrit encore l'ancien stack Next.js, voir note en tête de PLAN.md).
+Outil de modélisation d'architecture C4 (Context/Container/Component). Voir [PRODUCT_STATUS.md](./PRODUCT_STATUS.md) pour l'état du produit, [TECHNICAL_REFERENCE.md](./TECHNICAL_REFERENCE.md) pour le contexte produit et le modèle de données (sa section stack décrit encore l'ancien Next.js, voir note en tête de ce fichier).
 
 ## Stack
 

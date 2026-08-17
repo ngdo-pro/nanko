@@ -2,7 +2,7 @@ import { useState } from "react";
 import { dangerButtonStyle, GHOST_BUTTON_STYLE, INPUT_STYLE, LABEL_STYLE, PRIMARY_BUTTON_STYLE } from "../styles/controls";
 
 // A minimal popover for creating (right-click on empty canvas) or editing
-// (click an existing note) a sticky note — "auteur en texte libre" (PLAN.md):
+// (click an existing note) a sticky note — "auteur en texte libre" (TECHNICAL_REFERENCE.md):
 // no account/login, just a free-text name. Same component for both modes:
 // editing is just creation prefilled, plus a delete affordance.
 export function AnnotationComposer({
