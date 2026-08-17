@@ -2,7 +2,7 @@
 
 Monorepo pnpm : backend Symfony + Mercure (`apps/api`), frontend React SPA (`apps/web`). Bootstrap uniquement — aucune décision d'architecture d'implémentation actée au-delà de cette structure.
 
-PLAN.md reste la source de vérité produit/modèle de données ; sa section technique décrit encore un stack obsolète (voir note en tête de ce fichier).
+`PRODUCT_STATUS.md` (objectifs, décisions, roadmap) et `TECHNICAL_REFERENCE.md` (scope, modèle de données, logique métier, API — sa section stack décrit encore Next.js, obsolète, voir note en tête de ce fichier) sont les sources de vérité produit. `ENGINEERING_LOG.md` porte le journal détaillé d'implémentation (pièges, bugs).
 
 ## Tests
 

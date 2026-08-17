@@ -1,6 +1,6 @@
 import type { DiffStatus } from "./toFlowGraph";
 
-// Redundant encoding for the milestone-comparison overlay, per PLAN.md's
+// Redundant encoding for the milestone-comparison overlay, per TECHNICAL_REFERENCE.md's
 // accessibility requirement: never rely on color alone. Each status pairs a
 // color with both a distinct border style and a symbol, so the diff reads
 // correctly even without color perception.
