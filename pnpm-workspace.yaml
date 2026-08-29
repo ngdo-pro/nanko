@@ -1,0 +1,5 @@
+packages:
+  - "frontend"
+  - "landing"
+  - "library"
+  - "tests-e2e"

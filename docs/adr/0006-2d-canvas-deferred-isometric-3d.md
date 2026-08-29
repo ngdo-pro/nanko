@@ -1,0 +1,3 @@
+# Canvas 2D simple en v1 ; l'isométrique et le passage 3D (three.js) sont différés
+
+Bien que l'idée fondatrice de Nanko mette en avant un rendu en layers 2D isométriques et un passage en 3D via three.js, le canvas d'édition du v1 est un 2D simple (top-down). Seul un petit helper de navigation "pile de layers" en projection isométrique statique (SVG/CSS, non interactif) est prévu, livrable indépendamment du reste. La raison : le modèle de contenu (Document, Version, Layer, Capability) est déjà un chantier conséquent, et un moteur de rendu isométrique/3D est un investissement séparé qui n'a pas besoin d'être validé en même temps.

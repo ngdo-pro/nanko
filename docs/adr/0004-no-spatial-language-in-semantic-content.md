@@ -1,0 +1,3 @@
+# Aucune position ni relation spatiale dans le contenu sémantique d'un Document
+
+Le contenu sémantique d'un Document (formes et Connector) ne déclare jamais de position (x/y) ni de relation spatiale (`below`, `right_of`, etc.) — même une position relative de haut niveau a été écartée. La raison : une relation spatiale déclarée dans le contenu devient fausse dès que l'utilisateur déplace une Shape à la main dans le canvas, ce qui est le cas d'usage normal. Tout le placement vit exclusivement dans le Layout : généré une seule fois de façon naïve à la première importation d'un Document sans Layout, puis piloté à la main et jamais régénéré automatiquement par la suite.

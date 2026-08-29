@@ -1,0 +1,3 @@
+# Navigation inter-Layer par flag manuel "Current version", pas par résolution semver automatique
+
+Quand on navigue la timeline d'un Layer et qu'on plonge sur un Document d'un autre Layer, Nanko affiche la Version que l'utilisateur a manuellement désignée comme Current — pas la dernière Version dont le `@satisfies` couvre le point de la timeline consultée (ce qu'un dependency-resolver façon Composer ferait naturellement). Ce choix a été fait pour garder le contrôle explicite à l'utilisateur et éviter la complexité d'un vrai moteur de résolution de compatibilité ; `@satisfies` devient une métadonnée informative qui déclenche un avertissement quand la Current version affichée sort de la plage visée, sans jamais bloquer ni recalculer automatiquement la Version montrée.

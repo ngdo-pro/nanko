@@ -1,0 +1,28 @@
+# Backend (Symfony)
+/backend/vendor/
+/backend/var/
+/backend/.env.local
+/backend/.env.local.php
+/backend/.env.*.local
+/backend/public/bundles/
+
+# JS (pnpm workspaces)
+node_modules/
+dist/
+build/
+.turbo/
+
+# Playwright
+/tests-e2e/test-results/
+/tests-e2e/playwright-report/
+/tests-e2e/blob-report/
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Env
+.env
+.env.local

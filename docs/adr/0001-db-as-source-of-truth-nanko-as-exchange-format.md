@@ -1,0 +1,3 @@
+# La DB est la source de vérité runtime, `.nanko` est un format d'échange non persisté
+
+Malgré le positionnement "diagrams-as-code" de Nanko, l'app ne stocke jamais le fichier `.nanko` lui-même : Postgres est la source de vérité pour le contenu et les Version d'un Document. Le fichier `.nanko` n'existe qu'aux points d'export (l'utilisateur le commit dans son propre repo) et d'import (l'utilisateur le réimporte pour visualiser/éditer). L'alternative envisagée — un historique Git géré en interne par Nanko, un repo par Document/Project — a été écartée car elle ajoute une dépendance opérationnelle lourde pour un bénéfice non prouvé au stade du MVP.
