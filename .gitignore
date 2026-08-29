@@ -26,3 +26,5 @@ build/
 # Env
 .env
 .env.local
+/infra/preprod/.env
+/infra/prod/.env

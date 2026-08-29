@@ -1,0 +1,88 @@
+name: Deploy preprod
+
+on:
+  push:
+    branches: [main]
+
+env:
+  ENVIRONMENT: preprod
+  VITE_API_BASE_URL: https://api.preprod.nanko.dev
+  # Assumes a persistent checkout of this repo already exists on the VPS,
+  # relative to the SSH user's home directory, containing
+  # infra/deploy/deploy.sh and infra/preprod/.env. Adjust to match the real
+  # deploy path on the target host.
+  REMOTE_APP_PATH: nanko
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/nanko-backend:preprod-latest
+            ghcr.io/${{ github.repository_owner }}/nanko-backend:preprod-${{ github.sha }}
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install JS dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          VITE_API_BASE_URL: ${{ env.VITE_API_BASE_URL }}
+        run: pnpm build
+
+      - name: Upload frontend dist to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: frontend/dist/*
+          target: /srv/app-preprod
+          strip_components: 2
+
+      - name: Deploy backend
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -euo pipefail
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            cd "$HOME/${{ env.REMOTE_APP_PATH }}"
+            git pull --ff-only
+            infra/deploy/deploy.sh preprod

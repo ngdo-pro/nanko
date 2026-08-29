@@ -1,0 +1,19 @@
+api.nanko.dev {
+    reverse_proxy nanko-prod-backend:80
+}
+
+app.nanko.dev {
+    root * /srv/app-prod
+    try_files {path} /index.html
+    file_server
+}
+
+api.preprod.nanko.dev {
+    reverse_proxy nanko-preprod-backend:80
+}
+
+app.preprod.nanko.dev {
+    root * /srv/app-preprod
+    try_files {path} /index.html
+    file_server
+}

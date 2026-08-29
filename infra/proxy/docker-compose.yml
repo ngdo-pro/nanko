@@ -1,0 +1,25 @@
+services:
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      # Static frontend builds are scp'd here by the deploy workflows
+      # (see .github/workflows/deploy-{preprod,prod}.yml); Caddy serves
+      # them read-only for the app.* vhosts.
+      - /srv/app-prod:/srv/app-prod:ro
+      - /srv/app-preprod:/srv/app-preprod:ro
+    networks:
+      - nanko-edge
+
+networks:
+  nanko-edge:
+    external: true
+
+volumes:
+  caddy_data:
+  caddy_config:
