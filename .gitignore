@@ -24,7 +24,8 @@ build/
 !.vscode/extensions.json
 
 # Env
-.env
-.env.local
+# Note: no generic ".env" rule here on purpose — Symfony's convention is to
+# commit backend/.env (placeholder defaults only, never real secrets) and
+# only gitignore the *.local overrides, already covered above.
 /infra/preprod/.env
 /infra/prod/.env
