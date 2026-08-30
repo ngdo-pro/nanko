@@ -1,0 +1,16 @@
+<?php
+
+namespace Symfony\Component\Routing\Loader\Configurator;
+
+// This file is the entry point to configure the routes of your app.
+// Methods with the #[Route] attribute are automatically imported.
+// See also https://symfony.com/doc/current/routing.html
+
+// To list all registered routes, run the following command:
+//   bin/console debug:router
+
+return Routes::config([
+    'controllers' => [
+        'resource' => 'routing.controllers',
+    ],
+]);

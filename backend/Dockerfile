@@ -3,7 +3,7 @@
 # Multi-stage build for the nanko Symfony backend, running on FrankenPHP in
 # classic (non-worker) mode. FrankenPHP sits behind the VPS's shared
 # caddy-docker-proxy, routed by Docker labels (see
-# infra/preprod|prod/docker-compose.yml) rather than a static Caddyfile, and
+# infra/preprod|prod/compose.yaml) rather than a static Caddyfile, and
 # does not terminate TLS itself -- see SERVER_NAME below.
 
 FROM dunglas/frankenphp:1.12-php8.4-bookworm AS builder
@@ -37,6 +37,25 @@ ENV APP_ENV=prod \
     DATABASE_URL="postgresql://app:placeholder@127.0.0.1:5432/app?serverVersion=16&charset=utf8"
 
 RUN APP_ENV=prod php bin/console cache:warmup --env=prod
+
+# Dev-only stage for `infra/local/compose.yaml`. Source is bind-mounted
+# at /app at container start (not copied here), so edits are picked up
+# without a rebuild; only the PHP runtime + Composer are baked into the
+# image. `composer install`/migrations run at container start rather than
+# build time, since the mounted /app is empty until then.
+FROM dunglas/frankenphp:1.12-php8.4-bookworm AS dev
+
+RUN install-php-extensions \
+    pdo_pgsql \
+    intl \
+    opcache \
+    zip
+
+COPY --from=composer/composer:2-bin /composer /usr/bin/composer
+
+WORKDIR /app
+
+CMD ["sh", "-c", "composer install --no-interaction && php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration && php -S 0.0.0.0:8000 -t public public/index.php"]
 
 FROM dunglas/frankenphp:1.12-php8.4-bookworm AS runtime
 

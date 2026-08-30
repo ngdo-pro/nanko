@@ -16,9 +16,12 @@ See `CONTEXT.md` for the domain glossary and `docs/adr/` for the architecture de
 ## Local development
 
 ```
-docker compose -f infra/local/docker-compose.yml up -d
-cd backend && composer install
-php bin/console doctrine:migrations:migrate
-pnpm install
-pnpm --filter frontend dev
+make dev
 ```
+
+Runs postgres + backend + frontend in the background, fully dockerized --
+only Docker is required on the host, no PHP/Composer/Node/pnpm. Uses
+non-default host ports (frontend on http://localhost:45173, backend on
+http://localhost:48000, postgres on 45432) to avoid clashing with other
+projects on the same machine. `make logs` follows the logs, `make stop`
+stops everything.
