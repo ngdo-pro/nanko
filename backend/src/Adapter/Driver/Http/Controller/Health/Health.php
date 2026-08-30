@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace App\Controller;
+namespace App\Adapter\Driver\Http\Controller\Health;
 
 use Doctrine\DBAL\Connection;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
-final class HealthController
+final class Health
 {
     public function __construct(private readonly Connection $connection)
     {

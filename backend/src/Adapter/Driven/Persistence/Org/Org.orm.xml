@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                                       https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <!--
+        Mapping kept out of Core/Domain/Org/Org.php on purpose: the domain
+        entity must not carry any Doctrine dependency (see
+        docs/adr/0011-hexagonal-architecture-backend.md). Strategy "NONE" on
+        the id: Id is generated in the domain (Id::generate()) before the
+        use case ever calls the repository, not by the database.
+    -->
+    <entity name="App\Core\Domain\Org\Org" table="org">
+        <id name="id" type="org_id" column="id">
+            <generator strategy="NONE"/>
+        </id>
+        <field name="name" type="string" length="255" column="name"/>
+    </entity>
+
+</doctrine-mapping>
