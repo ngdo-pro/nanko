@@ -2,9 +2,6 @@
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-use App\Adapter\Driven\Persistence\Org\DoctrineOrgRepository;
-use App\Core\Port\Org\OrgRepository as OrgRepositoryPort;
-
 // This file is the entry point to configure your own services.
 // Files in the packages/ subdirectory configure your dependencies.
 // See also https://symfony.com/doc/current/service_container/import.html
@@ -28,10 +25,10 @@ return App::config([
             'exclude' => [
                 '../src/Kernel.php',
                 // Core/Domain holds entities and value objects: plain data,
-                // never services. A class like Org has a constructor
-                // argument (string $name) Symfony cannot autowire, which
-                // would otherwise fail the container compilation even
-                // though nothing ever injects Org itself.
+                // never services. An entity's constructor arguments are
+                // rarely autowirable (scalars, value objects), which would
+                // otherwise fail the container compilation even though
+                // nothing ever injects the entity itself as a service.
                 '../src/Core/Domain/',
                 // Same reasoning for use-case DTOs. The *Command.php /
                 // *Query.php suffix is therefore a hard requirement, not
@@ -49,10 +46,9 @@ return App::config([
 
         // Port -> Adapter bindings: the map of the architecture, kept
         // explicit and in one place rather than left to autowiring
-        // ambiguity as more adapters per port appear.
-        OrgRepositoryPort::class => [
-            'alias' => DoctrineOrgRepository::class,
-        ],
+        // ambiguity as more adapters per port appear. Add one alias entry
+        // here per new aggregate's repository port, e.g.:
+        //   SomeRepositoryPort::class => ['alias' => DoctrineSomeRepository::class],
 
         // add more service definitions when explicit configuration is needed
         // please note that last definitions always *replace* previous ones

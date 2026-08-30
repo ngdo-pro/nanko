@@ -31,7 +31,7 @@ return static function (DeptracConfig $config): void {
             ),
             // Not a src/ directory: a virtual layer over the framework/ORM
             // classes Core is forbidden from touching. symfony/uid is
-            // excluded -- see the OrgId exception in the ADR.
+            // excluded -- see the identity value-object exception in the ADR.
             $framework = Layer::withName('Framework')->collectors(
                 ClassNameRegexConfig::create('#^Symfony\\(?!Component\\Uid\\)#i'),
                 ClassNameRegexConfig::create('#^Doctrine\\#i'),

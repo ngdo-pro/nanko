@@ -2,7 +2,6 @@
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-use App\Adapter\Driven\Persistence\Org\DoctrineId;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 
@@ -16,8 +15,8 @@ return App::config([
                 // co-located with that aggregate's repository under
                 // Adapter/Driven/Persistence/<Aggregate>/ -- see
                 // docs/adr/0011-hexagonal-architecture-backend.md. Add one
-                // line here per new aggregate (DoctrineId for Project, ...).
-                DoctrineId::NAME => DoctrineId::class,
+                // line here per new aggregate, e.g.:
+                //   DoctrineId::NAME => DoctrineId::class,
             ],
 
             // IMPORTANT: You MUST configure your server version,
@@ -43,20 +42,20 @@ return App::config([
                 // SymfonyFileLocator (used by the "xml" driver type) turns
                 // everything after "prefix" into a DOT-separated filename
                 // in a single flat "dir" -- e.g. a shared "App\Core\Domain"
-                // prefix would require App\Core\Domain\Org\Org to live at
-                // Adapter/Driven/Persistence/Org.Org.orm.xml, no
-                // subfolders. Scoping "prefix" to the aggregate's own
+                // prefix would require App\Core\Domain\<Aggregate>\<Aggregate>
+                // to live at Adapter/Driven/Persistence/<Aggregate>.<Aggregate>.orm.xml,
+                // no subfolders. Scoping "prefix" to the aggregate's own
                 // namespace instead leaves only the class's own short name
-                // after stripping it, which is what gives us the intended
-                // Adapter/Driven/Persistence/Org/Org.orm.xml layout. Add
-                // one block like this per new aggregate.
-                'AppOrg' => [
-                    'type' => 'xml',
-                    'is_bundle' => false,
-                    'dir' => '%kernel.project_dir%/src/Adapter/Driven/Persistence/Org',
-                    'prefix' => 'App\\Core\\Domain\\Org',
-                    'alias' => 'AppOrg',
-                ],
+                // after stripping it, which is what gives the intended
+                // Adapter/Driven/Persistence/<Aggregate>/<Aggregate>.orm.xml
+                // layout. Add one block like this per new aggregate, e.g.:
+                //   'AppSomeAggregate' => [
+                //       'type' => 'xml',
+                //       'is_bundle' => false,
+                //       'dir' => '%kernel.project_dir%/src/Adapter/Driven/Persistence/SomeAggregate',
+                //       'prefix' => 'App\\Core\\Domain\\SomeAggregate',
+                //       'alias' => 'AppSomeAggregate',
+                //   ],
             ],
         ],
     ],
