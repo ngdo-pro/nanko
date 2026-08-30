@@ -2,7 +2,6 @@
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 
 return App::config([
@@ -11,6 +10,12 @@ return App::config([
             'url' => '%env(resolve:DATABASE_URL)%',
             'types' => [
                 'uuid' => UuidType::class,
+                // One DBAL type per aggregate identity value object,
+                // co-located with that aggregate's repository under
+                // Adapter/Driven/Persistence/<Aggregate>/ -- see
+                // docs/adr/0011-hexagonal-architecture-backend.md. Add one
+                // line here per new aggregate, e.g.:
+                //   DoctrineId::NAME => DoctrineId::class,
             ],
 
             // IMPORTANT: You MUST configure your server version,
@@ -19,23 +24,6 @@ return App::config([
 
             'profiling_collect_backtrace' => '%kernel.debug%',
         ],
-        'orm' => [
-            'validate_xml_mapping' => true,
-            'naming_strategy' => 'doctrine.orm.naming_strategy.underscore',
-            'identity_generation_preferences' => [
-                PostgreSQLPlatform::class => 'identity',
-            ],
-            'auto_mapping' => true,
-            'mappings' => [
-                'App' => [
-                    'type' => 'attribute',
-                    'is_bundle' => false,
-                    'dir' => '%kernel.project_dir%/src/Entity',
-                    'prefix' => 'App\\Entity',
-                    'alias' => 'App',
-                ],
-            ],
-        ],
     ],
 
     'when@test' => [
@@ -43,34 +31,6 @@ return App::config([
             'dbal' => [
                 // "TEST_TOKEN" is typically set by ParaTest
                 'dbname_suffix' => '_test%env(default::TEST_TOKEN)%',
-            ],
-        ],
-    ],
-
-    'when@prod' => [
-        'doctrine' => [
-            'orm' => [
-                'query_cache_driver' => [
-                    'type' => 'pool',
-                    'pool' => 'doctrine.system_cache_pool',
-                ],
-                'result_cache_driver' => [
-                    'type' => 'pool',
-                    'pool' => 'doctrine.result_cache_pool',
-                ],
-            ],
-        ],
-
-        'framework' => [
-            'cache' => [
-                'pools' => [
-                    'doctrine.result_cache_pool' => [
-                        'adapter' => 'cache.app',
-                    ],
-                    'doctrine.system_cache_pool' => [
-                        'adapter' => 'cache.system',
-                    ],
-                ],
             ],
         ],
     ],
