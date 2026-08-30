@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: nanko-preprod-postgres
+    environment:
+      POSTGRES_USER: nanko
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: nanko
+    volumes:
+      - nanko-preprod-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nanko -d nanko"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    image: ghcr.io/ngdo-pro/nanko-backend:preprod-latest
+    container_name: nanko-preprod-backend
+    environment:
+      APP_ENV: prod
+      APP_SECRET: ${APP_SECRET}
+      DATABASE_URL: postgresql://nanko:${POSTGRES_PASSWORD}@postgres:5432/nanko?serverVersion=16&charset=utf8
+      SERVER_NAME: ":80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      default: {}
+      nanko-edge: {}
+    # IMPORTANT: always reference this container by its explicit container_name
+    # (nanko-preprod-backend) in Caddy/other configs, never the bare service name
+    # "backend" -- Compose auto-aliases the bare service name on every network
+    # including nanko-edge, and preprod/prod would collide.
+
+networks:
+  nanko-edge:
+    external: true
+
+volumes:
+  nanko-preprod-postgres-data:

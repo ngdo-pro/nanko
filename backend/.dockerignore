@@ -1,0 +1,6 @@
+vendor/
+var/
+tests/
+.env.local*
+.git
+docker-compose*

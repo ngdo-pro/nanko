@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql, intl, opcache
+          coverage: none
+
+      - name: Validate composer.json/composer.lock
+        working-directory: backend
+        run: composer validate --no-check-publish --strict
+
+      # No phpstan/php-cs-fixer are configured in backend/composer.json yet
+      # (checked require-dev: only dama/doctrine-test-bundle,
+      # doctrine-fixtures-bundle, phpunit, browser-kit, css-selector,
+      # maker-bundle). Add a step here once one is introduced.
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install JS dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint frontend
+        run: pnpm --filter frontend lint
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: nanko
+          POSTGRES_PASSWORD: nanko
+          POSTGRES_DB: nanko
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U nanko -d nanko"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql://nanko:nanko@127.0.0.1:5432/nanko?serverVersion=16&charset=utf8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_pgsql, intl, opcache
+          coverage: none
+
+      - name: Install PHP dependencies
+        working-directory: backend
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Create test database
+        working-directory: backend
+        run: php bin/console doctrine:database:create --env=test --if-not-exists
+
+      - name: Run migrations
+        working-directory: backend
+        run: php bin/console doctrine:migrations:migrate --env=test --no-interaction --allow-no-migration
+
+      - name: Run tests
+        working-directory: backend
+        run: php bin/phpunit
