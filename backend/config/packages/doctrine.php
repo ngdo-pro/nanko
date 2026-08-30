@@ -2,7 +2,6 @@
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
-use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Symfony\Bridge\Doctrine\Types\UuidType;
 
 return App::config([
@@ -25,39 +24,6 @@ return App::config([
 
             'profiling_collect_backtrace' => '%kernel.debug%',
         ],
-        'orm' => [
-            'validate_xml_mapping' => true,
-            'naming_strategy' => 'doctrine.orm.naming_strategy.underscore',
-            'identity_generation_preferences' => [
-                PostgreSQLPlatform::class => 'identity',
-            ],
-            'auto_mapping' => true,
-            'mappings' => [
-                // XML mapping co-located with the Doctrine adapter, not
-                // with the domain entity: Core/Domain must stay free of any
-                // Doctrine dependency (docs/adr/0011-*.md).
-                //
-                // One mapping entry per aggregate, not a single catch-all
-                // "App" entry for all of Core/Domain: Symfony's
-                // SymfonyFileLocator (used by the "xml" driver type) turns
-                // everything after "prefix" into a DOT-separated filename
-                // in a single flat "dir" -- e.g. a shared "App\Core\Domain"
-                // prefix would require App\Core\Domain\<Aggregate>\<Aggregate>
-                // to live at Adapter/Driven/Persistence/<Aggregate>.<Aggregate>.orm.xml,
-                // no subfolders. Scoping "prefix" to the aggregate's own
-                // namespace instead leaves only the class's own short name
-                // after stripping it, which is what gives the intended
-                // Adapter/Driven/Persistence/<Aggregate>/<Aggregate>.orm.xml
-                // layout. Add one block like this per new aggregate, e.g.:
-                //   'AppSomeAggregate' => [
-                //       'type' => 'xml',
-                //       'is_bundle' => false,
-                //       'dir' => '%kernel.project_dir%/src/Adapter/Driven/Persistence/SomeAggregate',
-                //       'prefix' => 'App\\Core\\Domain\\SomeAggregate',
-                //       'alias' => 'AppSomeAggregate',
-                //   ],
-            ],
-        ],
     ],
 
     'when@test' => [
@@ -65,34 +31,6 @@ return App::config([
             'dbal' => [
                 // "TEST_TOKEN" is typically set by ParaTest
                 'dbname_suffix' => '_test%env(default::TEST_TOKEN)%',
-            ],
-        ],
-    ],
-
-    'when@prod' => [
-        'doctrine' => [
-            'orm' => [
-                'query_cache_driver' => [
-                    'type' => 'pool',
-                    'pool' => 'doctrine.system_cache_pool',
-                ],
-                'result_cache_driver' => [
-                    'type' => 'pool',
-                    'pool' => 'doctrine.result_cache_pool',
-                ],
-            ],
-        ],
-
-        'framework' => [
-            'cache' => [
-                'pools' => [
-                    'doctrine.result_cache_pool' => [
-                        'adapter' => 'cache.app',
-                    ],
-                    'doctrine.system_cache_pool' => [
-                        'adapter' => 'cache.system',
-                    ],
-                ],
             ],
         ],
     ],
