@@ -6,11 +6,6 @@ on:
 env:
   ENVIRONMENT: prod
   VITE_API_BASE_URL: https://api.nanko.dev
-  # Assumes a persistent checkout of this repo already exists on the VPS,
-  # relative to the SSH user's home directory, containing
-  # infra/deploy/deploy.sh and infra/prod/.env. Adjust to match the real
-  # deploy path on the target host.
-  REMOTE_APP_PATH: nanko
 
 permissions:
   contents: read
@@ -40,48 +35,18 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/nanko-backend:prod-latest
+            ghcr.io/${{ github.repository_owner }}/nanko-backend:prod
             ghcr.io/${{ github.repository_owner }}/nanko-backend:prod-${{ github.sha }}
 
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v6
         with:
-          version: 11
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-
-      - name: Install JS dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build frontend
-        working-directory: frontend
-        env:
-          VITE_API_BASE_URL: ${{ env.VITE_API_BASE_URL }}
-        run: pnpm build
-
-      - name: Upload frontend dist to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: frontend/dist/*
-          target: /srv/app-prod
-          strip_components: 2
-
-      - name: Deploy backend
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            set -euo pipefail
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            cd "$HOME/${{ env.REMOTE_APP_PATH }}"
-            git pull --ff-only
-            infra/deploy/deploy.sh prod
+          context: .
+          file: frontend/Dockerfile
+          platforms: linux/amd64
+          push: true
+          build-args: |
+            VITE_API_BASE_URL=${{ env.VITE_API_BASE_URL }}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/nanko-frontend:prod
+            ghcr.io/${{ github.repository_owner }}/nanko-frontend:prod-${{ github.sha }}

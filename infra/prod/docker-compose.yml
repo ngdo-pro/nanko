@@ -2,6 +2,7 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: nanko-prod-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: nanko
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -15,8 +16,9 @@ services:
       retries: 10
 
   backend:
-    image: ghcr.io/ngdo-pro/nanko-backend:prod-latest
+    image: ghcr.io/ngdo-pro/nanko-backend:prod
     container_name: nanko-prod-backend
+    restart: unless-stopped
     environment:
       APP_ENV: prod
       APP_SECRET: ${APP_SECRET}
@@ -25,16 +27,40 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+      caddy: api.nanko.dev
+      caddy.encode: gzip
+      caddy.reverse_proxy: "{{upstreams 80}}"
+      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+      caddy.header.X-Content-Type-Options: nosniff
+      caddy.header.X-Frame-Options: DENY
+    # Under caddy-docker-proxy, the `caddy.reverse_proxy` label above resolves
+    # the upstream automatically by container IP -- there's no separate
+    # Caddyfile to keep in sync anymore. `container_name` is kept only for
+    # human-readable `docker ps`/`docker logs` disambiguation between preprod
+    # and prod.
     networks:
       default: {}
-      nanko-edge: {}
-    # IMPORTANT: always reference this container by its explicit container_name
-    # (nanko-prod-backend) in Caddy/other configs, never the bare service name
-    # "backend" -- Compose auto-aliases the bare service name on every network
-    # including nanko-edge, and preprod/prod would collide.
+      edge: {}
+
+  frontend:
+    image: ghcr.io/ngdo-pro/nanko-frontend:prod
+    container_name: nanko-prod-frontend
+    restart: unless-stopped
+    networks:
+      edge: {}
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+      caddy: app.nanko.dev
+      caddy.encode: gzip
+      caddy.reverse_proxy: "{{upstreams 8080}}"
+      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+      caddy.header.X-Content-Type-Options: nosniff
+      caddy.header.X-Frame-Options: DENY
 
 networks:
-  nanko-edge:
+  edge:
     external: true
 
 volumes:
