@@ -1,3 +1,0 @@
-# Le système de plugins, quand il arrivera, sera limité à des presets statiques
-
-Le système de plugins permettant à une Org d'importer des formes/couleurs personnalisées est repoussé après le mode C4. Quand il sera construit, son scope est volontairement restreint à des presets statiques (formes, couleurs, styles) — pas de code exécuté dans le canvas, et pas de possibilité de définir un nouveau `@type` de Document (le type reste un enum fermé côté core). Un plugin exécutant du code tiers dans le canvas d'autres utilisateurs poserait des problèmes de sandboxing et de sécurité (accès aux données d'autres Project, XSS) qui méritent leur propre round de conception le jour où ce besoin sera confirmé.

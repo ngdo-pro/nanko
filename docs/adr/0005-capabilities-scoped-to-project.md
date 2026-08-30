@@ -1,3 +1,0 @@
-# Les Capability sont accordées par Project, pas implicitement via l'appartenance à l'Org
-
-Être membre d'une Org ne donne accès à aucun Project par défaut ; chaque Capability est accordée explicitement par Project. Une Org peut néanmoins définir une Capability par défaut appliquée à tous ses Project, pour couvrir simplement le cas d'une petite équipe ou d'un usage personnel. Ce choix, plus contraignant que le modèle habituel "membre d'un tenant = accès à toutes ses ressources", a été fait dès la v1 pour éviter une migration de données difficile le jour où une Org aura besoin d'un contrôle d'accès fin par Project.

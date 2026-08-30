@@ -1,3 +1,0 @@
-# Le Layout vit dans le même fichier `.nanko` que le contenu, et suit son versioning
-
-Le placement des Shape (section `!LAYOUT`/`!END`) est stocké dans le même fichier `.nanko` que le contenu sémantique, plutôt que dans un fichier séparé, et fait partie intégrante de chaque Version figée plutôt que d'être un état "vivant" indépendant. Deux alternatives ont été écartées : un fichier de layout séparé (rejeté — l'utilisateur ne veut pas gérer deux fichiers pour un seul Document) et un layout non versionné, appliqué quelle que soit la Version consultée (rejeté — le layout est jugé une donnée assez importante pour que la timeline reste visuellement fiable et reproductible à chaque Version passée).

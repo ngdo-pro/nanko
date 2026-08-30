@@ -1,9 +1,10 @@
 # syntax=docker/dockerfile:1
 #
 # Multi-stage build for the nanko Symfony backend, running on FrankenPHP in
-# classic (non-worker) mode. FrankenPHP sits behind Caddy on a shared Docker
-# network (infra/preprod|prod/docker-compose.yml + infra/proxy) rather than
-# terminating TLS itself -- see SERVER_NAME below.
+# classic (non-worker) mode. FrankenPHP sits behind the VPS's shared
+# caddy-docker-proxy, routed by Docker labels (see
+# infra/preprod|prod/docker-compose.yml) rather than a static Caddyfile, and
+# does not terminate TLS itself -- see SERVER_NAME below.
 
 FROM dunglas/frankenphp:1.12-php8.4-bookworm AS builder
 
@@ -53,6 +54,20 @@ WORKDIR /app
 # HTTP on the Docker network.
 ENV SERVER_NAME=:80
 ENV APP_ENV=prod
+
+# Copied directly from the build context (not from the builder stage, and
+# not under /app) so it survives independently of the app-code copy above.
+# Runs pending Doctrine migrations before chaining into the base image's
+# own entrypoint -- see docker-entrypoint.sh and docs/adr/0010-*.md.
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+# Re-declared explicitly: setting ENTRYPOINT above resets any CMD inherited
+# from the base image to empty. This must match the base image's own CMD
+# (verified via `docker image inspect dunglas/frankenphp:1.12-php8.4-bookworm
+# --format '{{.Config.Entrypoint}} {{.Config.Cmd}}'`) so that
+# `docker-php-entrypoint "$@"` in docker-entrypoint.sh still receives it.
+CMD ["--config", "/etc/frankenphp/Caddyfile", "--adapter", "caddyfile"]
 
 EXPOSE 80
 
