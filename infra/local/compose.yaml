@@ -1,0 +1,72 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: nanko
+      POSTGRES_PASSWORD: nanko
+      POSTGRES_DB: nanko
+    ports:
+      # Non-default host port: this is a work laptop that may run other
+      # projects' postgres/backend/frontend on the usual 5432/8000/5173.
+      - "45432:5432"
+    volumes:
+      - nanko-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nanko -d nanko"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ../../backend
+      target: dev
+    environment:
+      APP_ENV: dev
+      # Same value as backend/.env.dev (committed, dev-only) -- not a secret.
+      APP_SECRET: 0b2a39f9e7175ccce856ec0da95c65b6
+      DATABASE_URL: postgresql://nanko:nanko@postgres:5432/nanko?serverVersion=16&charset=utf8
+    ports:
+      - "48000:8000"
+    volumes:
+      - ../../backend:/app
+      # Named volume so the host (which may have no PHP/Composer at all) never
+      # shadows the vendor/ that `composer install` creates inside the
+      # container; it persists across `up`/`down` instead of reinstalling
+      # from scratch every time.
+      - nanko-backend-vendor:/app/vendor
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      # Repo root, not frontend/ -- see the comment atop frontend/Dockerfile:
+      # the pnpm workspace install needs every package's package.json.
+      context: ../..
+      dockerfile: frontend/Dockerfile
+      target: dev
+    environment:
+      VITE_API_BASE_URL: http://localhost:48000
+    ports:
+      - "45173:5173"
+    volumes:
+      - ../..:/workspace
+      # Named volumes for the same reason as the backend's vendor/ above:
+      # the host may have no Node/pnpm, so node_modules must live entirely
+      # inside the container rather than be shadowed by the bind mount.
+      - nanko-frontend-node-modules:/workspace/node_modules
+      - nanko-frontend-app-node-modules:/workspace/frontend/node_modules
+      # pnpm's content-addressable store defaults to <workspace-root>/.pnpm-store,
+      # which without --store-dir would land inside the bind-mounted repo root
+      # on the host (see frontend/Dockerfile's CMD).
+      - nanko-pnpm-store:/pnpm-store
+    depends_on:
+      - backend
+
+volumes:
+  nanko-postgres-data:
+  nanko-backend-vendor:
+  nanko-frontend-node-modules:
+  nanko-frontend-app-node-modules:
+  nanko-pnpm-store:
