@@ -23,9 +23,14 @@ COPY --from=composer/composer:2-bin /composer /usr/bin/composer
 WORKDIR /app
 
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-scripts --optimize-autoloader --no-interaction
+RUN composer install --no-dev --no-scripts --no-autoloader --no-interaction
 
 COPY . .
+
+# Autoloader is dumped after the full source is present, not as part of the
+# `composer install` above: the classmap entry for config/reference.php (see
+# composer.json) needs that file on disk, which it isn't until this COPY.
+RUN composer dump-autoload --no-dev --optimize
 
 # Build-time-only placeholders so the container compiler/cache warmup can
 # resolve env(...) parameters at image-build time. They are never used to
