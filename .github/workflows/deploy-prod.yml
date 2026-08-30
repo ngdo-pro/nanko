@@ -50,3 +50,13 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/nanko-frontend:prod
             ghcr.io/${{ github.repository_owner }}/nanko-frontend:prod-${{ github.sha }}
+
+      - name: Build and push landing image
+        uses: docker/build-push-action@v6
+        with:
+          context: landing
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/nanko-landing:prod
+            ghcr.io/${{ github.repository_owner }}/nanko-landing:prod-${{ github.sha }}

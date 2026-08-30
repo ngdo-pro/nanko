@@ -64,6 +64,14 @@ services:
     depends_on:
       - backend
 
+  landing:
+    build:
+      context: ../../landing
+    ports:
+      - "45174:8080"
+    volumes:
+      - ../../landing:/srv
+
 volumes:
   nanko-postgres-data:
   nanko-backend-vendor:
