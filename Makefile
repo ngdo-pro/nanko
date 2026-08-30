@@ -3,17 +3,19 @@ REMOTE_DIR ?= nanko
 
 .PHONY: dev stop logs test-backend deptrac deploy-preprod deploy-prod
 
-# Runs postgres + backend + frontend from infra/local/compose.yaml in
-# the background, all dockerized -- no PHP/Composer/Node/pnpm needed on the
-# host, only Docker. Source is bind-mounted into the backend/frontend
-# containers, so edits are picked up live without a rebuild; `--build` just
-# keeps the images (extensions, corepack) in sync with the Dockerfiles.
-# Host ports are non-default (45432/48000/45173) to avoid clashing with
-# other projects' postgres/backend/frontend on this machine.
+# Runs postgres + backend + frontend + landing from infra/local/compose.yaml
+# in the background, all dockerized -- no PHP/Composer/Node/pnpm needed on
+# the host, only Docker. Source is bind-mounted into the backend/frontend/
+# landing containers, so edits are picked up live without a rebuild;
+# `--build` just keeps the images (extensions, corepack) in sync with the
+# Dockerfiles.
+# Host ports are non-default (45432/48000/45173/45174) to avoid clashing
+# with other projects' postgres/backend/frontend/landing on this machine.
 dev:
 	docker compose -f infra/local/compose.yaml up -d --build
 	@echo
 	@echo "frontend: http://localhost:45173"
+	@echo "landing:  http://localhost:45174"
 	@echo "backend:  http://localhost:48000"
 	@echo "postgres: localhost:45432"
 	@echo
