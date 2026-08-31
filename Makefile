@@ -1,7 +1,12 @@
 VPS ?= nanko-vps
 REMOTE_DIR ?= nanko
 
-.PHONY: dev stop logs test-backend deptrac deploy-preprod deploy-prod
+.PHONY: help dev stop logs test-backend composer deptrac static-analysis lint lint-fix deploy-preprod deploy-prod
+
+.DEFAULT_GOAL := help
+
+help: ## Show this help
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
 
 # Runs postgres + backend + frontend + landing from infra/local/compose.yaml
 # in the background, all dockerized -- no PHP/Composer/Node/pnpm needed on
@@ -11,7 +16,7 @@ REMOTE_DIR ?= nanko
 # Dockerfiles.
 # Host ports are non-default (45432/48000/45173/45174) to avoid clashing
 # with other projects' postgres/backend/frontend/landing on this machine.
-dev:
+dev: ## Start the local dev stack (postgres+backend+frontend+landing)
 	docker compose -f infra/local/compose.yaml up -d --build
 	@echo
 	@echo "frontend: http://localhost:45173"
@@ -21,10 +26,10 @@ dev:
 	@echo
 	@echo "(first run installs composer/pnpm deps in the background -- 'make logs' to follow progress)"
 
-stop:
+stop: ## Stop the local dev stack
 	docker compose -f infra/local/compose.yaml down
 
-logs:
+logs: ## Follow logs of the local dev stack
 	docker compose -f infra/local/compose.yaml logs -f
 
 # Runs against the "backend" service's own postgres connection (see
@@ -36,27 +41,50 @@ logs:
 # Symfony's KernelTestCase reads $_ENV before phpunit.dist.xml's <server>
 # override, so without this override integration/functional tests would
 # silently boot the dev kernel instead of test.
-test-backend:
+test-backend: ## Run the backend test suite (phpunit)
 	docker compose -f infra/local/compose.yaml exec -e APP_ENV=test backend sh -c ' \
 		php bin/console doctrine:database:create --if-not-exists --no-interaction && \
 		php bin/console doctrine:migrations:migrate --no-interaction && \
 		php bin/phpunit'
 
+# Runs composer inside the backend container -- there's no PHP/Composer on
+# the host. Usage: make composer ARGS="require --dev phpstan/phpstan-symfony"
+composer: ## Run composer in the backend container (ARGS="require ...")
+	docker compose -f infra/local/compose.yaml exec backend composer $(ARGS)
+
 # Enforces the Core/Port/Adapter dependency direction -- see
 # docs/adr/0011-hexagonal-architecture-backend.md.
-deptrac:
+deptrac: ## Enforce backend hexagonal architecture boundaries
 	docker compose -f infra/local/compose.yaml exec backend vendor/bin/deptrac analyse
+
+# Backend: phpstan, see backend/phpstan.neon. Frontend: tsc project-reference
+# build with no emit (frontend/tsconfig*.json), which is what "typecheck"
+# runs -- same check as `build` without the vite bundling step.
+static-analysis: ## Run static analysis (backend phpstan + frontend tsc)
+	docker compose -f infra/local/compose.yaml exec backend vendor/bin/phpstan analyse
+	docker compose -f infra/local/compose.yaml exec frontend pnpm --filter frontend typecheck
+
+# Backend: php-cs-fixer, see backend/.php-cs-fixer.dist.php (same ruleset as
+# Evaneos/trip-project). --allow-risky=yes is required by declare_strict_types.
+# Frontend: oxlint.
+lint: ## Lint all code (backend cs-fixer dry-run + frontend oxlint)
+	docker compose -f infra/local/compose.yaml exec backend vendor/bin/php-cs-fixer fix --allow-risky=yes --dry-run --diff
+	docker compose -f infra/local/compose.yaml exec frontend pnpm --filter frontend lint
+
+lint-fix: ## Lint and auto-fix all code (backend cs-fixer + frontend oxlint --fix)
+	docker compose -f infra/local/compose.yaml exec backend vendor/bin/php-cs-fixer fix --allow-risky=yes --diff
+	docker compose -f infra/local/compose.yaml exec frontend pnpm --filter frontend lint:fix
 
 # Compose-structure changes only (new service, changed labels/ports) --
 # ordinary code changes just produce a new image and are picked up by
 # Watchtower on its own; this is deliberately NOT wired into CI, to keep
 # zero deploy credentials in GitHub Actions.
-deploy-preprod:
+deploy-preprod: ## Deploy to preprod (git pull + compose up on the VPS)
 	ssh $(VPS) "cd $(REMOTE_DIR) && git pull --ff-only && \
 		docker compose -p nanko-preprod -f infra/preprod/compose.yaml \
 		--env-file infra/preprod/.env up -d"
 
-deploy-prod:
+deploy-prod: ## Deploy to prod (git pull + compose up on the VPS)
 	ssh $(VPS) "cd $(REMOTE_DIR) && git pull --ff-only && \
 		docker compose -p nanko-prod -f infra/prod/compose.yaml \
 		--env-file infra/prod/.env up -d"

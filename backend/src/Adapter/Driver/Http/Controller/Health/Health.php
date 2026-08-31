@@ -10,9 +10,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class Health
 {
-    public function __construct(private readonly Connection $connection)
-    {
-    }
+    public function __construct(private readonly Connection $connection) {}
 
     #[Route('/health', name: 'health', methods: ['GET'])]
     public function __invoke(): JsonResponse
