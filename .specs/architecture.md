@@ -16,7 +16,7 @@ monorepo/
 ---
 
 ## 2. Stack Technique & Versions de Référence
-* **Backend (`backend/`) :** PHP 8.4+, Symfony 8.x, PostgreSQL 16+, Doctrine DBAL (pas d'ORM - cf. ADR 0011), `symfony/uid` (UUIDv7), architecture hexagonale (`Core/Domain`, `Core/UseCase`, `Core/Port`, `Adapter/Driven`, `Adapter/Driver`), vérification des frontières avec Deptrac.
+* **Backend (`backend/`) :** PHP 8.4+, Symfony 8.x, PostgreSQL 16+, Doctrine DBAL (pas d'ORM - cf. ADR 0011), `symfony/uid` (UUIDv7), architecture modulaire en Bounded Contexts (`backend/src/<BoundedContext>/Core/` et `backend/src/<BoundedContext>/Adapter/`), vérification des frontières avec Deptrac.
 * **Frontend (`frontend/`) :** Node.js 22+, React 19, TypeScript 5+, Vite, Tailwind CSS, TanStack Query, React Hook Form, Zod, Oxlint.
 * **E2E & Outillage (`tests-e2e/`) :** Playwright, pnpm workspaces (`pnpm-workspace.yaml`).
 
@@ -28,13 +28,16 @@ monorepo/
 * **Routage :** Endpoints préfixés par `/api/v1/`, ressources nommées en kebab-case au pluriel (ex. `/api/v1/workspace-members`).
 * **Format payload :** JSON strict (`Content-Type: application/json`).
 * **DTOs Backend :** Classes PHP `final readonly` avec contraintes Symfony Validator (`#[Assert\*]`).
-* **Architecture Hexagonale Backend :**
-  * `Core/Domain` : Entités et value objects purs, indépendants du framework.
-  * `Core/UseCase` : Commandes et handlers d'orchestration métier.
-  * `Core/Port` : Interfaces de ports (Repository, etc.).
-  * `Adapter/Driven` : Implémentations techniques (DBAL Persistence).
-  * `Adapter/Driver` : Contrôleurs HTTP et commandes CLI.
-  * Respect strict des frontières vérifié par Deptrac (`make deptrac`).
+* **Architecture Modulaire Backend (Monolithe par Bounded Context) :**
+  * Topologie : `backend/src/<BoundedContext>/` (ex. `AuthAndIdentity`, `WorkspaceManagement`).
+  * Chaque Bounded Context possède son propre hexagone étanche :
+    * `<BoundedContext>/Core/Domain/` : Entités et value objects purs, indépendants du framework.
+    * `<BoundedContext>/Core/UseCase/` : Commandes et handlers d'orchestration métier.
+    * `<BoundedContext>/Core/Port/` : Interfaces de ports (Repository, etc.).
+    * `<BoundedContext>/Adapter/Driven/` : Implémentations techniques (DBAL Persistence).
+    * `<BoundedContext>/Adapter/Driver/` : Contrôleurs HTTP, Authenticateurs et commandes CLI.
+  * `backend/src/Shared/` : Dédié uniquement au Kernel et à l'infrastructure purement transverse.
+  * Respect strict des frontières hexagonales et inter-contextes vérifié par Deptrac (`make deptrac`).
 * **Format des erreurs :**
   * Erreur de validation (`422`) : `{"violations": [{"propertyPath": "email", "title": "Format invalide"}]}`.
   * Erreur métier / Conflit (`409`, `400`, `403`) : `{"code": "MACHINE_READABLE_CODE", "message": "Description lisible."}`.
