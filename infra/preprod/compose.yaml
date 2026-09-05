@@ -50,7 +50,7 @@ services:
     image: quay.io/keycloak/keycloak:26.1
     container_name: nanko-preprod-keycloak
     restart: unless-stopped
-    command: start --optimized --import-realm
+    command: start --import-realm
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/nanko
