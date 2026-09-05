@@ -20,6 +20,19 @@ describe('Spécifications 003 : Centralisation et Validation Zod des Variables d
         assert.equal(parsed.data.VITE_KEYCLOAK_URL, 'http://localhost:48080')
         assert.equal(parsed.data.VITE_KEYCLOAK_REALM, 'nanko')
         assert.equal(parsed.data.VITE_KEYCLOAK_CLIENT_ID, 'nanko-web')
+        assert.equal(parsed.data.VITE_OTEL_EXPORTER_URL, '')
+        assert.equal(parsed.data.VITE_OTEL_SERVICE_NAME, 'nanko-frontend')
+        assert.equal(parsed.data.VITE_APP_ENV, 'local')
+      }
+    })
+
+    it('doit accepter une URL valide pour VITE_OTEL_EXPORTER_URL', () => {
+      const parsed = frontendEnvSchema.safeParse({
+        VITE_OTEL_EXPORTER_URL: 'http://localhost:44318/v1/traces',
+      })
+      assert.equal(parsed.success, true)
+      if (parsed.success) {
+        assert.equal(parsed.data.VITE_OTEL_EXPORTER_URL, 'http://localhost:44318/v1/traces')
       }
     })
   })
@@ -52,6 +65,17 @@ describe('Spécifications 003 : Centralisation et Validation Zod des Variables d
         VITE_KEYCLOAK_REALM: '',
       })
       assert.equal(parsed.success, false)
+    })
+
+    it('doit échouer si VITE_OTEL_EXPORTER_URL n\'est ni vide ni une URL valide', () => {
+      const parsed = frontendEnvSchema.safeParse({
+        VITE_OTEL_EXPORTER_URL: 'not-a-valid-url',
+      })
+      assert.equal(parsed.success, false)
+      if (!parsed.success) {
+        const issues = parsed.error.issues
+        assert.ok(issues.some((i) => i.path.includes('VITE_OTEL_EXPORTER_URL')))
+      }
     })
   })
 
