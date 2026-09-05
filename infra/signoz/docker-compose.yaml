@@ -23,7 +23,7 @@ services:
       default: {}
 
   signoz-query-service:
-    image: signoz/query-service:0.55.1
+    image: signoz/query-service:latest
     container_name: signoz-query-service
     restart: unless-stopped
     volumes:
@@ -42,7 +42,7 @@ services:
       default: {}
 
   signoz-frontend:
-    image: signoz/frontend:0.55.1
+    image: signoz/frontend:latest
     container_name: signoz-frontend
     restart: unless-stopped
     depends_on:
@@ -60,7 +60,7 @@ services:
       edge: {}
 
   otel-collector:
-    image: signoz/signoz-otel-collector:0.111.23
+    image: signoz/signoz-otel-collector:latest
     container_name: signoz-otel-collector
     restart: unless-stopped
     command: ["--config=/etc/otel-collector-config.yaml"]

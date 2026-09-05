@@ -17,7 +17,7 @@ services:
       - nanko-local-signoz-alertmanager:/data
 
   signoz-query-service:
-    image: signoz/query-service:0.55.1
+    image: signoz/query-service:latest
     restart: unless-stopped
     volumes:
       - ../signoz/alerts:/root/config/alerts:ro
@@ -33,7 +33,7 @@ services:
         condition: service_healthy
 
   signoz-frontend:
-    image: signoz/frontend:0.55.1
+    image: signoz/frontend:latest
     restart: unless-stopped
     ports:
       - "43301:3301"
@@ -41,7 +41,7 @@ services:
       - signoz-query-service
 
   otel-collector:
-    image: signoz/signoz-otel-collector:0.111.23
+    image: signoz/signoz-otel-collector:latest
     restart: unless-stopped
     command: ["--config=/etc/otel-collector-config.yaml"]
     volumes:
