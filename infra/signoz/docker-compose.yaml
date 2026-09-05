@@ -30,6 +30,23 @@ services:
     networks:
       default: {}
 
+  signoz-schema-migrator:
+    image: signoz/signoz-otel-collector:latest
+    container_name: signoz-schema-migrator
+    restart: "no"
+    command:
+      - sh
+      - -c
+      - |
+        /signoz-otel-collector migrate bootstrap --clickhouse-dsn=tcp://clickhouse:9000 &&
+        /signoz-otel-collector migrate sync up --clickhouse-dsn=tcp://clickhouse:9000 &&
+        /signoz-otel-collector migrate async up --clickhouse-dsn=tcp://clickhouse:9000
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    networks:
+      default: {}
+
   signoz-query-service:
     image: signoz/query-service:latest
     container_name: signoz-query-service
@@ -51,6 +68,8 @@ services:
     depends_on:
       clickhouse:
         condition: service_healthy
+      signoz-schema-migrator:
+        condition: service_completed_successfully
     networks:
       default: {}
 
@@ -86,6 +105,8 @@ services:
     depends_on:
       clickhouse:
         condition: service_healthy
+      signoz-schema-migrator:
+        condition: service_completed_successfully
     labels:
       com.centurylinklabs.watchtower.enable: "true"
       caddy: otlp.nanko.dev

@@ -7,6 +7,7 @@ env:
   ENVIRONMENT: prod
   VITE_API_BASE_URL: https://api.nanko.dev
   VITE_KEYCLOAK_URL: https://auth.nanko.dev
+  VITE_OTEL_EXPORTER_URL: https://otlp.nanko.dev/v1/traces
 
 permissions:
   contents: read
@@ -62,6 +63,8 @@ jobs:
           build-args: |
             VITE_API_BASE_URL=${{ env.VITE_API_BASE_URL }}
             VITE_KEYCLOAK_URL=${{ env.VITE_KEYCLOAK_URL }}
+            VITE_OTEL_EXPORTER_URL=${{ env.VITE_OTEL_EXPORTER_URL }}
+            VITE_APP_ENV=${{ env.ENVIRONMENT }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/nanko-frontend:prod
             ghcr.io/${{ github.repository_owner }}/nanko-frontend:prod-${{ github.sha }}
