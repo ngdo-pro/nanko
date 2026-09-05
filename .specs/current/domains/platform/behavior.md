@@ -23,6 +23,11 @@ Garantir l'intégrité, la traçabilité et la stabilité de la plateforme Nanko
 * Le contexte est transmis de façon transparente à travers toute la chaîne : Frontend React ➔ Keycloak (OIDC/SSO) ➔ Backend Symfony ➔ Requêtes PostgreSQL.
 * Les traces, métriques applicatives (RED) et métriques d'authentification Keycloak sont ingérées par SigNoz OTel Collector et visualisables sur le dashboard centralisé (`https://signoz.nanko.dev`) avec filtrage par environnement (`deployment.environment`).
 
+### Parcours 4 : Accès sécurisé à l'environnement de Préproduction (Caddy HTTP Basic Auth)
+* **Accès public / Robots :** Toute requête non authentifiée vers l'environnement de préproduction (`https://app.preprod.nanko.dev`) est interceptée par Caddy et reçoit immédiatement un statut HTTP `401 Unauthorized` avec l'en-tête `WWW-Authenticate: Basic realm="Nanko Preproduction"`, empêchant l'exploration du frontend ou du backend.
+* **Accès humain (Développeurs & QA) :** Une invite d'authentification native du navigateur s'affiche lors de la première navigation. Après validation des identifiants (`PREPROD_HTTP_USER`), la session HTTP est maintenue par le navigateur et la navigation dans l'application ainsi que l'authentification Keycloak OIDC se déroulent normalement.
+* **Exécution automatisée E2E (CI) :** Le runner Playwright injecte nativement les identifiants Basic Auth (`httpCredentials`) configurés via les secrets de repository (`PREPROD_HTTP_USER`, `PREPROD_HTTP_PASSWORD`) de façon 100% transparente, validant les parcours nominaux sans contourner ni altérer le flux Keycloak.
+
 ## 3. Règles de Gestion & Invariants Opérationnels
 * **Règle 1 (Gate de préprod bloquante) :** Toute Pull Request doit obligatoirement valider l'ensemble des scénarios E2E Playwright sur l'infrastructure de préproduction réelle avant d'être éligible au merge sur `main`.
 * **Règle 2 (Sérialisation de l'environnement de préproduction) :** Pour éviter les conflits d'état sur l'environnement partagé de préproduction, les exécutions de PR sont strictement sérialisées via un groupe de concurrence GitHub Actions (`concurrency: group: preprod-shared-env, cancel-in-progress: false`).
@@ -34,6 +39,8 @@ Garantir l'intégrité, la traçabilité et la stabilité de la plateforme Nanko
 * **Règle 8 (Observabilité locale à la demande) :** En développement local, SigNoz ne démarre pas par défaut avec `make dev` pour économiser les ressources de la machine (2-3 Go de RAM requis). Il est activable à la demande via `make signoz-up` et `make signoz-down`.
 * **Règle 9 (Conformité Compose Spec & Nommage) :** Toutes les piles de conteneurisation de l'infrastructure respectent la spécification Compose officielle en utilisant exclusivement le nom de fichier `compose.yaml` (ou `compose.*.yaml`), proscrivant l'ancienne dénomination `docker-compose.yaml`.
 * **Règle 10 (Migrations de schéma ClickHouse autonomes) :** Tout déploiement de la stack d'observabilité (local ou VPS) exécute automatiquement les migrations de schéma SigNoz (`bootstrap`, `sync up`, `async up`) via le conteneur dédié `signoz-schema-migrator` avant le démarrage des services `otel-collector` et `signoz-query-service`.
+* **Règle 11 (Sas de sécurité HTTP Basic Auth en préproduction) :** L'accès à l'application web de préproduction (`app.preprod.nanko.dev`) est protégé par une authentification HTTP Basic Auth au niveau du reverse proxy Caddy (`caddy.basic_auth`). La production et le développement local restent exempts de Basic Auth.
+* **Règle 12 (Directive anti-indexation robots en préproduction) :** Tous les sous-domaines de préproduction (`app.preprod.nanko.dev`, `www.preprod.nanko.dev`) renvoient obligatoirement l'en-tête de réponse HTTP `X-Robots-Tag: "noindex, nofollow"` pour proscrire tout référencement ou moissonnage par les moteurs de recherche.
 
 ## 4. Matrice des Échecs & Cas Limites
 | Situation | Comportement & Conséquence |
@@ -45,3 +52,5 @@ Garantir l'intégrité, la traçabilité et la stabilité de la plateforme Nanko
 | Variable d'environnement frontend invalide (ex. `VITE_KEYCLOAK_URL` mal formée) | `throw` immédiat au chargement du module `config/env.ts` + écran de secours HTML listant les erreurs Zod |
 | Variable d'environnement E2E invalide (ex. `APP_BASE_URL` mal formée) | `throw` immédiat au chargement de `tests-e2e/config/env.ts`, suite Playwright interrompue avant exécution |
 | Collecteur SigNoz arrêté ou inaccessible | Fonctionnement transparent en fail-open : requêtes HTTP et authentification 100% opérationnelles sans erreur |
+| Requête non authentifiée sur la préproduction (`app.preprod.nanko.dev`) | Réponse immédiate `401 Unauthorized` par Caddy avec challenge Basic Auth, code applicatif inaccessible |
+| Identifiants HTTP Basic Auth préproduction erronés | Réponse `401 Unauthorized`, réinvite native du navigateur ou échec explicite Playwright en CI |
