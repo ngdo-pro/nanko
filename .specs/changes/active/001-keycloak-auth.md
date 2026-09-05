@@ -11,11 +11,18 @@
 * **Problème résolu / Besoin :** Déléguer l'ensemble du cycle de vie des identités, du stockage sécurisé des mots de passe, du MFA et des flux de connexion à un Identity Provider (IdP) OIDC dédié et standardisé (Keycloak), plutôt que de développer et maintenir un serveur OAuth/identités maison dans Symfony.
 * **Impact utilisateur :** Expérience de connexion fluide et sécurisée via la mire Keycloak standard (avec support futur de 2FA, social login Google/GitHub, réinitialisation de mot de passe autonome). L'application React redirige vers Keycloak et récupère la session sans manipulation directe de mot de passe par le code client.
 * **In Scope (Ce qui est ajouté/modifié) :**
-  * Conteneur Docker Keycloak (Quarkus) dans `infra/local/compose.yaml` (port `48080`, realm `nanko`, client public `nanko-web` avec PKCE).
-  * Frontend React : Intégration OIDC via `keycloak-js` (Authorization Code Flow + PKCE), persistance de session en mémoire, injection du header `Authorization: Bearer <token>`, gestion du refresh automatique.
-  * Backend Symfony : Configuration en tant que **Resource Server** OIDC vérifiant la signature RS256 des Access Tokens JWT via le JWKS de Keycloak mis en cache.
-  * Provisioning Just-In-Time (JIT) : Création automatique d'une entité utilisateur locale minimale (`app_user` avec `keycloak_id`, `email`) lors de sa première requête authentifiée.
-  * Endpoint `GET /api/v1/me` renvoyant le profil de l'utilisateur courant et ses contextes.
+  * **Infrastructure Docker multi-environnements :**
+    * `infra/local/compose.yaml` : Conteneur Keycloak (Quarkus) exposé sur le port `48080:8080`.
+    * `infra/preprod/compose.yaml` : Service Keycloak raccordé au réseau `edge`, labels Caddy `auth.preprod.nanko.dev` et persistance Postgres (`nanko_keycloak`).
+    * `infra/prod/compose.yaml` : Service Keycloak raccordé au réseau `edge`, labels Caddy `auth.nanko.dev` et persistance Postgres (`nanko_keycloak`).
+  * **Configuration déclarative du Realm :**
+    * Fichier versionné `infra/keycloak/realm-nanko.json` monté dans `/opt/keycloak/data/import/` et chargé automatiquement via `--import-realm`.
+    * Client public `nanko-web` avec PKCE et redirect URIs pour Local (`localhost:45173`), Preprod (`app.preprod.nanko.dev`) et Prod (`app.nanko.dev`).
+  * **Déploiement VPS :** Validation du déploiement de structure compose via `make deploy-preprod` et `make deploy-prod`.
+  * **Frontend React :** Intégration OIDC via `keycloak-js` (Authorization Code Flow + PKCE), persistance de session en mémoire, injection du header `Authorization: Bearer <token>`, gestion du refresh automatique et variables `VITE_KEYCLOAK_*`.
+  * **Backend Symfony (`AuthAndIdentity`) :** Configuration en tant que **Resource Server** OIDC vérifiant la signature RS256 des Access Tokens JWT via le JWKS de Keycloak mis en cache.
+  * **Provisioning Just-In-Time (JIT) :** Création automatique d'une entité utilisateur locale minimale (`app_user` avec `keycloak_id`, `email`) lors de sa première requête authentifiée.
+  * **Endpoint `GET /api/v1/me` :** Renvoie le profil de l'utilisateur courant.
 * **Out of Scope (Exclusions strictes) :**
   * Formulaire de saisie de mot de passe direct dans React (exclu par OAuth 2.1).
   * Synchronisation complexe par webhooks ou SPI Java custom côté Keycloak.
@@ -57,6 +64,42 @@ sequenceDiagram
         F-->>U: Affichage de l'espace de travail connecté
     end
 ```
+
+### 2.2. Topologie Déploiement & Infrastructure (Local, Preprod, Prod)
+
+L'introduction de Keycloak modifie la composition Docker des 3 environnements :
+
+```text
++----------------------------------------------------------------------------------------------------+
+| ENVIRONNEMENT LOCAL (infra/local/compose.yaml)                                                     |
+|                                                                                                    |
+|  [Browser :45173] --------> [Keycloak :48080] (Import auto: infra/keycloak/realm-nanko.json)       |
+|         |                           |                                                              |
+|         v                           v                                                              |
+|  [Frontend SPA] ------------> [Backend API :48000] --------> [Postgres :45432]                     |
++----------------------------------------------------------------------------------------------------+
+
++----------------------------------------------------------------------------------------------------+
+| VPS PREPROD & PROD (infra/preprod/ & infra/prod/)                                                  |
+|                                                                                                    |
+|  [Caddy Docker Proxy (Réseau 'edge')]                                                              |
+|     ├── auth.preprod.nanko.dev  ──> [Keycloak :8080] (Import auto / Réseau default + edge)         |
+|     ├── app.preprod.nanko.dev   ──> [Frontend SPA :8080]                                           |
+|     ├── api.preprod.nanko.dev   ──> [Backend Symfony :80] ──> [Postgres (DB: nanko_keycloak)]     |
+|     └── www.preprod.nanko.dev   ──> [Landing :8080]                                                |
++----------------------------------------------------------------------------------------------------+
+```
+
+#### Matrice de Configuration par Environnement
+
+| Paramètre | Local (`local/`) | Preprod (`preprod/`) | Prod (`prod/`) |
+|---|---|---|---|
+| **Domaine Auth Keycloak** | `http://localhost:48080` | `https://auth.preprod.nanko.dev` | `https://auth.nanko.dev` |
+| **Domaine Frontend SPA** | `http://localhost:45173` | `https://app.preprod.nanko.dev` | `https://app.nanko.dev` |
+| **Domaine Backend API** | `http://localhost:48000` | `https://api.preprod.nanko.dev` | `https://api.nanko.dev` |
+| **Port Hôte Keycloak** | `48080` | Aucun (routage Caddy labels) | Aucun (routage Caddy labels) |
+| **Base de données Keycloak** | PostgreSQL locale (`nanko_keycloak`) | PostgreSQL preprod (`nanko_keycloak`) | PostgreSQL prod (`nanko_keycloak`) |
+| **Déploiement initial VPS** | `make dev` | `make deploy-preprod` | `make deploy-prod` |
 
 ---
 
@@ -201,10 +244,13 @@ frontend/src/
 
 ## 8. Plan d'exécution séquentiel
 
-- [ ] **Phase 1 : Infrastructure Docker (`infra/local/`)**
-  - [ ] 1. Ajouter le service `keycloak` dans `infra/local/compose.yaml` (image `quay.io/keycloak/keycloak:26.1` ou `25.x`, ports `48080:8080`).
-  - [ ] 2. Configurer un realm d'export/import initial `nanko` (client `nanko-web` public avec PKCE et redirect URIs configurées).
-  - [ ] 3. Valider le démarrage du conteneur Keycloak avec `make dev` ou `docker compose up -d keycloak`.
+- [ ] **Phase 1 : Infrastructure Docker & Déploiement Multi-Environnements (`infra/`)**
+  - [ ] 1. Configuration déclarative : Créer le fichier `infra/keycloak/realm-nanko.json` (realm `nanko`, client `nanko-web` public avec PKCE et redirect URIs pour `http://localhost:45173/*`, `https://app.preprod.nanko.dev/*`, `https://app.nanko.dev/*`).
+  - [ ] 2. Service local : Ajouter le service `keycloak` dans `infra/local/compose.yaml` (port `48080:8080`, montage du realm avec `--import-realm`, healthcheck).
+  - [ ] 3. Service Preprod : Ajouter `keycloak` dans `infra/preprod/compose.yaml` (image `quay.io/keycloak/keycloak:26.1`, labels Caddy `auth.preprod.nanko.dev`, réseaux `default` + `edge`, persistance Postgres `nanko_keycloak`).
+  - [ ] 4. Service Prod : Ajouter `keycloak` dans `infra/prod/compose.yaml` (labels Caddy `auth.nanko.dev`, réseaux `default` + `edge`, persistance Postgres `nanko_keycloak`).
+  - [ ] 5. Variables d'environnement : Déclarer les variables requises dans `infra/preprod/.env` et `infra/prod/.env` (`KEYCLOAK_ADMIN_PASSWORD`, `KEYCLOAK_DB_PASSWORD`).
+  - [ ] 6. Déploiement VPS : Documenter et valider la commande `make deploy-preprod` pour appliquer les nouveaux conteneurs sur le serveur.
 
 - [ ] **Phase 2 : Backend Symfony (`backend/src/AuthAndIdentity/`)**
   - [ ] 1. Architecture : Mettre en place l'arborescence du Bounded Context sous `backend/src/AuthAndIdentity/` (`Core/Domain/`, `Core/Port/`, `Core/UseCase/`, `Adapter/Driven/`, `Adapter/Driver/`).
