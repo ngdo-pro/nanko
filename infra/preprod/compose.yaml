@@ -56,6 +56,7 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres:5432/nanko
       KC_DB_USERNAME: nanko
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KC_DB_SCHEMA: keycloak
       KC_HOSTNAME: auth.preprod.nanko.dev
       KC_PROXY_HEADERS: xforwarded
       KC_HTTP_ENABLED: "true"
