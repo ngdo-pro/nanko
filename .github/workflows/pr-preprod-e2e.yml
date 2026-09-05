@@ -173,6 +173,7 @@ jobs:
         if: steps.changes.outputs.app == 'true'
         env:
           APP_BASE_URL: ${{ env.APP_BASE_URL }}
+          API_BASE_URL: ${{ env.VITE_API_BASE_URL }}
           E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
           E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
           PREPROD_HTTP_USER: ${{ secrets.PREPROD_HTTP_USER }}

@@ -6,6 +6,10 @@ export const e2eEnvSchema = z.object({
     .string()
     .url('APP_BASE_URL doit être une URL valide')
     .default('http://localhost:45173'),
+  API_BASE_URL: z
+    .string()
+    .url('API_BASE_URL doit être une URL valide')
+    .default('http://localhost:48000'),
   LIBRARY_BASE_URL: z
     .string()
     .url('LIBRARY_BASE_URL doit être une URL valide')
@@ -35,6 +39,7 @@ if (!parsed.success) {
 
 export const env = Object.freeze({
   appBaseUrl: parsed.data.APP_BASE_URL,
+  apiBaseUrl: parsed.data.API_BASE_URL,
   libraryBaseUrl: parsed.data.LIBRARY_BASE_URL,
   keycloak: {
     url: parsed.data.KEYCLOAK_URL,

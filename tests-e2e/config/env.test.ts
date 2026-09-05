@@ -85,6 +85,7 @@ describe('Spécifications 003 : Centralisation et Validation Zod des Variables d
       assert.equal(parsed.success, true)
       if (parsed.success) {
         assert.equal(parsed.data.APP_BASE_URL, 'http://localhost:45173')
+        assert.equal(parsed.data.API_BASE_URL, 'http://localhost:48000')
         assert.equal(parsed.data.LIBRARY_BASE_URL, 'http://localhost:45174')
         assert.equal(parsed.data.KEYCLOAK_URL, 'http://localhost:48080')
         assert.equal(parsed.data.KEYCLOAK_ADMIN_USER, 'admin')
