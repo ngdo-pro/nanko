@@ -1,0 +1,110 @@
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.1-alpine
+    restart: unless-stopped
+    volumes:
+      - nanko-local-signoz-clickhouse:/var/lib/clickhouse
+      - ../signoz/clickhouse-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ../signoz/clickhouse-config.xml:/etc/clickhouse-server/config.d/keeper.xml:ro
+      - ../signoz/clickhouse-users.xml:/etc/clickhouse-server/users.d/json.xml:ro
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "0.0.0.0:8123/ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  signoz-alertmanager:
+    image: signoz/alertmanager:0.23.6
+    restart: unless-stopped
+    command:
+      - --queryService.url=http://signoz-query-service:8080
+      - --storage.path=/data
+    depends_on:
+      - signoz-query-service
+    volumes:
+      - nanko-local-signoz-alertmanager:/data
+
+  signoz-schema-migrator:
+    image: signoz/signoz-otel-collector:latest
+    restart: "no"
+    command:
+      - sh
+      - -c
+      - |
+        /signoz-otel-collector migrate bootstrap --clickhouse-dsn=tcp://clickhouse:9000 &&
+        /signoz-otel-collector migrate sync up --clickhouse-dsn=tcp://clickhouse:9000 &&
+        /signoz-otel-collector migrate async up --clickhouse-dsn=tcp://clickhouse:9000
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+
+  signoz-query-service:
+    image: signoz/query-service:latest
+    restart: unless-stopped
+    command:
+      - -config=/root/config/prometheus.yml
+      - -use-trace-new-schema=true
+      - -use-logs-new-schema=true
+    volumes:
+      - nanko-local-signoz-data:/var/lib/signoz
+      - ../signoz/alerts:/root/config/alerts:ro
+      - ../signoz/dashboards:/root/config/dashboards:ro
+    environment:
+      - ClickHouseUrl=tcp://clickhouse:9000
+      - STORAGE=clickhouse
+      - GODEBUG=netdns=go
+      - TELEMETRY_ENABLED=false
+      - ALERTMANAGER_API_PREFIX=http://signoz-alertmanager:9093/api/
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+      signoz-schema-migrator:
+        condition: service_completed_successfully
+
+  signoz-frontend:
+    image: signoz/frontend:latest
+    restart: unless-stopped
+    ports:
+      - "43301:3301"
+    volumes:
+      - ../signoz/nginx-config.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - signoz-query-service
+
+  signoz-provisioner:
+    image: alpine:latest
+    environment:
+      - SIGNOZ_ADMIN_EMAIL=admin@nanko.dev
+      - SIGNOZ_ADMIN_PASSWORD=admin1234
+      - SIGNOZ_ADMIN_NAME=Local Admin
+    volumes:
+      - ../signoz/dashboards:/dashboards:ro
+      - ../signoz/provisioner/provision.sh:/provision.sh:ro
+    entrypoint: ["/bin/sh", "/provision.sh"]
+    depends_on:
+      - signoz-query-service
+    restart: "no"
+
+  otel-collector:
+    image: signoz/signoz-otel-collector:latest
+    restart: unless-stopped
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ../signoz/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    ports:
+      - "44317:4317"
+      - "44318:4318"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+      signoz-schema-migrator:
+        condition: service_completed_successfully
+
+networks:
+  default:
+    name: local_default
+
+volumes:
+  nanko-local-signoz-clickhouse:
+  nanko-local-signoz-alertmanager:
+  nanko-local-signoz-data:

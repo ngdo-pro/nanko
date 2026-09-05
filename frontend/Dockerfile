@@ -18,9 +18,13 @@ RUN pnpm install --frozen-lockfile
 COPY frontend frontend
 ARG VITE_API_BASE_URL
 ARG VITE_KEYCLOAK_URL
+ARG VITE_OTEL_EXPORTER_URL
+ARG VITE_APP_ENV
 RUN test -n "$VITE_API_BASE_URL"
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 ENV VITE_KEYCLOAK_URL=${VITE_KEYCLOAK_URL}
+ENV VITE_OTEL_EXPORTER_URL=${VITE_OTEL_EXPORTER_URL}
+ENV VITE_APP_ENV=${VITE_APP_ENV}
 RUN pnpm --filter frontend build
 
 # Dev-only stage for `infra/local/compose.yaml`. The repo is

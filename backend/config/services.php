@@ -15,6 +15,9 @@ return App::config([
         'app.commit' => '%env(default:default_app_commit:APP_COMMIT)%',
         'default_app_version' => 'v0.0.0-dev',
         'default_app_commit' => 'dev',
+        'otel.exporter_endpoint' => '%env(default::OTEL_EXPORTER_OTLP_ENDPOINT)%',
+        'otel.service_name' => '%env(default:default_otel_service_name:OTEL_SERVICE_NAME)%',
+        'default_otel_service_name' => 'nanko-backend',
     ],
 
     'services' => [
@@ -61,6 +64,14 @@ return App::config([
         //   SomeRepositoryPort::class => ['alias' => DoctrineSomeRepository::class],
         \App\AuthAndIdentity\Core\Port\User\Repository::class => [
             'alias' => \App\AuthAndIdentity\Adapter\Driven\Persistence\User\DoctrineRepository::class,
+        ],
+
+        \App\Adapter\Driver\Http\OpenTelemetry\TraceSubscriber::class => [
+            'arguments' => [
+                '$otlpEndpoint' => '%otel.exporter_endpoint%',
+                '$serviceName' => '%otel.service_name%',
+                '$environment' => '%kernel.environment%',
+            ],
         ],
 
         // add more service definitions when explicit configuration is needed

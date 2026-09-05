@@ -1,0 +1,43 @@
+{
+  "title": "Platform Overview (Symfony, Keycloak & React)",
+  "description": "Vue synthétique des RED metrics, traces distribuées et métriques d'authentification Keycloak",
+  "tags": ["platform", "symfony", "keycloak", "react"],
+  "widgets": [
+    {
+      "id": "req-rate",
+      "title": "API Request Rate (req/s)",
+      "type": "time_series",
+      "query": {
+        "queryType": "promql",
+        "promql": "sum(rate(signoz_http_requests_total[1m])) by (service_name)"
+      }
+    },
+    {
+      "id": "err-rate",
+      "title": "API 5xx Error Rate (%)",
+      "type": "time_series",
+      "query": {
+        "queryType": "promql",
+        "promql": "(sum(rate(signoz_http_requests_total{status_code=~\"5..\"}[1m])) / sum(rate(signoz_http_requests_total[1m]))) * 100"
+      }
+    },
+    {
+      "id": "p95-latency",
+      "title": "API P95 Latency (ms)",
+      "type": "time_series",
+      "query": {
+        "queryType": "promql",
+        "promql": "histogram_quantile(0.95, sum(rate(signoz_http_latency_bucket[1m])) by (le))"
+      }
+    },
+    {
+      "id": "keycloak-logins",
+      "title": "Keycloak Successful & Failed Logins",
+      "type": "time_series",
+      "query": {
+        "queryType": "promql",
+        "promql": "sum(rate(keycloak_login_attempts_total[1m])) by (outcome)"
+      }
+    }
+  ]
+}

@@ -18,6 +18,11 @@ Garantir l'intégrité, la traçabilité et la stabilité de la plateforme Nanko
 * Tout système tiers, développeur ou sonde de supervision peut interroger publiquement `GET /api/v1/version` sur n'importe quel environnement (`local`, `preprod`, `prod`).
 * L'API retourne instantanément l'état opérationnel, la version SemVer, le commit SHA et l'environnement d'exécution.
 
+### Parcours 3 : Traçabilité distribuée de bout en bout (OpenTelemetry & SigNoz)
+* Chaque action utilisateur sur le frontend React génère ou propage un contexte de traçabilité W3C (`traceparent`, `tracestate`).
+* Le contexte est transmis de façon transparente à travers toute la chaîne : Frontend React ➔ Keycloak (OIDC/SSO) ➔ Backend Symfony ➔ Requêtes PostgreSQL.
+* Les traces, métriques applicatives (RED) et métriques d'authentification Keycloak sont ingérées par SigNoz OTel Collector et visualisables sur le dashboard centralisé (`https://signoz.nanko.dev`) avec filtrage par environnement (`deployment.environment`).
+
 ## 3. Règles de Gestion & Invariants Opérationnels
 * **Règle 1 (Gate de préprod bloquante) :** Toute Pull Request doit obligatoirement valider l'ensemble des scénarios E2E Playwright sur l'infrastructure de préproduction réelle avant d'être éligible au merge sur `main`.
 * **Règle 2 (Sérialisation de l'environnement de préproduction) :** Pour éviter les conflits d'état sur l'environnement partagé de préproduction, les exécutions de PR sont strictement sérialisées via un groupe de concurrence GitHub Actions (`concurrency: group: preprod-shared-env, cancel-in-progress: false`).
@@ -25,6 +30,10 @@ Garantir l'intégrité, la traçabilité et la stabilité de la plateforme Nanko
 * **Règle 4 (Zéro secret SSH en CI) :** Conformément à l'ADR-0010, aucun accès SSH ou webhook direct vers le serveur n'est octroyé à GitHub Actions ; le déploiement repose sur le polling de Watchtower.
 * **Règle 5 (Bypass CI pour changements non applicatifs) :** Si une Pull Request ne modifie que des éléments documentaires, de spécifications ou d'outillage (`.agents/`, `.claude/`, `.github/`, `.specs/`, `docs/`, `landing/`, fichiers Markdown), les étapes lourdes de build Docker, de déploiement préproduction et de tests E2E sont automatiquement ignorées pour libérer l'environnement partagé et valider le check en quelques secondes.
 * **Règle 6 (Fail-fast sur configuration d'environnement invalide) :** Le frontend (`frontend/src/config/env.ts`) et les tests E2E (`tests-e2e/config/env.ts`) valident systématiquement leurs variables d'environnement via un schéma Zod au chargement. Toute variable manquante ou mal formée interrompt immédiatement le démarrage (exception explicite + écran de secours pour le frontend), sans jamais laisser un `undefined` se propager silencieusement dans le code applicatif.
+* **Règle 7 (Résilience Fail-Open absolue sur la télémétrie) :** L'indisponibilité, la lenteur ou l'arrêt du collecteur SigNoz ne doit en aucun cas dégrader ni interrompre l'expérience utilisateur, l'authentification Keycloak ou les appels d'API Symfony. Les exportateurs OTel fonctionnent en asynchrone (batching) avec timeout court et abandon silencieux en cas d'erreur réseau.
+* **Règle 8 (Observabilité locale à la demande) :** En développement local, SigNoz ne démarre pas par défaut avec `make dev` pour économiser les ressources de la machine (2-3 Go de RAM requis). Il est activable à la demande via `make signoz-up` et `make signoz-down`.
+* **Règle 9 (Conformité Compose Spec & Nommage) :** Toutes les piles de conteneurisation de l'infrastructure respectent la spécification Compose officielle en utilisant exclusivement le nom de fichier `compose.yaml` (ou `compose.*.yaml`), proscrivant l'ancienne dénomination `docker-compose.yaml`.
+* **Règle 10 (Migrations de schéma ClickHouse autonomes) :** Tout déploiement de la stack d'observabilité (local ou VPS) exécute automatiquement les migrations de schéma SigNoz (`bootstrap`, `sync up`, `async up`) via le conteneur dédié `signoz-schema-migrator` avant le démarrage des services `otel-collector` et `signoz-query-service`.
 
 ## 4. Matrice des Échecs & Cas Limites
 | Situation | Comportement & Conséquence |
@@ -35,3 +44,4 @@ Garantir l'intégrité, la traçabilité et la stabilité de la plateforme Nanko
 | Absence de tag Git dans le repository | Fallback sur `v0.0.0-dev` pour les environnements locaux ou non tagués |
 | Variable d'environnement frontend invalide (ex. `VITE_KEYCLOAK_URL` mal formée) | `throw` immédiat au chargement du module `config/env.ts` + écran de secours HTML listant les erreurs Zod |
 | Variable d'environnement E2E invalide (ex. `APP_BASE_URL` mal formée) | `throw` immédiat au chargement de `tests-e2e/config/env.ts`, suite Playwright interrompue avant exécution |
+| Collecteur SigNoz arrêté ou inaccessible | Fonctionnement transparent en fail-open : requêtes HTTP et authentification 100% opérationnelles sans erreur |

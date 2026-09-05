@@ -28,10 +28,31 @@
 | `APP_VERSION` | Non | `v0.0.0-dev` | Version SemVer injectée lors du build Docker ou au runtime |
 | `APP_COMMIT` | Non | `dev` | SHA du commit Git injecté lors du build Docker |
 | `APP_ENV` | Oui | `prod` | Nom de l'environnement Symfony (`local`, `test`, `preprod`, `prod`) |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Non | `""` | Endpoint OTLP/HTTP pour export des traces (ex: `http://otel-collector:4318/v1/traces`) |
+| `OTEL_SERVICE_NAME` | Non | `nanko-backend` | Nom du service dans SigNoz APM |
+| `OTEL_RESOURCE_ATTRIBUTES` | Non | `""` | Attributs OpenTelemetry standard (ex: `service.name=nanko-backend,deployment.environment=preprod`) |
 
 ### Paramètres Symfony (`config/services.php`)
 * `%app.version%` : mappé sur `%env(default:default_app_version:APP_VERSION)%`
 * `%app.commit%` : mappé sur `%env(default:default_app_commit:APP_COMMIT)%`
+* `%otel.exporter_endpoint%` : mappé sur `%env(default::OTEL_EXPORTER_OTLP_ENDPOINT)%`
+* `%otel.service_name%` : mappé sur `%env(default:default_otel_service_name:OTEL_SERVICE_NAME)%`
+
+### Variables du Conteneur Keycloak 26
+| Variable | Obligatoire | Valeur type | Rôle |
+|---|---|---|---|
+| `KC_TRACING_ENABLED` | Non | `"true"` | Active l'instrumentation native Quarkus OpenTelemetry |
+| `KC_TRACING_ENDPOINT` | Non | `http://signoz-otel-collector:4317` | Collecteur OTLP gRPC (`http://otel-collector:4317` en local) |
+| `KC_TRACING_RESOURCE_ATTRIBUTES` | Non | `service.name=nanko-keycloak,deployment.environment=...` | Attributs OpenTelemetry du service d'identité |
+| `KC_METRICS_ENABLED` | Non | `"true"` | Active les métriques d'authentification Micrometer/Prometheus |
+
+### Variables de la Stack d'Observabilité SigNoz (`~/.config/nanko/signoz.env`)
+| Variable | Obligatoire | Rôle |
+|---|---|---|
+| `SIGNOZ_BASICAUTH_HASH` | Oui (VPS) | Hash bcrypt Caddy pour sécuriser l'accès à `https://signoz.nanko.dev` |
+| `SIGNOZ_ADMIN_EMAIL` | Oui (VPS) | Adresse email du compte superadmin initial créé au démarrage |
+| `SIGNOZ_ADMIN_PASSWORD` | Oui (VPS) | Mot de passe initial du compte superadmin créé par le provisioner |
+| `SIGNOZ_ADMIN_NAME` | Non | Nom d'affichage du superadmin (`Nanko Admin` par défaut) |
 
 ---
 
@@ -44,11 +65,14 @@
 | `VITE_KEYCLOAK_URL` | Non | `http://localhost:48080` | URL valide |
 | `VITE_KEYCLOAK_REALM` | Non | `nanko` | Chaîne non vide |
 | `VITE_KEYCLOAK_CLIENT_ID` | Non | `nanko-web` | Chaîne non vide |
+| `VITE_OTEL_EXPORTER_URL` | Non | `""` | URL valide ou chaîne vide (mode no-op) |
+| `VITE_OTEL_SERVICE_NAME` | Non | `nanko-frontend` | Chaîne non vide |
+| `VITE_APP_ENV` | Non | `local` | Chaîne non vide |
 
 * Parsing via `frontendEnvSchema.safeParse()` sur un objet extrait explicitement de `import.meta.env` (compatibilité substitution statique Vite/Rollup).
 * Échec de validation : `throw` immédiat + rendu d'un écran de secours HTML injecté dans `#root` listant les erreurs de schéma.
-* Export figé (`Object.freeze`) : `env.api.baseUrl`, `env.keycloak.{url,realm,clientId}`.
-* Consommé par `frontend/src/auth/httpClient.ts` et `frontend/src/auth/keycloak.ts` (plus aucun accès direct à `import.meta.env` en dehors de ce module).
+* Export figé (`Object.freeze`) : `env.api.baseUrl`, `env.keycloak.{url,realm,clientId}`, `env.otel.{exporterUrl,serviceName,environment}`.
+* Consommé par `frontend/src/auth/httpClient.ts`, `frontend/src/auth/keycloak.ts`, et `frontend/src/config/telemetry.ts`.
 
 ### Tests E2E (`tests-e2e/config/env.ts`)
 | Variable | Obligatoire | Fallback par défaut | Validation |
@@ -65,11 +89,20 @@
 * Parsing via `e2eEnvSchema.safeParse(process.env)`.
 * Échec de validation : `throw` immédiat avec détail des erreurs Zod en console.
 * Export figé : `env.{appBaseUrl,libraryBaseUrl}`, `env.keycloak.{url,adminUser,adminPassword}`, `env.testUser.{username,password}`, `env.isCi`.
-* Consommé par `tests-e2e/playwright.config.ts` et `tests-e2e/tests/helpers/keycloak.ts` (plus aucun accès direct à `process.env` en dehors de ce module).
+* Consommé par `tests-e2e/playwright.config.ts` et `tests-e2e/tests/helpers/keycloak.ts`.
 
 ---
 
-## 4. Comptes & Identifiants Réservés
+## 4. Protocole de Traçabilité Distribuée (W3C Trace Context) & CORS
+* **En-tête `traceparent` :** Format standard W3C `00-{trace_id}-{span_id}-{flags}` (ex: `00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01`).
+* **En-tête `tracestate` :** Métadonnées additionnelles du contexte de traçabilité.
+* **CORS Nelmio (`backend/config/packages/nelmio_cors.yaml`) :**
+  - `allow_headers` inclut `'traceparent'` et `'tracestate'`.
+  - `expose_headers` inclut `'traceparent'` et `'tracestate'`.
+
+---
+
+## 5. Comptes & Identifiants Réservés
 * **Compte E2E Préproduction :** `e2e-tester@nanko.dev`
   * Pré-provisionné dans l'instance Keycloak de préproduction.
   * Identifiants injectés via les secrets de repository GitHub `E2E_USERNAME` et `E2E_PASSWORD`.

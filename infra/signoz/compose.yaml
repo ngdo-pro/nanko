@@ -1,0 +1,147 @@
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.1-alpine
+    container_name: signoz-clickhouse
+    restart: unless-stopped
+    volumes:
+      - signoz-clickhouse-data:/var/lib/clickhouse
+      - ./clickhouse-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./clickhouse-config.xml:/etc/clickhouse-server/config.d/keeper.xml:ro
+      - ./clickhouse-users.xml:/etc/clickhouse-server/users.d/json.xml:ro
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "0.0.0.0:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      default: {}
+
+  signoz-alertmanager:
+    image: signoz/alertmanager:0.23.6
+    container_name: signoz-alertmanager
+    restart: unless-stopped
+    command:
+      - --queryService.url=http://signoz-query-service:8080
+      - --storage.path=/data
+    depends_on:
+      - signoz-query-service
+    volumes:
+      - signoz-alertmanager-data:/data
+    networks:
+      default: {}
+
+  signoz-schema-migrator:
+    image: signoz/signoz-otel-collector:latest
+    container_name: signoz-schema-migrator
+    restart: "no"
+    command:
+      - sh
+      - -c
+      - |
+        /signoz-otel-collector migrate bootstrap --clickhouse-dsn=tcp://clickhouse:9000 &&
+        /signoz-otel-collector migrate sync up --clickhouse-dsn=tcp://clickhouse:9000 &&
+        /signoz-otel-collector migrate async up --clickhouse-dsn=tcp://clickhouse:9000
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    networks:
+      default: {}
+
+  signoz-query-service:
+    image: signoz/query-service:latest
+    container_name: signoz-query-service
+    restart: unless-stopped
+    command:
+      - -config=/root/config/prometheus.yml
+      - -use-trace-new-schema=true
+      - -use-logs-new-schema=true
+    volumes:
+      - signoz-data:/var/lib/signoz
+      - ./alerts:/root/config/alerts:ro
+      - ./dashboards:/root/config/dashboards:ro
+    environment:
+      - ClickHouseUrl=tcp://clickhouse:9000
+      - STORAGE=clickhouse
+      - GODEBUG=netdns=go
+      - TELEMETRY_ENABLED=false
+      - ALERTMANAGER_API_PREFIX=http://signoz-alertmanager:9093/api/
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+      signoz-schema-migrator:
+        condition: service_completed_successfully
+    networks:
+      default: {}
+
+  signoz-frontend:
+    image: signoz/frontend:latest
+    container_name: signoz-frontend
+    restart: unless-stopped
+    depends_on:
+      - signoz-query-service
+    volumes:
+      - ./nginx-config.conf:/etc/nginx/conf.d/default.conf:ro
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+      caddy: signoz.nanko.dev
+      caddy.encode: gzip
+      caddy.basic_auth: "/*"
+      caddy.basic_auth.admin: "${SIGNOZ_BASICAUTH_HASH}"
+      caddy.reverse_proxy: "{{upstreams 3301}}"
+      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+      caddy.header.X-Content-Type-Options: nosniff
+      caddy.header.X-Frame-Options: DENY
+    networks:
+      default: {}
+      edge: {}
+
+  otel-collector:
+    image: signoz/signoz-otel-collector:latest
+    container_name: signoz-otel-collector
+    restart: unless-stopped
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+      signoz-schema-migrator:
+        condition: service_completed_successfully
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+      caddy: otlp.nanko.dev
+      caddy.encode: gzip
+      caddy.reverse_proxy: "{{upstreams 4318}}"
+      caddy.header.Access-Control-Allow-Origin: "*"
+      caddy.header.Access-Control-Allow-Methods: "POST, OPTIONS"
+      caddy.header.Access-Control-Allow-Headers: "*"
+    networks:
+      default: {}
+      edge: {}
+
+  signoz-provisioner:
+    image: alpine:latest
+    container_name: signoz-provisioner
+    environment:
+      - SIGNOZ_ADMIN_EMAIL=${SIGNOZ_ADMIN_EMAIL:-}
+      - SIGNOZ_ADMIN_PASSWORD=${SIGNOZ_ADMIN_PASSWORD:-}
+      - SIGNOZ_ADMIN_NAME=${SIGNOZ_ADMIN_NAME:-Nanko Admin}
+    volumes:
+      - ./dashboards:/dashboards:ro
+      - ./provisioner/provision.sh:/provision.sh:ro
+    entrypoint: ["/bin/sh", "/provision.sh"]
+    depends_on:
+      - signoz-query-service
+    restart: "no"
+    networks:
+      default: {}
+
+networks:
+  default: {}
+  edge:
+    external: true
+
+volumes:
+  signoz-clickhouse-data:
+  signoz-alertmanager-data:
+  signoz-data:

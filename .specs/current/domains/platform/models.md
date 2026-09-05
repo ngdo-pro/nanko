@@ -1,8 +1,9 @@
 # Domaine : Plateforme & Livraison Continue (platform) - Modèles & Schéma DB
 
 ## 1. Modèle Domaine & Schéma de Données
-* **Aucune entité persistée en base de données :** Le domaine Plateforme ne possède pas de table SQL dédiée.
+* **Aucune entité persistée en base de données relationnelle :** Le domaine Plateforme ne possède pas de table SQL dans PostgreSQL.
 * Les états de version sont injectés dynamiquement à la compilation/démarrage du conteneur sans état persistant.
+* **Datastore Télémétrique Dédié (ADR-0007) :** L'observabilité (traces, métriques, logs) repose sur un moteur ClickHouse dédié et isolé (`signoz-clickhouse-data`) géré par la stack SigNoz, sans aucun impact sur la base PostgreSQL applicative.
 
 ---
 

@@ -1,0 +1,32 @@
+groups:
+  - name: platform-alerts
+    rules:
+      - alert: ApiHigh5xxRate
+        expr: (sum(rate(signoz_http_requests_total{status_code=~"5.."}[5m])) / sum(rate(signoz_http_requests_total[5m]))) * 100 > 2
+        for: 5m
+        labels:
+          severity: critical
+          service: nanko-backend
+        annotations:
+          summary: "Taux d'erreurs 5xx supérieur à 2% sur l'API Symfony"
+          description: "Le taux d'erreurs HTTP 5xx a dépassé le seuil tolérable de 2% sur les 5 dernières minutes."
+
+      - alert: ApiP95LatencySpike
+        expr: histogram_quantile(0.95, sum(rate(signoz_http_latency_bucket[5m])) by (le)) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: nanko-backend
+        annotations:
+          summary: "Pic de latence P95 supérieur à 1 seconde sur l'API Symfony"
+          description: "Le 95e percentile du temps de réponse HTTP dépasse 1 seconde."
+
+      - alert: KeycloakLoginFailures
+        expr: sum(rate(keycloak_failed_login_attempts_total[5m])) > 10
+        for: 2m
+        labels:
+          severity: critical
+          service: nanko-keycloak
+        annotations:
+          summary: "Pic d'échecs d'authentification Keycloak détecté"
+          description: "Plus de 10 échecs de connexion par minute détectés sur Keycloak."
