@@ -119,13 +119,40 @@ final readonly class [InputDtoName]
 
 ---
 
-## 5. Delta Maquettes & Layout UI
+## 5. Configuration Réseau, Prérequis DNS & Sécurisation des Endpoints
 
-### 5.1. Référence visuelle (Vision / Humain)
+### 5.1. Prérequis DNS Externes (Registrar / Zone DNS)
+*Indiquer les enregistrements DNS requis si de nouveaux sous-domaines ou services exposés sont introduits.*
+
+| Sous-domaine / Hôte | Type DNS | Cible | Rôle |
+|---|---|---|---|
+| `[service].nanko.dev` | `A` (ou `CNAME`) | `<IP_PUBLIQUE_VPS>` | [Description du rôle de l'hôte / service] |
+
+> [!NOTE]
+> Préciser si l'entrée est déjà couverte par un wildcard existant (ex: `*.nanko.dev` pointant vers l'IP du VPS) ou si une création manuelle est requise chez le registrar.
+
+### 5.2. Matrice d'Exposition et Sécurisation des Endpoints
+*Détailler pour chaque endpoint ou service son niveau d'exposition, son authentification et les mesures de mitigation associées.*
+
+| Endpoint / Service | Exposition (`Publique` / `Restreinte` / `Interne Docker`) | Authentification & Contrôle d'accès | Mesures de mitigation (CORS, Rate-limit, Payload max, TLS/HSTS) |
+|---|---|---|---|
+| `[Nom Endpoint/URL]` | `Publique` / `Restreinte` | `Bearer Token JWT` / `Public` / `BasicAuth` | CORS restreint aux origines Nanko, Rate limiting X req/min, HSTS |
+| `[Flux Interne]` | `Interne Docker` | Réseau privé `edge` | Aucun port exposé publiquement sur l'hôte |
+
+### 5.3. Variables d'Environnement & Secrets requis
+| Variable | Composant (`backend` / `frontend` / `compose`) | Environnement (`local` / `preprod` / `prod`) | Description & Exemple |
+|---|---|---|---|
+| `[NOM_VARIABLE]` | `frontend` | Tous | [Description de la variable et valeur par défaut] |
+
+---
+
+## 6. Delta Maquettes & Layout UI
+
+### 6.1. Référence visuelle (Vision / Humain)
 * **Fichier mockup :** `.specs/mockups/[XXX]-[change-name].png` *(ou URL Figma ciblée)*.
 * **Consigne :** Respecter les alignements, proportions et contrastes de la maquette.
 
-### 5.2. Wireframes conceptuels (ASCII Layout)
+### 6.2. Wireframes conceptuels (ASCII Layout)
 
 #### Vue Desktop (≥ 1024px)
 ```text
@@ -204,7 +231,7 @@ frontend/src/features/[feature-name]/
 
 ---
 
-## 6. Delta Spécifications UI & Logique Client (React)
+## 7. Delta Spécifications UI & Logique Client (React)
 
 ### Schéma de validation Zod (`schemas.ts`)
 ```typescript
@@ -230,14 +257,14 @@ export type [FeatureInput] = z.infer<typeof [featureSchema]>;
 
 ---
 
-## 7. Invariants & Cas limites (*Edge cases*)
+## 8. Invariants & Cas limites (*Edge cases*)
 1. **Rétrocompatibilité :** [Impact sur les endpoints existants ou sur les clients déjà connectés].
 2. **Idempotence & Concurrence :** [Gestion des doubles soumissions ou accès concurrents].
 3. **Contrôle d'accès :** [Vérification des droits et renvoi explicite de 403 Forbidden via un Voter ou Capability].
 
 ---
 
-## 8. Plan d'exécution séquentiel
+## 9. Plan d'exécution séquentiel
 
 - [ ] **Phase 1 : Backend (`backend/`)**
   - [ ] 1. Modèle & DB : Créer/mettre à jour la migration Doctrine et les types DBAL.
@@ -266,9 +293,9 @@ export type [FeatureInput] = z.infer<typeof [featureSchema]>;
 
 ---
 
-## 9. Definition of Done & Stratégie de tests
+## 10. Definition of Done & Stratégie de tests
 
-### 9.1. Scénarios de validation (Format Gherkin avec tags)
+### 10.1. Scénarios de validation (Format Gherkin avec tags)
 
 ```gherkin
 # ==============================================================================

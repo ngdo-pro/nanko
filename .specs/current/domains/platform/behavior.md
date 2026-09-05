@@ -24,6 +24,7 @@ Garantir l'intégrité, la traçabilité et la stabilité de la plateforme Nanko
 * **Règle 3 (Versionnement SemVer strict & traçable) :** Chaque build et conteneur porte une version SemVer traçable issue des tags Git (`git describe --tags --always`).
 * **Règle 4 (Zéro secret SSH en CI) :** Conformément à l'ADR-0010, aucun accès SSH ou webhook direct vers le serveur n'est octroyé à GitHub Actions ; le déploiement repose sur le polling de Watchtower.
 * **Règle 5 (Bypass CI pour changements non applicatifs) :** Si une Pull Request ne modifie que des éléments documentaires, de spécifications ou d'outillage (`.agents/`, `.claude/`, `.github/`, `.specs/`, `docs/`, `landing/`, fichiers Markdown), les étapes lourdes de build Docker, de déploiement préproduction et de tests E2E sont automatiquement ignorées pour libérer l'environnement partagé et valider le check en quelques secondes.
+* **Règle 6 (Fail-fast sur configuration d'environnement invalide) :** Le frontend (`frontend/src/config/env.ts`) et les tests E2E (`tests-e2e/config/env.ts`) valident systématiquement leurs variables d'environnement via un schéma Zod au chargement. Toute variable manquante ou mal formée interrompt immédiatement le démarrage (exception explicite + écran de secours pour le frontend), sans jamais laisser un `undefined` se propager silencieusement dans le code applicatif.
 
 ## 4. Matrice des Échecs & Cas Limites
 | Situation | Comportement & Conséquence |
@@ -32,3 +33,5 @@ Garantir l'intégrité, la traçabilité et la stabilité de la plateforme Nanko
 | Échec d'un test Playwright en préproduction | Rapport de test et traces conservés en artefacts GitHub, merge bloqué |
 | Pull Requests simultanées | Mise en file d'attente séquentielle sans annulation des runs précédents |
 | Absence de tag Git dans le repository | Fallback sur `v0.0.0-dev` pour les environnements locaux ou non tagués |
+| Variable d'environnement frontend invalide (ex. `VITE_KEYCLOAK_URL` mal formée) | `throw` immédiat au chargement du module `config/env.ts` + écran de secours HTML listant les erreurs Zod |
+| Variable d'environnement E2E invalide (ex. `APP_BASE_URL` mal formée) | `throw` immédiat au chargement de `tests-e2e/config/env.ts`, suite Playwright interrompue avant exécution |
