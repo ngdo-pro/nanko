@@ -8,7 +8,7 @@ Suite de tests End-to-End Playwright pour Nanko.
 En local, Playwright utilise le helper `keycloak.ts` pour provisionner automatiquement le compte utilisateur via l'API Admin de Keycloak (`admin-cli`) sans configuration requise :
 
 ```bash
-APP_BASE_URL=http://localhost:45173 pnpm --filter tests-e2e exec playwright test
+pnpm --filter tests-e2e test
 ```
 
 ### 2. En CI (contre la Préproduction `app.preprod.nanko.dev`)

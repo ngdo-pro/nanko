@@ -131,11 +131,11 @@ const e2eEnvSchema = z.object({
   APP_BASE_URL: z
     .string()
     .url('APP_BASE_URL doit être une URL valide')
-    .default('https://app.preprod.nanko.dev'),
+    .default('http://localhost:45173'),
   LIBRARY_BASE_URL: z
     .string()
     .url('LIBRARY_BASE_URL doit être une URL valide')
-    .default('https://library.preprod.nanko.dev'),
+    .default('http://localhost:45174'),
   KEYCLOAK_URL: z
     .string()
     .url('KEYCLOAK_URL doit être une URL valide')
@@ -261,7 +261,7 @@ En cas d'erreur de configuration sur le Frontend, un composant de secours minima
 * **Given** la variable d'environnement `CI="true"` est présente dans le processus Node
 * **When** le module `tests-e2e/config/env.ts` est évalué
 * **Then** `env.isCi` vaut le booléen `true`
-* **And** `env.appBaseUrl` pointe par défaut sur `'https://app.preprod.nanko.dev'`
+* **And** `env.appBaseUrl` pointe par défaut sur `'http://localhost:45173'`
 
 ### Scénario 4 : Vérification d'absence d'accès direct sauvage
 * **Given** la base de code après refactorisation

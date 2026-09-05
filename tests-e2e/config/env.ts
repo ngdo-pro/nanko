@@ -4,11 +4,11 @@ export const e2eEnvSchema = z.object({
   APP_BASE_URL: z
     .string()
     .url('APP_BASE_URL doit être une URL valide')
-    .default('https://app.preprod.nanko.dev'),
+    .default('http://localhost:45173'),
   LIBRARY_BASE_URL: z
     .string()
     .url('LIBRARY_BASE_URL doit être une URL valide')
-    .default('https://library.preprod.nanko.dev'),
+    .default('http://localhost:45174'),
   KEYCLOAK_URL: z
     .string()
     .url('KEYCLOAK_URL doit être une URL valide')
