@@ -61,7 +61,7 @@ sequenceDiagram
         alt Utilisateur inconnu en base locale (1ère connexion)
             B->>DB: INSERT INTO app_user (id, keycloak_id, email, created_at)
         end
-        B-->>F: 200 OK (Profil utilisateur & Org active)
+        B-->>F: 200 OK (Profil utilisateur & Organisation active)
         F-->>U: Affichage de l'espace de travail connecté
     end
 ```

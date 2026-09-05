@@ -5,7 +5,7 @@
 * **Impact :** `backend`
 
 ## 1. Contexte & Problématique
-Le backend adoptait initialement une architecture hexagonale globale (`src/Core/` et `src/Adapter/`, cf. ADR 0011) où les agrégats de différents domaines métier (ex: `User`, `Org`) se trouvaient regroupés au même niveau technique (`src/Core/Domain/User`, `src/Core/Domain/Org`).
+Le backend adoptait initialement une architecture hexagonale globale (`src/Core/` et `src/Adapter/`, cf. ADR 0011) où les agrégats de différents domaines métier (ex: `User`, `Organisation`) se trouvaient regroupés au même niveau technique (`src/Core/Domain/User`, `src/Core/Domain/Organisation`).
 Avec l'enrichissement des domaines et la formalisation des contextes délimités (Bounded Contexts : `AuthAndIdentity`, `WorkspaceManagement`), ce regroupement horizontal risquait d'induire un couplage fort accidentel entre domaines, des dépendances croisées de persistance et une dilution des frontières DDD.
 
 ## 2. Options techniques étudiées

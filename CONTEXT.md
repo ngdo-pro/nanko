@@ -6,12 +6,12 @@ Nanko aide à concevoir des schémas d'architecture selon une approche "diagrams
 
 ### Structure
 
-**Org**:
+**Organisation**:
 Le regroupement de premier niveau qui possède des Project et des membres. Peut définir une Capability par défaut applicable à tous ses Project.
-_Avoid_: Organisation, tenant, workspace
+_Avoid_: Tenant, workspace
 
 **Project**:
-Un conteneur plat de Document au sein d'une Org. Pas de hiérarchie ni de dossiers en v1 — la recherche full-text remplace le rangement.
+Un conteneur plat de Document au sein d'une Organisation. Pas de hiérarchie ni de dossiers en v1 — la recherche full-text remplace le rangement.
 _Avoid_: Espace, dossier
 
 **Document**:
@@ -57,5 +57,5 @@ _Avoid_: Lien, edge, arrow
 ### Droits
 
 **Capability**:
-Un droit accordé explicitement à un membre sur un Project précis — pas un rôle. Une Org peut définir une Capability par défaut appliquée à tous ses Project pour couvrir le cas simple.
+Un droit accordé explicitement à un membre sur un Project précis — pas un rôle. Une Organisation peut définir une Capability par défaut appliquée à tous ses Project pour couvrir le cas simple.
 _Avoid_: Rôle, permission, droit

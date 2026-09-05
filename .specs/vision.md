@@ -22,5 +22,5 @@ Ces principes guident les arbitrages fonctionnels et d'interface en cas d'ambigu
 | Domaine | Répertoire | Responsabilité & Périmètre |
 |---|---|---|
 | **Identité & Accès** | `domains/auth-and-identity/` | Inscription, sessions OAuth 2.0, sécurité des comptes et profils. |
-| **Espaces de travail** | `domains/workspace-management/` | Organisation des équipes (Org, Project, Document), invitations, contextes collaboratifs et droits (Capabilities). |
+| **Espaces de travail** | `domains/workspace-management/` | Organisation des équipes (Organisation, Project, Document), invitations, contextes collaboratifs et droits (Capabilities). |
 | **Facturation & Quotas** | `domains/billing/` | Abonnements, intégration PSP (Stripe), gestion des plans et limites d'usage. |
