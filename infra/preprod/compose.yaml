@@ -57,7 +57,7 @@ services:
       KC_DB_USERNAME: nanko
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
       KC_DB_SCHEMA: keycloak
-      KC_HOSTNAME: auth.preprod.nanko.dev
+      KC_HOSTNAME: https://auth.preprod.nanko.dev
       KC_PROXY_HEADERS: xforwarded
       KC_HTTP_ENABLED: "true"
     volumes:
@@ -72,7 +72,6 @@ services:
       caddy.reverse_proxy: "{{upstreams 8080}}"
       caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
       caddy.header.X-Content-Type-Options: nosniff
-      caddy.header.X-Frame-Options: DENY
     networks:
       default: {}
       edge: {}
