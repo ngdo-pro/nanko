@@ -15,6 +15,7 @@ permissions:
 env:
   ENVIRONMENT: preprod
   VITE_API_BASE_URL: https://api.preprod.nanko.dev
+  VITE_KEYCLOAK_URL: https://auth.preprod.nanko.dev
   PREPROD_VERSION_URL: https://api.preprod.nanko.dev/api/v1/version
   APP_BASE_URL: https://app.preprod.nanko.dev
 
@@ -69,6 +70,7 @@ jobs:
           push: true
           build-args: |
             VITE_API_BASE_URL=${{ env.VITE_API_BASE_URL }}
+            VITE_KEYCLOAK_URL=${{ env.VITE_KEYCLOAK_URL }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/nanko-frontend:preprod
             ghcr.io/${{ github.repository_owner }}/nanko-frontend:preprod-${{ steps.semver.outputs.commit }}

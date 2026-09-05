@@ -17,8 +17,10 @@ COPY tests-e2e/package.json tests-e2e/package.json
 RUN pnpm install --frozen-lockfile
 COPY frontend frontend
 ARG VITE_API_BASE_URL
+ARG VITE_KEYCLOAK_URL
 RUN test -n "$VITE_API_BASE_URL"
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+ENV VITE_KEYCLOAK_URL=${VITE_KEYCLOAK_URL}
 RUN pnpm --filter frontend build
 
 # Dev-only stage for `infra/local/compose.yaml`. The repo is
