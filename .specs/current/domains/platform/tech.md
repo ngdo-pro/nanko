@@ -32,17 +32,41 @@
 
 ### Infrastructure & Déploiement VPS (`infra/`)
 * **Watchtower :** Scrutation automatique des digests d'images GHCR (polling 5 minutes) assurant un déploiement continu sans exposition de clés SSH privées (respect de l'ADR-0010).
-* **Reverse Proxy Caddy :** Gestion automatique des certificats Let's Encrypt TLS et routage dynamique des sous-domaines (`api.preprod.nanko.dev`, `app.preprod.nanko.dev`, `auth.preprod.nanko.dev`).
+* **Reverse Proxy Caddy :** Gestion automatique des certificats Let's Encrypt TLS et routage dynamique des sous-domaines (`api.preprod.nanko.dev`, `app.preprod.nanko.dev`, `auth.preprod.nanko.dev`, `signoz.nanko.dev`, `otlp.nanko.dev`).
+
+### Observabilité & Monitoring Distribué (SigNoz & OpenTelemetry)
+* **Stack SigNoz Auto-Hébergée (`infra/signoz/docker-compose.yaml`, `infra/shared/signoz/`) :**
+  - **Moteur ClickHouse :** Stockage colonnaire dédié (`clickhouse/clickhouse-server:24.1.2-alpine`) pour traces, métriques et logs.
+  - **SigNoz OTel Collector :** Image `signoz/signoz-otel-collector:0.111.23` exposant les ports OTLP `4317` (gRPC interne pour Keycloak et Symfony) et `4318` (HTTP pour le frontend web).
+  - **Routage & Sécurisation Caddy :**
+    - `signoz.nanko.dev` ➔ Frontend UI SigNoz (`:3301`) avec HTTPS forcé.
+    - `otlp.nanko.dev` ➔ Endpoint d'ingestion public OTLP HTTP (`:4318`), avec CORS strict et limite de payload 2MB.
+  - **Observability as Code :**
+    - Alertes déclaratives : `infra/signoz/alerts/platform-alerts.yaml` montées dans AlertManager.
+    - Dashboards déclaratifs : `infra/signoz/dashboards/platform-overview.json` injectés par le service `signoz-provisioner` au démarrage.
+* **Environnement Local Dédié (`infra/local/compose.observability.yaml`) :**
+  - Stack SigNoz locale optionnelle pilotée par les cibles Makefile `make signoz-up` et `make signoz-down` pour tester la télémétrie sans alourdir le démarrage de base `make dev`.
+* **Serveur d'Identité Keycloak 26 :**
+  - Activation de l'extension Quarkus OpenTelemetry intégrée (`KC_TRACING_ENABLED=true`, `KC_TRACING_ENDPOINT=http://otel-collector:4317`, `KC_METRICS_ENABLED=true`).
+  - Métriques d'authentification exposées et spans de validation de session/token exportés en gRPC.
+* **Backend Symfony 8 :**
+  - SDK OpenTelemetry PHP (`open-telemetry/sdk`, `open-telemetry/exporter-otlp`, `open-telemetry/sem-conv`).
+  - `App\Adapter\Driver\Http\OpenTelemetry\TraceSubscriber` : souscripteur HTTP qui extrait le header W3C `traceparent`, instrumente la requête et réinjecte `traceparent` dans la réponse.
+  - Résilience fail-open absolue (l'absence de collecteur n'interrompt ni ne ralentit aucune requête).
+* **Frontend React 19 :**
+  - SDK OpenTelemetry Web (`@opentelemetry/sdk-trace-web`, `@opentelemetry/exporter-trace-otlp-http`, `@opentelemetry/instrumentation-fetch`).
+  - `frontend/src/config/telemetry.ts` : initialisation résiliente et helper `injectTraceContext` assurant la propagation de `traceparent` sur les appels HTTP.
 
 ### Configuration Centralisée & Validée par Zod (`frontend/src/config/env.ts`, `tests-e2e/config/env.ts`)
 * Dépendance `zod` ajoutée à `frontend/package.json` (dépendance) et `tests-e2e/package.json` (devDépendance).
 * Chaque package expose un unique module `config/env.ts` qui parse `import.meta.env` (frontend) ou `process.env` (tests-e2e) via un schéma Zod, avec valeurs par défaut *zero-config* alignées sur Docker local.
 * Validation `safeParse` fail-fast : toute variable manquante ou mal formée lève une exception explicite au chargement plutôt que de propager un `undefined`.
-* Export figé (`Object.freeze`) d'un objet `env` fortement typé (`AppEnv`, `E2EEnv`), consommé exclusivement par `frontend/src/auth/httpClient.ts`, `frontend/src/auth/keycloak.ts`, `tests-e2e/playwright.config.ts` et `tests-e2e/tests/helpers/keycloak.ts`.
+* Export figé (`Object.freeze`) d'un objet `env` fortement typé (`AppEnv`, `E2EEnv`), consommé exclusivement par `frontend/src/auth/httpClient.ts`, `frontend/src/auth/keycloak.ts`, `frontend/src/config/telemetry.ts`, `tests-e2e/playwright.config.ts` et `tests-e2e/tests/helpers/keycloak.ts`.
 * Aucun accès direct à `import.meta.env` (hors `frontend/src/config/env.ts`) ni à `process.env` (hors `tests-e2e/config/env.ts`) ne subsiste dans le code applicatif ou les tests.
 
 ### Tests E2E Playwright (`tests-e2e/`)
 * `tests-e2e/playwright.config.ts` configuré avec support de la variable `APP_BASE_URL` pour cibler indifféremment l'environnement local (`http://localhost:5173`) ou l'environnement de préproduction (`https://app.preprod.nanko.dev`), désormais exposée via `tests-e2e/config/env.ts`.
+* `tests-e2e/tests/app/telemetry.spec.ts` validant la conformité du header W3C `traceparent` et la résilience fail-open.
 
 ---
 
@@ -50,8 +74,10 @@
 * Aucun secret d'accès serveur (SSH, sudo, API daemon Docker) n'est injecté dans GitHub Actions (architecture *pull-based* stricte).
 * Les runs de préproduction sont strictement sérialisés pour garantir l'isolation des tests E2E.
 * L'endpoint de diagnostic `/api/v1/version` est public, sans dépendance à la base de données, assurant un temps de réponse instantané et une disponibilité maximale en tant que health check applicatif.
+* La télémétrie OpenTelemetry applique un principe de **fail-open absolu** : aucun composant ne doit échouer ni bloquer en cas d'indisponibilité du collecteur.
 
 ---
 
 ## 3. ADRs de Référence
+* `ADR-0007` : Postgres seul pour le MVP applicatif & exception documentée pour le datastore ClickHouse de SigNoz.
 * `ADR-0010` : Déploiement préproduction sans secret SSH via GHCR et Watchtower.
