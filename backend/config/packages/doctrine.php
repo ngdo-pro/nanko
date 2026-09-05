@@ -12,12 +12,7 @@ return App::config([
             'url' => '%env(resolve:DATABASE_URL)%',
             'types' => [
                 'uuid' => UuidType::class,
-                // One DBAL type per aggregate identity value object,
-                // co-located with that aggregate's repository under
-                // Adapter/Driven/Persistence/<Aggregate>/ -- see
-                // docs/adr/0011-hexagonal-architecture-backend.md. Add one
-                // line here per new aggregate, e.g.:
-                //   DoctrineId::NAME => DoctrineId::class,
+                \App\AuthAndIdentity\Adapter\Driven\Persistence\User\DoctrineId::NAME => \App\AuthAndIdentity\Adapter\Driven\Persistence\User\DoctrineId::class,
             ],
 
             // IMPORTANT: You MUST configure your server version,

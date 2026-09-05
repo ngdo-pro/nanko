@@ -15,8 +15,9 @@
     * `infra/local/compose.yaml` : Conteneur Keycloak (Quarkus) exposé sur le port `48080:8080`.
     * `infra/preprod/compose.yaml` : Service Keycloak raccordé au réseau `edge`, labels Caddy `auth.preprod.nanko.dev` et persistance Postgres (`nanko_keycloak`).
     * `infra/prod/compose.yaml` : Service Keycloak raccordé au réseau `edge`, labels Caddy `auth.nanko.dev` et persistance Postgres (`nanko_keycloak`).
-  * **Configuration déclarative du Realm :**
-    * Fichier versionné `infra/keycloak/realm-nanko.json` monté dans `/opt/keycloak/data/import/` et chargé automatiquement via `--import-realm`.
+  * **Configuration déclarative du Realm (Parité Dev/Prod stricte) :**
+    * Fichier unique versionné `infra/keycloak/realm-nanko.json` monté dans `/opt/keycloak/data/import/` sur tous les environnements (Local, Preprod, Prod) avec `--import-realm`.
+    * Strictement aucun utilisateur codé en dur dans Git (onboarding sur invitation, `registrationAllowed: false`, `resetPasswordAllowed: false`, `directAccessGrantsEnabled: false`).
     * Client public `nanko-web` avec PKCE et redirect URIs pour Local (`localhost:45173`), Preprod (`app.preprod.nanko.dev`) et Prod (`app.nanko.dev`).
   * **Déploiement VPS :** Validation du déploiement de structure compose via `make deploy-preprod` et `make deploy-prod`.
   * **Frontend React :** Intégration OIDC via `keycloak-js` (Authorization Code Flow + PKCE), persistance de session en mémoire, injection du header `Authorization: Bearer <token>`, gestion du refresh automatique et variables `VITE_KEYCLOAK_*`.
@@ -244,41 +245,41 @@ frontend/src/
 
 ## 8. Plan d'exécution séquentiel
 
-- [ ] **Phase 1 : Infrastructure Docker & Déploiement Multi-Environnements (`infra/`)**
-  - [ ] 1. Configuration déclarative : Créer le fichier `infra/keycloak/realm-nanko.json` (realm `nanko`, client `nanko-web` public avec PKCE et redirect URIs pour `http://localhost:45173/*`, `https://app.preprod.nanko.dev/*`, `https://app.nanko.dev/*`).
-  - [ ] 2. Service local : Ajouter le service `keycloak` dans `infra/local/compose.yaml` (port `48080:8080`, montage du realm avec `--import-realm`, healthcheck).
-  - [ ] 3. Service Preprod : Ajouter `keycloak` dans `infra/preprod/compose.yaml` (image `quay.io/keycloak/keycloak:26.1`, labels Caddy `auth.preprod.nanko.dev`, réseaux `default` + `edge`, persistance Postgres `nanko_keycloak`).
-  - [ ] 4. Service Prod : Ajouter `keycloak` dans `infra/prod/compose.yaml` (labels Caddy `auth.nanko.dev`, réseaux `default` + `edge`, persistance Postgres `nanko_keycloak`).
-  - [ ] 5. Variables d'environnement : Déclarer les variables requises dans `infra/preprod/.env` et `infra/prod/.env` (`KEYCLOAK_ADMIN_PASSWORD`, `KEYCLOAK_DB_PASSWORD`).
-  - [ ] 6. Déploiement VPS : Documenter et valider la commande `make deploy-preprod` pour appliquer les nouveaux conteneurs sur le serveur.
+- [x] **Phase 1 : Infrastructure Docker & Déploiement Multi-Environnements (`infra/`)**
+  - [x] 1. Configuration déclarative : Créer le fichier unique `infra/keycloak/realm-nanko.json` (commun à tous les environnements, sans utilisateurs codés en dur, sans direct access grants, inscription fermée car sur invitation).
+  - [x] 2. Service local : Ajouter le service `keycloak` dans `infra/local/compose.yaml` (port `48080:8080`, montage du realm local avec `--import-realm`, healthcheck).
+  - [x] 3. Service Preprod : Ajouter `keycloak` dans `infra/preprod/compose.yaml` (image `quay.io/keycloak/keycloak:26.1`, labels Caddy `auth.preprod.nanko.dev`, réseaux `default` + `edge`, persistance Postgres `nanko_keycloak`).
+  - [x] 4. Service Prod : Ajouter `keycloak` dans `infra/prod/compose.yaml` (labels Caddy `auth.nanko.dev`, réseaux `default` + `edge`, persistance Postgres `nanko_keycloak`).
+  - [x] 5. Variables d'environnement : Déclarer les variables requises dans `infra/preprod/.env` et `infra/prod/.env` (`KEYCLOAK_ADMIN_PASSWORD`, `KEYCLOAK_DB_PASSWORD`).
+  - [x] 6. Déploiement VPS : Documenter et valider la commande `make deploy-preprod` pour appliquer les nouveaux conteneurs sur le serveur.
 
-- [ ] **Phase 2 : Backend Symfony (`backend/src/AuthAndIdentity/`)**
-  - [ ] 1. Architecture : Mettre en place l'arborescence du Bounded Context sous `backend/src/AuthAndIdentity/` (`Core/Domain/`, `Core/Port/`, `Core/UseCase/`, `Adapter/Driven/`, `Adapter/Driver/`).
-  - [ ] 2. Modèle & DB : Migration de création de la table `app_user` (id UUIDv7, keycloak_id, email) et type DBAL custom `backend/src/AuthAndIdentity/Adapter/Driven/Persistence/User/DoctrineId.php`.
-  - [ ] 3. Core Domain : Entité `User`, value objects (`Id`, `KeycloakId`).
-  - [ ] 4. Core Port : Interface `backend/src/AuthAndIdentity/Core/Port/User/Repository.php`.
-  - [ ] 5. Core UseCase : `backend/src/AuthAndIdentity/Core/UseCase/User/SynchronizeUser/{Command,Handler}.php` pour orchestrer le JIT provisioning.
-  - [ ] 6. Adapter Persistence : `backend/src/AuthAndIdentity/Adapter/Driven/Persistence/User/DoctrineRepository.php` (requêtes DBAL explicites et hydratation).
-  - [ ] 7. Adapter Driver Security : `backend/src/AuthAndIdentity/Adapter/Driver/Http/Security/JwtKeycloakAuthenticator.php` (validation JWT via JWKS).
-  - [ ] 8. Adapter Driver Controller : `backend/src/AuthAndIdentity/Adapter/Driver/Http/Controller/User/Me.php` (`GET /api/v1/me`).
-  - [ ] 9. Tooling & Deptrac : Mettre à jour `backend/deptrac.php` pour supporter les jokers `src/*/Core/...` et `src/*/Adapter/...`.
-  - [ ] **Tests & Gates :**
+- [x] **Phase 2 : Backend Symfony (`backend/src/AuthAndIdentity/`)**
+  - [x] 1. Architecture : Mettre en place l'arborescence du Bounded Context sous `backend/src/AuthAndIdentity/` (`Core/Domain/`, `Core/Port/`, `Core/UseCase/`, `Adapter/Driven/`, `Adapter/Driver/`).
+  - [x] 2. Modèle & DB : Migration de création de la table `app_user` (id UUIDv7, keycloak_id, email) et type DBAL custom `backend/src/AuthAndIdentity/Adapter/Driven/Persistence/User/DoctrineId.php`.
+  - [x] 3. Core Domain : Entité `User`, value objects (`Id`, `KeycloakId`).
+  - [x] 4. Core Port : Interface `backend/src/AuthAndIdentity/Core/Port/User/Repository.php`.
+  - [x] 5. Core UseCase : `backend/src/AuthAndIdentity/Core/UseCase/User/SynchronizeUser/{Command,Handler}.php` pour orchestrer le JIT provisioning.
+  - [x] 6. Adapter Persistence : `backend/src/AuthAndIdentity/Adapter/Driven/Persistence/User/DoctrineRepository.php` (requêtes DBAL explicites et hydratation).
+  - [x] 7. Adapter Driver Security : `backend/src/AuthAndIdentity/Adapter/Driver/Http/Security/JwtKeycloakAuthenticator.php` (validation JWT via JWKS).
+  - [x] 8. Adapter Driver Controller : `backend/src/AuthAndIdentity/Adapter/Driver/Http/Controller/User/Me.php` (`GET /api/v1/me`).
+  - [x] 9. Tooling & Deptrac : Mettre à jour `backend/deptrac.php` pour supporter les jokers `src/*/Core/...` et `src/*/Adapter/...`.
+  - [x] **Tests & Gates :**
     - `make deptrac` (respect des couches hexagonales dans chaque bounded context).
     - `make test-backend` (tests unitaires dans `backend/tests/Unit/AuthAndIdentity/` et d'intégration dans `backend/tests/Integration/AuthAndIdentity/`).
     - `make static-analysis` (PHPStan sans erreur).
     - `make lint` (PHP-CS-Fixer).
 
-- [ ] **Phase 3 : Frontend React (`frontend/`)**
-  - [ ] 1. Dépendances : Installer `keycloak-js`.
-  - [ ] 2. Provider : Mettre en place `KeycloakProvider` avec configuration (URL `:48080`, realm `nanko`, client `nanko-web`).
-  - [ ] 3. Intercepteur HTTP : Injecter le token dans les requêtes vers `VITE_API_BASE_URL` et gérer le refresh.
-  - [ ] 4. Composants : Intégrer les boutons Login/Logout et le composant `UserMenu`.
-  - [ ] **Tests & Gates :**
+- [x] **Phase 3 : Frontend React (`frontend/`)**
+  - [x] 1. Dépendances : Installer `keycloak-js`.
+  - [x] 2. Provider : Mettre en place `KeycloakProvider` avec configuration (URL `:48080`, realm `nanko`, client `nanko-web`).
+  - [x] 3. Intercepteur HTTP : Injecter le token dans les requêtes vers `VITE_API_BASE_URL` et gérer le refresh.
+  - [x] 4. Composants : Intégrer les boutons Login/Logout et le composant `UserMenu`.
+  - [x] **Tests & Gates :**
     - `pnpm --filter frontend typecheck`.
     - `pnpm --filter frontend lint`.
 
-- [ ] **Phase 4 : End-to-End Playwright (`tests-e2e/`)**
-  - [ ] 1. Scénario de test E2E de connexion via la mire Keycloak et vérification du profil sur Nanko.
+- [x] **Phase 4 : End-to-End Playwright (`tests-e2e/`)**
+  - [x] 1. Scénario de test E2E de connexion via la mire Keycloak et vérification du profil sur Nanko.
 
 - [ ] **Phase 5 : Synchronisation documentaire (via `/sync-current 001`)**
   - [ ] 1. Mettre à jour `.specs/current/domains/auth-and-identity/behavior.md`.

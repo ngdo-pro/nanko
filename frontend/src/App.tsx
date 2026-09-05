@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { UserMenu } from './components/UserMenu'
+import { useAuth } from './auth/useAuth'
 import heroImg from './assets/hero.png'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
@@ -6,9 +8,22 @@ import './App.css'
 
 function App() {
   const [count, setCount] = useState(0)
+  const { isAuthenticated } = useAuth()
 
   return (
     <>
+      <header className="navbar">
+        <div className="nav-left">
+          <a href="/" className="nav-logo">NANKO</a>
+          {isAuthenticated && (
+            <ul className="nav-links">
+              <li><a href="#projets" className="nav-link">Projets</a></li>
+              <li><a href="#organisations" className="nav-link">Organisations</a></li>
+            </ul>
+          )}
+        </div>
+        <UserMenu />
+      </header>
       <section id="center">
         <div className="hero">
           <img src={heroImg} className="base" width="170" height="179" alt="" />

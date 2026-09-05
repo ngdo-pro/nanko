@@ -14,14 +14,15 @@ help: ## Show this help
 # landing containers, so edits are picked up live without a rebuild;
 # `--build` just keeps the images (extensions, corepack) in sync with the
 # Dockerfiles.
-# Host ports are non-default (45432/48000/45173/45174) to avoid clashing
-# with other projects' postgres/backend/frontend/landing on this machine.
-dev: ## Start the local dev stack (postgres+backend+frontend+landing)
+# Host ports are non-default (45432/48000/45173/45174/48080) to avoid clashing
+# with other projects' postgres/backend/frontend/landing/keycloak on this machine.
+dev: ## Start the local dev stack (postgres+keycloak+backend+frontend+landing)
 	docker compose -f infra/local/compose.yaml up -d --build
 	@echo
 	@echo "frontend: http://localhost:45173"
 	@echo "landing:  http://localhost:45174"
 	@echo "backend:  http://localhost:48000"
+	@echo "keycloak: http://localhost:48080"
 	@echo "postgres: localhost:45432"
 	@echo
 	@echo "(first run installs composer/pnpm deps in the background -- 'make logs' to follow progress)"
@@ -61,7 +62,7 @@ deptrac: ## Enforce backend hexagonal architecture boundaries
 # build with no emit (frontend/tsconfig*.json), which is what "typecheck"
 # runs -- same check as `build` without the vite bundling step.
 static-analysis: ## Run static analysis (backend phpstan + frontend tsc)
-	docker compose -f infra/local/compose.yaml exec backend vendor/bin/phpstan analyse
+	docker compose -f infra/local/compose.yaml exec backend vendor/bin/phpstan analyse --memory-limit=512M
 	docker compose -f infra/local/compose.yaml exec frontend pnpm --filter frontend typecheck
 
 # Backend: php-cs-fixer, see backend/.php-cs-fixer.dist.php (same ruleset as
