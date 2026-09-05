@@ -55,7 +55,7 @@ test-backend: ## Run the backend test suite (phpunit)
 test-e2e: ## Run E2E tests against local dev stack (starts dev stack if needed)
 	@docker compose -f infra/local/compose.yaml up -d
 	@until curl -s http://localhost:48080/realms/nanko/.well-known/openid-configuration > /dev/null 2>&1; do sleep 1; done
-	APP_BASE_URL=http://localhost:45173 pnpm --filter tests-e2e test $(ARGS)
+	pnpm --filter tests-e2e test $(ARGS)
 
 test-e2e-ui: ## Run E2E tests with Playwright interactive UI
 	@$(MAKE) test-e2e ARGS="--ui"

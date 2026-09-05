@@ -131,11 +131,11 @@ const e2eEnvSchema = z.object({
   APP_BASE_URL: z
     .string()
     .url('APP_BASE_URL doit être une URL valide')
-    .default('https://app.preprod.nanko.dev'),
+    .default('http://localhost:45173'),
   LIBRARY_BASE_URL: z
     .string()
     .url('LIBRARY_BASE_URL doit être une URL valide')
-    .default('https://library.preprod.nanko.dev'),
+    .default('http://localhost:45174'),
   KEYCLOAK_URL: z
     .string()
     .url('KEYCLOAK_URL doit être une URL valide')
@@ -221,23 +221,23 @@ En cas d'erreur de configuration sur le Frontend, un composant de secours minima
 
 ## 7. Plan d'exécution séquentiel
 
-- [ ] **Phase 1 : Frontend (`frontend/`)**
-  - [ ] 1. Installer `zod` en dépendance dans `frontend/package.json` (`pnpm --filter frontend add zod`).
-  - [ ] 2. Créer `frontend/src/config/env.ts` avec le schéma Zod, le parsing fail-fast et l'export typé.
-  - [ ] 3. Refactorer `frontend/src/auth/httpClient.ts` pour importer `env` au lieu de `import.meta.env.VITE_API_BASE_URL`.
-  - [ ] 4. Refactorer `frontend/src/auth/keycloak.ts` pour importer `env` au lieu de `import.meta.env.VITE_KEYCLOAK_*`.
-  - [ ] 5. Vérifier le typage et le linting frontend (`pnpm --filter frontend typecheck` et `pnpm --filter frontend lint`).
+- [x] **Phase 1 : Frontend (`frontend/`)**
+  - [x] 1. Installer `zod` en dépendance dans `frontend/package.json` (`pnpm --filter frontend add zod`).
+  - [x] 2. Créer `frontend/src/config/env.ts` avec le schéma Zod, le parsing fail-fast et l'export typé.
+  - [x] 3. Refactorer `frontend/src/auth/httpClient.ts` pour importer `env` au lieu de `import.meta.env.VITE_API_BASE_URL`.
+  - [x] 4. Refactorer `frontend/src/auth/keycloak.ts` pour importer `env` au lieu de `import.meta.env.VITE_KEYCLOAK_*`.
+  - [x] 5. Vérifier le typage et le linting frontend (`pnpm --filter frontend typecheck` et `pnpm --filter frontend lint`).
 
-- [ ] **Phase 2 : Tests E2E (`tests-e2e/`)**
-  - [ ] 1. Installer `zod` en devDépendance dans `tests-e2e/package.json` (`pnpm --filter tests-e2e add -D zod`).
-  - [ ] 2. Créer `tests-e2e/config/env.ts` avec le schéma Zod, la conversion des types et l'export typé.
-  - [ ] 3. Refactorer `tests-e2e/playwright.config.ts` pour consommer `env.appBaseUrl`, `env.libraryBaseUrl`, `env.isCi`.
-  - [ ] 4. Refactorer `tests-e2e/tests/helpers/keycloak.ts` pour consommer `env.keycloak` et `env.testUser`.
-  - [ ] 5. Vérifier la validité des tests E2E Playwright (`pnpm --filter tests-e2e exec playwright test --list`).
+- [x] **Phase 2 : Tests E2E (`tests-e2e/`)**
+  - [x] 1. Installer `zod` en devDépendance dans `tests-e2e/package.json` (`pnpm --filter tests-e2e add -D zod`).
+  - [x] 2. Créer `tests-e2e/config/env.ts` avec le schéma Zod, la conversion des types et l'export typé.
+  - [x] 3. Refactorer `tests-e2e/playwright.config.ts` pour consommer `env.appBaseUrl`, `env.libraryBaseUrl`, `env.isCi`.
+  - [x] 4. Refactorer `tests-e2e/tests/helpers/keycloak.ts` pour consommer `env.keycloak` et `env.testUser`.
+  - [x] 5. Vérifier la validité des tests E2E Playwright (`pnpm --filter tests-e2e exec playwright test --list`).
 
-- [ ] **Phase 3 : Quality Gates & Contrôle de non-régression**
-  - [ ] 1. Vérifier par une recherche globale (`grep`) qu'il ne subsiste aucun appel direct à `import.meta.env` ou `process.env` dans `frontend/src/` et `tests-e2e/tests/` (hors fichiers `config/env.ts`).
-  - [ ] 2. Valider le build de production frontend (`pnpm --filter frontend build`).
+- [x] **Phase 3 : Quality Gates & Contrôle de non-régression**
+  - [x] 1. Vérifier par une recherche globale (`grep`) qu'il ne subsiste aucun appel direct à `import.meta.env` ou `process.env` dans `frontend/src/` et `tests-e2e/tests/` (hors fichiers `config/env.ts`).
+  - [x] 2. Valider le build de production frontend (`pnpm --filter frontend build`).
 
 ---
 
@@ -261,7 +261,7 @@ En cas d'erreur de configuration sur le Frontend, un composant de secours minima
 * **Given** la variable d'environnement `CI="true"` est présente dans le processus Node
 * **When** le module `tests-e2e/config/env.ts` est évalué
 * **Then** `env.isCi` vaut le booléen `true`
-* **And** `env.appBaseUrl` pointe par défaut sur `'https://app.preprod.nanko.dev'`
+* **And** `env.appBaseUrl` pointe par défaut sur `'http://localhost:45173'`
 
 ### Scénario 4 : Vérification d'absence d'accès direct sauvage
 * **Given** la base de code après refactorisation

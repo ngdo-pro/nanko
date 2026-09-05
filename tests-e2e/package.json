@@ -2,10 +2,14 @@
   "name": "tests-e2e",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "test": "playwright test"
+    "test": "playwright test",
+    "test:env": "node --test config/env.test.ts"
   },
   "devDependencies": {
-    "@playwright/test": "^1.48.0"
+    "@playwright/test": "^1.48.0",
+    "@types/node": "^24.13.3",
+    "zod": "^4.5.4"
   }
 }

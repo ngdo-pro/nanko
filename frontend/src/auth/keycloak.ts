@@ -1,7 +1,8 @@
 import Keycloak from 'keycloak-js'
+import { env } from '../config/env'
 
 export const keycloak = new Keycloak({
-  url: import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:48080',
-  realm: import.meta.env.VITE_KEYCLOAK_REALM || 'nanko',
-  clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'nanko-web',
+  url: env.keycloak.url,
+  realm: env.keycloak.realm,
+  clientId: env.keycloak.clientId,
 })
