@@ -16,18 +16,23 @@ return static function (DeptracConfig $config): void {
         ->layers(
             $coreDomain = Layer::withName('CoreDomain')->collectors(
                 DirectoryConfig::create('src/Core/Domain'),
+                DirectoryConfig::create('src/.*/Core/Domain'),
             ),
             $corePort = Layer::withName('CorePort')->collectors(
                 DirectoryConfig::create('src/Core/Port'),
+                DirectoryConfig::create('src/.*/Core/Port'),
             ),
             $coreUseCase = Layer::withName('CoreUseCase')->collectors(
                 DirectoryConfig::create('src/Core/UseCase'),
+                DirectoryConfig::create('src/.*/Core/UseCase'),
             ),
             $adapterDriven = Layer::withName('AdapterDriven')->collectors(
                 DirectoryConfig::create('src/Adapter/Driven'),
+                DirectoryConfig::create('src/.*/Adapter/Driven'),
             ),
             $adapterDriver = Layer::withName('AdapterDriver')->collectors(
                 DirectoryConfig::create('src/Adapter/Driver'),
+                DirectoryConfig::create('src/.*/Adapter/Driver'),
             ),
             // Not a src/ directory: a virtual layer over the framework/ORM
             // classes Core is forbidden from touching. symfony/uid is

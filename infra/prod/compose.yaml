@@ -23,6 +23,8 @@ services:
       APP_ENV: prod
       APP_SECRET: ${APP_SECRET}
       DATABASE_URL: postgresql://nanko:${POSTGRES_PASSWORD}@postgres:5432/nanko?serverVersion=16&charset=utf8
+      KEYCLOAK_JWKS_URL: https://auth.nanko.dev/realms/nanko/protocol/openid-connect/certs
+      KEYCLOAK_ISSUER: https://auth.nanko.dev/realms/nanko
       SERVER_NAME: ":80"
     depends_on:
       postgres:
@@ -40,6 +42,38 @@ services:
     # Caddyfile to keep in sync anymore. `container_name` is kept only for
     # human-readable `docker ps`/`docker logs` disambiguation between preprod
     # and prod.
+    networks:
+      default: {}
+      edge: {}
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1
+    container_name: nanko-prod-keycloak
+    restart: unless-stopped
+    command: start --optimized --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/nanko
+      KC_DB_USERNAME: nanko
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KC_HOSTNAME: auth.nanko.dev
+      KC_PROXY_HEADERS: xforwarded
+      KC_HTTP_ENABLED: "true"
+    volumes:
+      - ../keycloak:/opt/keycloak/data/import:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+      caddy: auth.nanko.dev
+      caddy.encode: gzip
+      caddy.reverse_proxy: "{{upstreams 8080}}"
+      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+      caddy.header.X-Content-Type-Options: nosniff
+      caddy.header.X-Frame-Options: DENY
     networks:
       default: {}
       edge: {}

@@ -1,0 +1,37 @@
+{
+  "realm": "nanko",
+  "enabled": true,
+  "displayName": "Nanko",
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "rememberMe": true,
+  "verifyEmail": false,
+  "clients": [
+    {
+      "clientId": "nanko-web",
+      "name": "Nanko Web SPA",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "+"
+      },
+      "redirectUris": [
+        "http://localhost:45173/*",
+        "https://app.preprod.nanko.dev/*",
+        "https://app.nanko.dev/*"
+      ],
+      "webOrigins": [
+        "+"
+      ]
+    }
+  ]
+}
