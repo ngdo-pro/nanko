@@ -25,6 +25,21 @@ Fournir une gestion sécurisée, sans friction et standardisée de l'identité d
 * L'utilisateur clique sur « Déconnexion » depuis son menu profil.
 * La session locale est purgée et une redirection vers l'endpoint de logout de Keycloak invalide la session SSO globale.
 
+### Parcours 5 : Accueil visiteur non connecté (Portail Nanko)
+* Un visiteur non connecté accède à l'application (`/`).
+* L'interface affiche l'identité visuelle officielle Nanko (`BrandLogo`), la proposition de valeur (« Vos diagrammes d'architecture, écrits comme du code »), un extrait interactif de code `.nanko` et les 3 piliers fondateurs (base de données source de vérité, rendu déterministe C4, navigation multi-layer).
+* Le visiteur clique sur le bouton d'action principal « Se connecter / Créer un compte » qui déclenche la redirection vers la mire d'authentification Keycloak.
+
+### Parcours 6 : Tableau de bord d'accueil connecté (Dashboard)
+* Une fois authentifié, l'utilisateur accède au tableau de bord d'accueil (`DashboardView`).
+* L'en-tête affiche un message de bienvenue personnalisé avec son email issu de `GET /api/v1/me`.
+* Un état vide incitatif (*Empty State*) invite l'utilisateur à créer son premier document d'architecture ou à importer un fichier `.nanko` existant.
+* Un aide-mémoire syntaxique rappelle les instructions clés du DSL (`@id`, `@version`, `@satisfies`, `rectangle`, `connector`).
+
+### Parcours 7 : Personnalisation du thème d'affichage
+* L'utilisateur sélectionne son thème d'affichage via le composant `ThemeSwitch` (`light`, `system`, `dark`).
+* Le choix est persisté dans `localStorage` sous la clé `nanko-theme` et appliqué via l'attribut `data-theme` sur l'élément racine du document sans flash visuel au rechargement.
+
 ## 3. Règles de Gestion Métier
 * **Règle 1 (Zero Trust & Signature RS256) :** Tout accès aux endpoints applicatifs privés exige un jeton JWT Bearer valide émis par Keycloak et vérifiable via JWKS.
 * **Règle 2 (Délégation IAM totale) :** Strictement aucun mot de passe ni identifiant brut ne transite ou n'est stocké par le backend Symfony ou le frontend Nanko.

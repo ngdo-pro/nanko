@@ -16,8 +16,13 @@
   * `KeycloakProvider` (Context React) gérant l'initialisation avec PKCE (S256) et le renouvellement silencieux.
   * `httpClient` injectant automatiquement le bearer token et gérant l'actualisation sur expiration.
   * Garde de navigation `ProtectedRoute`.
+  * **Design System & Identité Nanko :** Typographies officielles (`Archivo`, `IBM Plex Sans`, `IBM Plex Mono`, `Poppins`), tokens CSS clair (`#F7F4EF`) / sombre (`#04141A`), et logo officiel vectoriel SVG (`BrandLogo`).
+  * **Composants d'Interface :** `ThemeSwitch` (gestion et persistance du thème `nanko-theme`), `UserMenu` épuré (avatar, email, déconnexion).
+  * **Vues :** `UnauthenticatedView` (portail visiteur avec aperçu `.nanko` et CTA Keycloak) et `DashboardView` (accueil connecté avec état vide incitatif).
+  * **Outillage de Tests Unitaires & Intégration :** Vitest, React Testing Library, `@testing-library/jest-dom`, `@testing-library/user-event`, jsdom (`pnpm --filter frontend test`).
 * **Tests E2E (`tests-e2e/`) :**
   * Helper `tests-e2e/tests/helpers/keycloak.ts` provisionnant les utilisateurs de test en local via l'API Admin Keycloak (`admin-cli`).
+  * Suite de tests Playwright couvrant le flux d'authentification (`auth.spec.ts`) et le portail d'accueil (`portal.spec.ts`).
 
 ## 2. Invariants Techniques & Sécurité
 * Strictement aucun mot de passe ou secret utilisateur en clair dans les bases applicatives ou les logs.

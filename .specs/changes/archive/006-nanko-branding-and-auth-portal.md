@@ -30,6 +30,7 @@
     * Rappel des principes clés (modèle immuable, navigation multi-layer, rendu déterministe).
   * **Nettoyage & Remplacement des assets :**
     * Suppression de `hero.png`, `react.svg`, `vite.svg` dans `frontend/src/assets/`.
+    * Remplacement du favicon Vite par le favicon vectoriel officiel Nanko (`frontend/public/favicon.svg`) et suppression de `frontend/public/icons.svg`.
     * Refonte complète de `frontend/src/App.tsx`, `frontend/src/App.css` et `frontend/src/index.css`.
   * **Mise en place de l'outillage de Tests Unitaires & Intégration Frontend :**
     * Installation et configuration de **Vitest** + **React Testing Library** + **jsdom** dans `frontend/`.
@@ -209,6 +210,8 @@ sequenceDiagram
 
 ```text
 frontend/
+├── public/
+│   └── favicon.svg              # Favicon vectoriel officiel Nanko (SVG)
 ├── src/
 │   ├── assets/                  # Suppression de hero.png, react.svg, vite.svg
 │   ├── auth/                    # Client Keycloak & contextes existants
@@ -276,36 +279,37 @@ export type ValidatedUserProfile = z.infer<typeof userProfileSchema>;
 
 ## 9. Plan d'exécution séquentiel
 
-- [ ] **Phase 1 : Socle de Tests Frontend & Configuration (`frontend/`)**
-  - [ ] 1. Installer `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event`, `jsdom`.
-  - [ ] 2. Configurer `vite.config.ts` (section `test: { globals: true, environment: 'jsdom', setupFiles: './src/test/setup.ts' }`) et `frontend/src/test/setup.ts`.
-  - [ ] 3. Ajouter le script `"test": "vitest run"` et `"test:watch": "vitest"` dans `frontend/package.json`.
+- [x] **Phase 1 : Socle de Tests Frontend & Configuration (`frontend/`)**
+  - [x] 1. Installer `vitest`, `@testing-library/react`, `@testing-library/jest-dom`, `@testing-library/user-event`, `jsdom`.
+  - [x] 2. Configurer `vite.config.ts` (section `test: { globals: true, environment: 'jsdom', setupFiles: './src/test/setup.ts' }`) et `frontend/src/test/setup.ts`.
+  - [x] 3. Ajouter le script `"test": "vitest run"` et `"test:watch": "vitest"` dans `frontend/package.json`.
 
-- [ ] **Phase 2 : Design Tokens & Assets Nanko (`frontend/`)**
-  - [ ] 1. Supprimer les assets obsolètes : `frontend/src/assets/hero.png`, `frontend/src/assets/react.svg`, `frontend/src/assets/vite.svg`.
-  - [ ] 2. Configurer `index.html` pour charger les typographies officielles (`Archivo`, `IBM Plex Sans`, `IBM Plex Mono`, `Poppins`).
-  - [ ] 3. Intégrer les variables de thème (clair/sombre) dans `frontend/src/index.css`.
+- [x] **Phase 2 : Design Tokens & Assets Nanko (`frontend/`)**
+  - [x] 1. Supprimer les assets obsolètes : `frontend/src/assets/hero.png`, `frontend/src/assets/react.svg`, `frontend/src/assets/vite.svg`.
+  - [x] 2. Configurer `index.html` pour charger les typographies officielles (`Archivo`, `IBM Plex Sans`, `IBM Plex Mono`, `Poppins`).
+  - [x] 3. Remplacer le favicon Vite par le favicon SVG officiel Nanko (`frontend/public/favicon.svg`) et supprimer `frontend/public/icons.svg`.
+  - [x] 4. Intégrer les variables de thème (clair/sombre) dans `frontend/src/index.css`.
 
-- [ ] **Phase 3 : Composants Partagés & Tests Unitaires (`frontend/src/components/`)**
-  - [ ] 1. Créer le composant vectoriel `BrandLogo.tsx` et son test unitaire `BrandLogo.test.tsx`.
-  - [ ] 2. Créer le composant `ThemeSwitch.tsx` et son test unitaire `ThemeSwitch.test.tsx` (validation des thèmes light/system/dark et persistance `localStorage`).
-  - [ ] 3. Mettre à jour `UserMenu.tsx` avec le style épuré Nanko et son test unitaire `UserMenu.test.tsx`.
-  - [ ] 4. Créer le schéma de validation Zod `frontend/src/auth/schemas.ts` et son test unitaire `schemas.test.ts`.
+- [x] **Phase 3 : Composants Partagés & Tests Unitaires (`frontend/src/components/`)**
+  - [x] 1. Créer le composant vectoriel `BrandLogo.tsx` et son test unitaire `BrandLogo.test.tsx`.
+  - [x] 2. Créer le composant `ThemeSwitch.tsx` et son test unitaire `ThemeSwitch.test.tsx` (validation des thèmes light/system/dark et persistance `localStorage`).
+  - [x] 3. Mettre à jour `UserMenu.tsx` avec le style épuré Nanko et son test unitaire `UserMenu.test.tsx`.
+  - [x] 4. Créer le schéma de validation Zod `frontend/src/auth/schemas.ts` et son test unitaire `schemas.test.ts`.
 
-- [ ] **Phase 4 : Vues Principales & Tests d'Intégration UI (`frontend/src/views/`)**
-  - [ ] 1. Développer `UnauthenticatedView.tsx` et son test d'intégration `UnauthenticatedView.test.tsx` (validation du branding Nanko, absence de reliquats Vite, appel au login).
-  - [ ] 2. Développer `DashboardView.tsx` et son test d'intégration `DashboardView.test.tsx` (validation de l'affichage du profil et de l'état vide pour les documents).
-  - [ ] 3. Refactoriser `frontend/src/App.tsx` pour orchestrer le rendu selon l'état d'authentification.
+- [x] **Phase 4 : Vues Principales & Tests d'Intégration UI (`frontend/src/views/`)**
+  - [x] 1. Développer `UnauthenticatedView.tsx` et son test d'intégration `UnauthenticatedView.test.tsx` (validation du branding Nanko, absence de reliquats Vite, appel au login).
+  - [x] 2. Développer `DashboardView.tsx` et son test d'intégration `DashboardView.test.tsx` (validation de l'affichage du profil et de l'état vide pour les documents).
+  - [x] 3. Refactoriser `frontend/src/App.tsx` pour orchestrer le rendu selon l'état d'authentification.
 
-- [ ] **Phase 5 : Validation Qualité, Tests Unitaires & E2E**
-  - [ ] 1. Valider le typage strict TypeScript : `pnpm --filter frontend typecheck`.
-  - [ ] 2. Valider le linting : `pnpm --filter frontend lint`.
-  - [ ] 3. Exécuter l'ensemble des tests unitaires et d'intégration : `pnpm --filter frontend test`.
-  - [ ] 4. Exécuter les tests E2E Playwright : `pnpm --filter tests-e2e exec playwright test`.
+- [x] **Phase 5 : Validation Qualité, Tests Unitaires & E2E**
+  - [x] 1. Valider le typage strict TypeScript : `pnpm --filter frontend typecheck`.
+  - [x] 2. Valider le linting : `pnpm --filter frontend lint`.
+  - [x] 3. Exécuter l'ensemble des tests unitaires et d'intégration : `pnpm --filter frontend test`.
+  - [x] 4. Exécuter les tests E2E Playwright : `pnpm --filter tests-e2e exec playwright test`.
 
-- [ ] **Phase 6 : Synchronisation documentaire (via `/sync-current`)**
-  - [ ] 1. Mettre à jour `.specs/current/domains/auth-and-identity/behavior.md` avec les détails du portail d'accueil.
-  - [ ] 2. Archiver cette spécification sous `.specs/changes/archive/006-nanko-branding-and-auth-portal.md`.
+- [x] **Phase 6 : Synchronisation documentaire (via `/sync-current`)**
+  - [x] 1. Mettre à jour `.specs/current/domains/auth-and-identity/behavior.md` avec les détails du portail d'accueil.
+  - [x] 2. Archiver cette spécification sous `.specs/changes/archive/006-nanko-branding-and-auth-portal.md`.
 
 ---
 

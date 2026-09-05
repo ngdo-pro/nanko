@@ -29,14 +29,26 @@
 
 ## 2. Contrats & Types Frontend (TypeScript)
 
-### Type : `UserProfile` (`frontend/src/auth/types.ts`)
+### Type & Schéma Zod : `UserProfile` (`frontend/src/auth/schemas.ts`, `frontend/src/auth/types.ts`)
 ```typescript
+import { z } from 'zod';
+
+export const userProfileSchema = z.object({
+  id: z.string().uuid(),
+  keycloakId: z.string().min(1),
+  email: z.string().email(),
+  createdAt: z.string().datetime(),
+});
+
+export type ValidatedUserProfile = z.infer<typeof userProfileSchema>;
+
 export interface UserProfile {
   id: string
   keycloakId: string
   email: string
   createdAt: string
 }
+```
 
 export interface AuthContextValue {
   isAuthenticated: boolean
