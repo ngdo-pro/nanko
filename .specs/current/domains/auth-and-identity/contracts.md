@@ -1,44 +1,58 @@
 # Domaine : Identité & Accès (auth-and-identity) - Contrats d'API & Schémas
 
-## 1. Endpoints REST & OAuth Actifs
+## 1. Endpoints REST Actifs
 
-### `POST /api/v1/auth/token`
-* **Authentification :** `PUBLIC_ACCESS`
-* **Headers :** `Content-Type: application/json`
-* **Description :** Émission d'un token d'accès JWT et d'un refresh token.
-
-#### Request Payload
-```json
-{
-  "grantType": "password",
-  "email": "user@example.com",
-  "password": "SecretPassword123!"
-}
-```
+### `GET /api/v1/me`
+* **Authentification :** `ROLE_USER` (Jeton Bearer JWT émis par Keycloak valide)
+* **Headers :** `Authorization: Bearer <access_token>`
+* **Description :** Retourne le profil interne Nanko associé au compte Keycloak connecté (avec JIT provisioning automatique si premier appel).
 
 #### Réponses
 * `200 OK` :
   ```json
   {
-    "tokenType": "Bearer",
-    "expiresIn": 3600,
-    "accessToken": "eyJhbGciOiJSUzI1NiIs...",
-    "refreshToken": "def50200..."
+    "id": "0191c280-496a-7312-bf91-a1b2c3d4e5f6",
+    "keycloakId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "email": "user@nanko.dev",
+    "createdAt": "2026-09-05T08:00:00.000Z"
   }
   ```
-* `401 Unauthorized` : `{ "code": "INVALID_CREDENTIALS", "message": "Identifiant ou mot de passe invalide." }`
+* `401 Unauthorized` :
+  ```json
+  {
+    "code": "UNAUTHORIZED",
+    "message": "Token JWT manquant, invalide ou expiré."
+  }
+  ```
 
 ---
 
-## 2. Schémas de Validation Frontend (Zod)
+## 2. Contrats & Types Frontend (TypeScript)
 
+### Type : `UserProfile` (`frontend/src/auth/types.ts`)
 ```typescript
-import { z } from 'zod';
+export interface UserProfile {
+  id: string
+  keycloakId: string
+  email: string
+  createdAt: string
+}
 
-export const loginSchema = z.object({
-  email: z.string().trim().email('Format email invalide'),
-  password: z.string().min(12, 'Le mot de passe doit contenir au moins 12 caractères')
-});
-
-export type LoginInput = z.infer<typeof loginSchema>;
+export interface AuthContextValue {
+  isAuthenticated: boolean
+  isLoading: boolean
+  user: UserProfile | null
+  token: string | null
+  login: () => Promise<void>
+  logout: () => Promise<void>
+}
 ```
+
+### Configuration OIDC Client
+* **Client ID :** `nanko-web` (Public client avec PKCE standard S256).
+* **Realm :** `nanko`.
+* **Endpoints OIDC standards :**
+  * Authorization : `/realms/nanko/protocol/openid-connect/auth`
+  * Token : `/realms/nanko/protocol/openid-connect/token`
+  * JWKS Certs : `/realms/nanko/protocol/openid-connect/certs`
+  * Logout : `/realms/nanko/protocol/openid-connect/logout`

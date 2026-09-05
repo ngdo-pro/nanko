@@ -1,20 +1,28 @@
 # Domaine : Identité & Accès (auth-and-identity) - Architecture Technique
 
 ## 1. Stack & Composants Cibles
+* **Identity Provider (Keycloak 26.1) :**
+  * Conteneur Docker officiel Quay (`quay.io/keycloak/keycloak:26.1`).
+  * Configuration déclarative versionnée dans `infra/keycloak/realm-nanko.json` (import automatique `--import-realm`).
+  * Persistance dans PostgreSQL sous le schéma dédié `keycloak` (`KC_DB_SCHEMA: keycloak`).
+  * Inscription publique et direct access grants désactivés (`registrationAllowed: false`, `directAccessGrantsEnabled: false`).
 * **Backend (`backend/`) :**
-  * Spécification OAuth 2.0 (RFC 6749) avec signature JWT en RS256.
-  * Hachage des mots de passe avec Argon2id.
-  * Entités Core Domain isolées, services d'authentification et intercepteurs de sécurité Symfony.
+  * Rôle de **Resource Server** OIDC sans stockage ni manipulation de mots de passe.
+  * Authenticator Symfony custom `JwtKeycloakAuthenticator` interceptant `Authorization: Bearer <token>`.
+  * `JwtKeycloakValidator` validant les signatures RS256 contre les clés publiques JWKS de Keycloak (`KEYCLOAK_JWKS_URL`) avec cache et invalidation sur rotation (`kid`).
+  * Architecture hexagonale stricte (`backend/src/AuthAndIdentity/Core/` et `Adapter/`) validée par Deptrac.
 * **Frontend (`frontend/`) :**
-  * Client HTTP Axios/Fetch avec intercepteur de renouvellement sur code 401.
-  * Context Provider React pour l'état d'authentification (`AuthContext`).
-* **Base de données :**
-  * Tables PostgreSQL pour les identités, comptes et jetons révoqués avec identifiants UUIDv7.
+  * Bibliothèque officielle `keycloak-js`.
+  * `KeycloakProvider` (Context React) gérant l'initialisation avec PKCE (S256) et le renouvellement silencieux.
+  * `httpClient` injectant automatiquement le bearer token et gérant l'actualisation sur expiration.
+  * Garde de navigation `ProtectedRoute`.
+* **Tests E2E (`tests-e2e/`) :**
+  * Helper `tests-e2e/tests/helpers/keycloak.ts` provisionnant les utilisateurs de test en local via l'API Admin Keycloak (`admin-cli`).
 
 ## 2. Invariants Techniques & Sécurité
-* Aucun mot de passe ni token JWT en clair dans les logs Monolog.
-* Durée de vie du JWT d'accès limitée à 60 minutes.
-* Signature asymétrique RS256 (clé privée sur l'API, clé publique pour vérification).
+* Strictement aucun mot de passe ou secret utilisateur en clair dans les bases applicatives ou les logs.
+* Validation cryptographique locale des JWT via les clés publiques JWKS sans dépendance synchrone à Keycloak pour chaque appel API.
+* Idempotence garantie lors du premier appel pour le provisioning Just-In-Time de l'entité locale `app_user`.
 
 ## 3. ADRs de Référence
-* `ADR-001` : Adoption du serveur OAuth 2.0 avec rotation de jetons.
+* `ADR-0011` : Architecture hexagonale et structure des Bounded Contexts.
