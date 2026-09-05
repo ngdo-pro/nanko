@@ -27,6 +27,10 @@ services:
   signoz-query-service:
     image: signoz/query-service:latest
     restart: unless-stopped
+    command:
+      - -config=/root/config/prometheus.yml
+      - -use-trace-new-schema=true
+      - -use-logs-new-schema=true
     volumes:
       - nanko-local-signoz-data:/var/lib/signoz
       - ../signoz/alerts:/root/config/alerts:ro

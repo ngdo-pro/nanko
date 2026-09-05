@@ -34,6 +34,10 @@ services:
     image: signoz/query-service:latest
     container_name: signoz-query-service
     restart: unless-stopped
+    command:
+      - -config=/root/config/prometheus.yml
+      - -use-trace-new-schema=true
+      - -use-logs-new-schema=true
     volumes:
       - signoz-data:/var/lib/signoz
       - ./alerts:/root/config/alerts:ro
