@@ -1,4 +1,5 @@
 import { env } from '../config/env'
+import { injectTraceContext } from '../config/telemetry'
 import { keycloak } from './keycloak'
 
 const API_BASE_URL = env.api.baseUrl
@@ -19,6 +20,8 @@ export async function fetchWithAuth(input: string, init: RequestInit = {}): Prom
   if (keycloak.token) {
     headers.set('Authorization', `Bearer ${keycloak.token}`)
   }
+
+  injectTraceContext(headers)
 
   return fetch(url, {
     ...init,
