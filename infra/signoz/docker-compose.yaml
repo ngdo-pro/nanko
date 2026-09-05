@@ -17,6 +17,11 @@ services:
     image: signoz/alertmanager:0.23.6
     container_name: signoz-alertmanager
     restart: unless-stopped
+    command:
+      - --queryService.url=http://signoz-query-service:8080
+      - --storage.path=/data
+    depends_on:
+      - signoz-query-service
     volumes:
       - signoz-alertmanager-data:/data
     networks:
@@ -27,6 +32,7 @@ services:
     container_name: signoz-query-service
     restart: unless-stopped
     volumes:
+      - signoz-data:/var/lib/signoz
       - ./alerts:/root/config/alerts:ro
       - ./dashboards:/root/config/dashboards:ro
     environment:
@@ -102,3 +108,4 @@ networks:
 volumes:
   signoz-clickhouse-data:
   signoz-alertmanager-data:
+  signoz-data:

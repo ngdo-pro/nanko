@@ -21,12 +21,10 @@ extensions:
 exporters:
   clickhousetraces:
     datasource: tcp://clickhouse:9000/signoz_traces
-    docker_multi_node_cluster: false
-    low_cardinal_exception_grouping: false
-  clickhousemetricsworker:
-    endpoint: tcp://clickhouse:9000/signoz_metrics
-  signozclickhouselogs:
-    endpoint: tcp://clickhouse:9000/signoz_logs
+  signozclickhousemetrics:
+    dsn: tcp://clickhouse:9000/signoz_metrics
+  clickhouselogsexporter:
+    dsn: tcp://clickhouse:9000/signoz_logs
 
 service:
   extensions: [health_check, zpages]
@@ -38,8 +36,8 @@ service:
     metrics:
       receivers: [otlp]
       processors: [batch]
-      exporters: [clickhousemetricsworker]
+      exporters: [signozclickhousemetrics]
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [signozclickhouselogs]
+      exporters: [clickhouselogsexporter]

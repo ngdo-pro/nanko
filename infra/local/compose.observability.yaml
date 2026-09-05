@@ -13,6 +13,11 @@ services:
   signoz-alertmanager:
     image: signoz/alertmanager:0.23.6
     restart: unless-stopped
+    command:
+      - --queryService.url=http://signoz-query-service:8080
+      - --storage.path=/data
+    depends_on:
+      - signoz-query-service
     volumes:
       - nanko-local-signoz-alertmanager:/data
 
@@ -20,6 +25,7 @@ services:
     image: signoz/query-service:latest
     restart: unless-stopped
     volumes:
+      - nanko-local-signoz-data:/var/lib/signoz
       - ../signoz/alerts:/root/config/alerts:ro
       - ../signoz/dashboards:/root/config/dashboards:ro
     environment:
@@ -60,3 +66,4 @@ networks:
 volumes:
   nanko-local-signoz-clickhouse:
   nanko-local-signoz-alertmanager:
+  nanko-local-signoz-data:
