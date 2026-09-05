@@ -1,0 +1,104 @@
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.1.2-alpine
+    container_name: signoz-clickhouse
+    restart: unless-stopped
+    volumes:
+      - signoz-clickhouse-data:/var/lib/clickhouse
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "0.0.0.0:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      default: {}
+
+  signoz-alertmanager:
+    image: signoz/alertmanager:0.23.6
+    container_name: signoz-alertmanager
+    restart: unless-stopped
+    volumes:
+      - signoz-alertmanager-data:/data
+    networks:
+      default: {}
+
+  signoz-query-service:
+    image: signoz/query-service:0.55.1
+    container_name: signoz-query-service
+    restart: unless-stopped
+    volumes:
+      - ./alerts:/root/config/alerts:ro
+      - ./dashboards:/root/config/dashboards:ro
+    environment:
+      - ClickHouseUrl=tcp://clickhouse:9000
+      - STORAGE=clickhouse
+      - GODEBUG=netdns=go
+      - TELEMETRY_ENABLED=false
+      - ALERTMANAGER_API_PREFIX=http://signoz-alertmanager:9093/api/
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    networks:
+      default: {}
+
+  signoz-frontend:
+    image: signoz/frontend:0.55.1
+    container_name: signoz-frontend
+    restart: unless-stopped
+    depends_on:
+      - signoz-query-service
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+      caddy: signoz.nanko.dev
+      caddy.encode: gzip
+      caddy.reverse_proxy: "{{upstreams 3301}}"
+      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+      caddy.header.X-Content-Type-Options: nosniff
+      caddy.header.X-Frame-Options: DENY
+    networks:
+      default: {}
+      edge: {}
+
+  otel-collector:
+    image: signoz/signoz-otel-collector:0.111.23
+    container_name: signoz-otel-collector
+    restart: unless-stopped
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+      caddy: otlp.nanko.dev
+      caddy.encode: gzip
+      caddy.reverse_proxy: "{{upstreams 4318}}"
+      caddy.header.Access-Control-Allow-Origin: "*"
+      caddy.header.Access-Control-Allow-Methods: "POST, OPTIONS"
+      caddy.header.Access-Control-Allow-Headers: "*"
+    networks:
+      default: {}
+      edge: {}
+
+  signoz-provisioner:
+    image: alpine:latest
+    container_name: signoz-provisioner
+    volumes:
+      - ./dashboards:/dashboards:ro
+      - ./provisioner/provision.sh:/provision.sh:ro
+    entrypoint: ["/bin/sh", "/provision.sh"]
+    depends_on:
+      - signoz-query-service
+    restart: "no"
+    networks:
+      default: {}
+
+networks:
+  default: {}
+  edge:
+    external: true
+
+volumes:
+  signoz-clickhouse-data:
+  signoz-alertmanager-data:

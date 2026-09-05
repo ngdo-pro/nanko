@@ -1,7 +1,7 @@
 VPS ?= nanko-vps
 REMOTE_DIR ?= nanko
 
-.PHONY: help dev stop logs test-backend test-e2e test-e2e-ui composer deptrac static-analysis lint lint-fix deploy-preprod deploy-prod
+.PHONY: help dev stop logs signoz-up signoz-down test-backend test-e2e test-e2e-ui composer deptrac static-analysis lint lint-fix deploy-preprod deploy-prod
 
 .DEFAULT_GOAL := help
 
@@ -32,6 +32,17 @@ stop: ## Stop the local dev stack
 
 logs: ## Follow logs of the local dev stack
 	docker compose -f infra/local/compose.yaml logs -f
+
+signoz-up: ## Start the optional local SigNoz observability stack
+	docker compose -f infra/local/compose.observability.yaml up -d
+	@echo
+	@echo "SigNoz UI:        http://localhost:43301"
+	@echo "OTel gRPC (4317): localhost:44317"
+	@echo "OTel HTTP (4318): localhost:44318"
+	@echo
+
+signoz-down: ## Stop the optional local SigNoz observability stack
+	docker compose -f infra/local/compose.observability.yaml down
 
 # Runs against the "backend" service's own postgres connection (see
 # infra/local/compose.yaml), with dbname_suffix=_test applied by

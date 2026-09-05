@@ -27,6 +27,9 @@ services:
       KEYCLOAK_ISSUER: https://auth.nanko.dev/realms/nanko
       SERVER_NAME: ":80"
       CORS_ALLOW_ORIGIN: '^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$|^https://[a-z0-9-]+\.nanko\.dev$'
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://signoz-otel-collector:4318/v1/traces
+      OTEL_SERVICE_NAME: nanko-backend
+      OTEL_RESOURCE_ATTRIBUTES: service.name=nanko-backend,deployment.environment=prod
     depends_on:
       postgres:
         condition: service_healthy
@@ -61,6 +64,10 @@ services:
       KC_HOSTNAME: https://auth.nanko.dev
       KC_PROXY_HEADERS: xforwarded
       KC_HTTP_ENABLED: "true"
+      KC_TRACING_ENABLED: "true"
+      KC_TRACING_ENDPOINT: http://signoz-otel-collector:4317
+      KC_TRACING_RESOURCE_ATTRIBUTES: service.name=nanko-keycloak,deployment.environment=prod
+      KC_METRICS_ENABLED: "true"
     volumes:
       - ../keycloak:/opt/keycloak/data/import:ro
     depends_on:
