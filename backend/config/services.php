@@ -10,8 +10,12 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 return App::config([
     // Put parameters here that don't need to change on each machine where the app is deployed
-    // https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
-    'parameters' => [],
+    'parameters' => [
+        'app.version' => '%env(default:default_app_version:APP_VERSION)%',
+        'app.commit' => '%env(default:default_app_commit:APP_COMMIT)%',
+        'default_app_version' => 'v0.0.0-dev',
+        'default_app_commit' => 'dev',
+    ],
 
     'services' => [
         // default configuration for services in *this* file

@@ -22,6 +22,7 @@ security:
                 - App\AuthAndIdentity\Adapter\Driver\Http\Security\JwtKeycloakAuthenticator
 
     access_control:
+        - { path: ^/api/v1/version, roles: PUBLIC_ACCESS }
         - { path: ^/api/v1/me, roles: ROLE_USER }
 
 when@test:
