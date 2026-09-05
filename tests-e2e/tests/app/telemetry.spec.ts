@@ -14,6 +14,7 @@ test.describe('Observabilité & Télémétrie OpenTelemetry', () => {
     })
 
     await page.goto('/')
+    await expect(page.locator('.nav-logo')).toBeVisible()
 
     // Émission d'une requête API via le navigateur
     const responseStatus = await page.evaluate(async () => {

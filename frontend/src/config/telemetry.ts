@@ -46,7 +46,10 @@ export function initTelemetry(): void {
       tracerProvider,
       instrumentations: [
         new FetchInstrumentation({
-          propagateTraceHeaderCorsUrls: [/.*/],
+          propagateTraceHeaderCorsUrls: [
+            new RegExp(env.api.baseUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')),
+            /\/api\//,
+          ],
           clearTimingResources: true,
         }),
       ],

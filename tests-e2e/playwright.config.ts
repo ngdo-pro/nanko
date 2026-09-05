@@ -14,6 +14,14 @@ export default defineConfig({
   use: {
     baseURL: env.appBaseUrl,
     trace: "on-first-retry",
+    ...(env.preprodHttpUser && env.preprodHttpPassword
+      ? {
+          httpCredentials: {
+            username: env.preprodHttpUser,
+            password: env.preprodHttpPassword,
+          },
+        }
+      : {}),
   },
   projects: [
     {

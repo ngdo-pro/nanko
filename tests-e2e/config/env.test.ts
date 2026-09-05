@@ -112,6 +112,25 @@ describe('Spécifications 003 : Centralisation et Validation Zod des Variables d
         assert.equal(parsedOther.data.CI, false)
       }
     })
+
+    it('doit accepter les variables optionnelles PREPROD_HTTP_USER et PREPROD_HTTP_PASSWORD', () => {
+      const parsedWithout = e2eEnvSchema.safeParse({})
+      assert.equal(parsedWithout.success, true)
+      if (parsedWithout.success) {
+        assert.equal(parsedWithout.data.PREPROD_HTTP_USER, undefined)
+        assert.equal(parsedWithout.data.PREPROD_HTTP_PASSWORD, undefined)
+      }
+
+      const parsedWith = e2eEnvSchema.safeParse({
+        PREPROD_HTTP_USER: 'nanko',
+        PREPROD_HTTP_PASSWORD: 'secret-password',
+      })
+      assert.equal(parsedWith.success, true)
+      if (parsedWith.success) {
+        assert.equal(parsedWith.data.PREPROD_HTTP_USER, 'nanko')
+        assert.equal(parsedWith.data.PREPROD_HTTP_PASSWORD, 'secret-password')
+      }
+    })
   })
 
   describe('Scénario 4 : Vérification d\'absence d\'accès direct sauvage', () => {

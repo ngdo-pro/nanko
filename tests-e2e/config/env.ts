@@ -18,6 +18,8 @@ export const e2eEnvSchema = z.object({
   KEYCLOAK_ADMIN_PASSWORD: z.string().min(1).default('admin'),
   E2E_USERNAME: z.string().optional(),
   E2E_PASSWORD: z.string().optional(),
+  PREPROD_HTTP_USER: z.string().optional(),
+  PREPROD_HTTP_PASSWORD: z.string().optional(),
   CI: z
     .string()
     .optional()
@@ -43,6 +45,8 @@ export const env = Object.freeze({
     username: parsed.data.E2E_USERNAME,
     password: parsed.data.E2E_PASSWORD,
   },
+  preprodHttpUser: parsed.data.PREPROD_HTTP_USER,
+  preprodHttpPassword: parsed.data.PREPROD_HTTP_PASSWORD,
   isCi: parsed.data.CI,
 })
 
