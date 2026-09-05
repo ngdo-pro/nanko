@@ -24,7 +24,7 @@ export function UserMenu() {
     )
   }
 
-  const email = user?.email || 'user@nanko.dev'
+  const email = user?.email || ''
   const initial = email.charAt(0).toUpperCase()
 
   return (

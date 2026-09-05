@@ -29,6 +29,15 @@ export function KeycloakProvider({ children }: KeycloakProviderProps) {
         setIsAuthenticated(authenticated)
         if (authenticated && keycloak.token) {
           setToken(keycloak.token)
+          const parsed = keycloak.tokenParsed as { email?: string; preferred_username?: string; sub?: string } | undefined
+          if (parsed) {
+            setUser({
+              id: parsed.sub ?? '',
+              keycloakId: parsed.sub ?? '',
+              email: parsed.email || parsed.preferred_username || '',
+              createdAt: new Date().toISOString(),
+            })
+          }
           try {
             const res = await fetchWithAuth('/api/v1/me')
             if (res.ok) {
