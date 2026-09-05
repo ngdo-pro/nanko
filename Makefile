@@ -83,9 +83,9 @@ lint-fix: ## Lint and auto-fix all code (backend cs-fixer + frontend oxlint --fi
 deploy-preprod: ## Deploy to preprod (git pull + compose up on the VPS)
 	ssh $(VPS) "cd $(REMOTE_DIR) && git pull --ff-only && \
 		docker compose -p nanko-preprod -f infra/preprod/compose.yaml \
-		--env-file infra/preprod/.env up -d"
+		--env-file ~/.config/nanko/preprod.env up -d"
 
 deploy-prod: ## Deploy to prod (git pull + compose up on the VPS)
 	ssh $(VPS) "cd $(REMOTE_DIR) && git pull --ff-only && \
 		docker compose -p nanko-prod -f infra/prod/compose.yaml \
-		--env-file infra/prod/.env up -d"
+		--env-file ~/.config/nanko/prod.env up -d"
