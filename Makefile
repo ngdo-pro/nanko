@@ -1,7 +1,7 @@
 VPS ?= nanko-vps
 REMOTE_DIR ?= nanko
 
-.PHONY: help dev stop logs signoz-up signoz-down test-backend test-e2e test-e2e-ui composer deptrac static-analysis lint lint-fix deploy-preprod deploy-prod
+.PHONY: help dev stop logs signoz-up signoz-down test-backend test-e2e test-e2e-ui composer deptrac static-analysis lint lint-fix deploy-preprod deploy-prod deploy-signoz
 
 .DEFAULT_GOAL := help
 
@@ -112,3 +112,9 @@ deploy-prod: ## Deploy to prod (git pull + compose up on the VPS)
 	ssh $(VPS) "cd $(REMOTE_DIR) && git pull --ff-only && \
 		docker compose -p nanko-prod -f infra/prod/compose.yaml \
 		--env-file ~/.config/nanko/prod.env up -d"
+
+deploy-signoz: ## Deploy SigNoz observability stack to VPS
+	ssh $(VPS) "cd $(REMOTE_DIR) && git pull --ff-only && \
+		docker compose -p signoz -f infra/signoz/docker-compose.yaml \
+		--env-file ~/.config/nanko/signoz.env up -d"
+

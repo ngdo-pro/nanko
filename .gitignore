@@ -30,3 +30,4 @@ build/
 # only gitignore the *.local overrides, already covered above.
 /infra/preprod/.env
 /infra/prod/.env
+/infra/signoz/.env
