@@ -1,6 +1,7 @@
+import { env } from '../config/env'
 import { keycloak } from './keycloak'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:48000'
+const API_BASE_URL = env.api.baseUrl
 
 export async function fetchWithAuth(input: string, init: RequestInit = {}): Promise<Response> {
   if (keycloak.authenticated) {

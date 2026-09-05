@@ -1,6 +1,4 @@
-const KEYCLOAK_URL = process.env.KEYCLOAK_URL ?? 'http://localhost:48080'
-const KEYCLOAK_ADMIN_USER = process.env.KEYCLOAK_ADMIN_USER ?? 'admin'
-const KEYCLOAK_ADMIN_PASSWORD = process.env.KEYCLOAK_ADMIN_PASSWORD ?? 'admin'
+import { env } from '../../config/env'
 
 export interface TestUserCredentials {
   email: string
@@ -13,8 +11,8 @@ export interface TestUserCredentials {
  * - Otherwise (local development), ensures the test user exists via the local Keycloak Admin API.
  */
 export async function getOrSetupTestUser(): Promise<TestUserCredentials> {
-  const envEmail = process.env.E2E_USERNAME
-  const envPassword = process.env.E2E_PASSWORD
+  const envEmail = env.testUser.username
+  const envPassword = env.testUser.password
 
   if (envEmail && envPassword) {
     return { email: envEmail, password: envPassword }
@@ -33,13 +31,13 @@ export async function createOrResetKeycloakUser(
   password = 'password123',
   realm = 'nanko',
 ): Promise<void> {
-  const tokenRes = await fetch(`${KEYCLOAK_URL}/realms/master/protocol/openid-connect/token`, {
+  const tokenRes = await fetch(`${env.keycloak.url}/realms/master/protocol/openid-connect/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       client_id: 'admin-cli',
-      username: KEYCLOAK_ADMIN_USER,
-      password: KEYCLOAK_ADMIN_PASSWORD,
+      username: env.keycloak.adminUser,
+      password: env.keycloak.adminPassword,
       grant_type: 'password',
     }),
   })
@@ -52,7 +50,7 @@ export async function createOrResetKeycloakUser(
   const token = tokenData.access_token
 
   const searchRes = await fetch(
-    `${KEYCLOAK_URL}/admin/realms/${realm}/users?username=${encodeURIComponent(email)}&exact=true`,
+    `${env.keycloak.url}/admin/realms/${realm}/users?username=${encodeURIComponent(email)}&exact=true`,
     {
       headers: { Authorization: `Bearer ${token}` },
     },
@@ -63,7 +61,7 @@ export async function createOrResetKeycloakUser(
     if (existing.length > 0 && existing[0]?.id) {
       const userId = existing[0].id
 
-      await fetch(`${KEYCLOAK_URL}/admin/realms/${realm}/users/${userId}`, {
+      await fetch(`${env.keycloak.url}/admin/realms/${realm}/users/${userId}`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -77,7 +75,7 @@ export async function createOrResetKeycloakUser(
         }),
       })
 
-      await fetch(`${KEYCLOAK_URL}/admin/realms/${realm}/users/${userId}/reset-password`, {
+      await fetch(`${env.keycloak.url}/admin/realms/${realm}/users/${userId}/reset-password`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -93,7 +91,7 @@ export async function createOrResetKeycloakUser(
     }
   }
 
-  const createRes = await fetch(`${KEYCLOAK_URL}/admin/realms/${realm}/users`, {
+  const createRes = await fetch(`${env.keycloak.url}/admin/realms/${realm}/users`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
