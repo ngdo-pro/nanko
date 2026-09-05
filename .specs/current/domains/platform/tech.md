@@ -33,6 +33,11 @@
 ### Infrastructure & Déploiement VPS (`infra/`)
 * **Watchtower :** Scrutation automatique des digests d'images GHCR (polling 5 minutes) assurant un déploiement continu sans exposition de clés SSH privées (respect de l'ADR-0010).
 * **Reverse Proxy Caddy :** Gestion automatique des certificats Let's Encrypt TLS et routage dynamique des sous-domaines (`api.preprod.nanko.dev`, `app.preprod.nanko.dev`, `auth.preprod.nanko.dev`, `signoz.nanko.dev`, `otlp.nanko.dev`).
+* **Sécurisation Préproduction (Sas HTTP Basic Auth & Robots) :**
+  * `infra/preprod/compose.yaml` : configuration du label `caddy.basic_auth: "/*"` et `caddy.basic_auth.${PREPROD_HTTP_USER:-nanko}: "${PREPROD_HTTP_HASH}"` sur le service `frontend` (`app.preprod.nanko.dev`).
+  * Les mots de passe sont hachés en Bcrypt sur le serveur VPS via `caddy hash-password` et stockés dans `~/.config/nanko/preprod.env`.
+  * Directive anti-indexation systématique appliquée sur tous les services de préproduction via `caddy.header.X-Robots-Tag: "noindex, nofollow"`.
+  * L'environnement de production et l'environnement local demeurent exempts de Basic Auth.
 
 ### Observabilité & Monitoring Distribué (SigNoz & OpenTelemetry)
 * **Stack SigNoz Auto-Hébergée (`infra/signoz/compose.yaml`) :**
@@ -70,6 +75,8 @@
 
 ### Tests E2E Playwright (`tests-e2e/`)
 * `tests-e2e/playwright.config.ts` configuré avec support de la variable `APP_BASE_URL` pour cibler indifféremment l'environnement local (`http://localhost:5173`) ou l'environnement de préproduction (`https://app.preprod.nanko.dev`), désormais exposée via `tests-e2e/config/env.ts`.
+* Injection conditionnelle de `httpCredentials: { username, password }` dans `playwright.config.ts` lorsque `env.preprodHttpUser` et `env.preprodHttpPassword` sont définis, autorisant l'exécution transparente de la suite de tests E2E contre une préproduction protégée.
+* Workflow CI `pr-preprod-e2e.yml` transmettant les secrets `PREPROD_HTTP_USER` et `PREPROD_HTTP_PASSWORD` lors de l'exécution du job Playwright.
 * `tests-e2e/tests/app/telemetry.spec.ts` validant la conformité du header W3C `traceparent` et la résilience fail-open.
 
 ---
@@ -79,6 +86,7 @@
 * Les runs de préproduction sont strictement sérialisés pour garantir l'isolation des tests E2E.
 * L'endpoint de diagnostic `/api/v1/version` est public, sans dépendance à la base de données, assurant un temps de réponse instantané et une disponibilité maximale en tant que health check applicatif.
 * La télémétrie OpenTelemetry applique un principe de **fail-open absolu** : aucun composant ne doit échouer ni bloquer en cas d'indisponibilité du collecteur.
+* Le sas HTTP Basic Auth est strictement restreint à la préproduction : il ne s'applique ni au local ni à la production, et n'altère en rien les flux d'authentification applicatifs Keycloak OIDC.
 
 ---
 

@@ -46,6 +46,14 @@
 | `KC_TRACING_RESOURCE_ATTRIBUTES` | Non | `service.name=nanko-keycloak,deployment.environment=...` | Attributs OpenTelemetry du service d'identité |
 | `KC_METRICS_ENABLED` | Non | `"true"` | Active les métriques d'authentification Micrometer/Prometheus |
 
+### Variables de la Stack Préproduction (`~/.config/nanko/preprod.env`)
+| Variable | Obligatoire | Fallback par défaut | Rôle |
+|---|---|---|---|
+| `POSTGRES_PASSWORD` | Oui | — | Mot de passe base PostgreSQL préproduction |
+| `APP_SECRET` | Oui | — | Secret Symfony pour tokens et sessions |
+| `PREPROD_HTTP_USER` | Non | `nanko` | Nom d'utilisateur pour le sas Caddy HTTP Basic Auth |
+| `PREPROD_HTTP_HASH` | Oui | — | Hash Bcrypt du mot de passe Basic Auth généré par `caddy hash-password` |
+
 ### Variables de la Stack d'Observabilité SigNoz (`~/.config/nanko/signoz.env`)
 | Variable | Obligatoire | Rôle |
 |---|---|---|
@@ -78,18 +86,21 @@
 | Variable | Obligatoire | Fallback par défaut | Validation |
 |---|---|---|---|
 | `APP_BASE_URL` | Non | `http://localhost:45173` | URL valide |
+| `API_BASE_URL` | Non | `http://localhost:48000` | URL valide |
 | `LIBRARY_BASE_URL` | Non | `http://localhost:45174` | URL valide |
 | `KEYCLOAK_URL` | Non | `http://localhost:48080` | URL valide |
 | `KEYCLOAK_ADMIN_USER` | Non | `admin` | Chaîne non vide |
 | `KEYCLOAK_ADMIN_PASSWORD` | Non | `admin` | Chaîne non vide |
 | `E2E_USERNAME` | Non | — | Optionnel |
 | `E2E_PASSWORD` | Non | — | Optionnel |
+| `PREPROD_HTTP_USER` | Non | — | Optionnel (nom d'utilisateur Basic Auth préprod) |
+| `PREPROD_HTTP_PASSWORD` | Non | — | Optionnel (mot de passe clair Basic Auth préprod) |
 | `CI` | Non | `false` | Transformée en booléen (`"true"` ou `"1"` → `true`) |
 
 * Parsing via `e2eEnvSchema.safeParse(process.env)`.
 * Échec de validation : `throw` immédiat avec détail des erreurs Zod en console.
-* Export figé : `env.{appBaseUrl,libraryBaseUrl}`, `env.keycloak.{url,adminUser,adminPassword}`, `env.testUser.{username,password}`, `env.isCi`.
-* Consommé par `tests-e2e/playwright.config.ts` et `tests-e2e/tests/helpers/keycloak.ts`.
+* Export figé : `env.{appBaseUrl,apiBaseUrl,libraryBaseUrl}`, `env.keycloak.{url,adminUser,adminPassword}`, `env.testUser.{username,password}`, `env.{preprodHttpUser,preprodHttpPassword}`, `env.isCi`.
+* Consommé par `tests-e2e/playwright.config.ts`, `tests-e2e/tests/app/telemetry.spec.ts` et `tests-e2e/tests/helpers/keycloak.ts`.
 
 ---
 
@@ -102,7 +113,20 @@
 
 ---
 
-## 5. Comptes & Identifiants Réservés
+## 5. Protocole HTTP Basic Auth (RFC 7617) — Préproduction
+* **Sous-domaines cibles :** `app.preprod.nanko.dev`
+* **En-tête de challenge (requête anonyme) :** `WWW-Authenticate: Basic realm="Nanko Preproduction"`
+* **En-tête de requête attendu :** `Authorization: Basic <base64(user:password)>`
+* **Codes retour :**
+  - Sans en-tête / échec : `401 Unauthorized`
+  - Avec identifiants valides : code de statut du service sous-jacent (`200 OK`, etc.)
+* **En-tête anti-indexation systématique :** `X-Robots-Tag: "noindex, nofollow"`
+
+---
+
+## 6. Comptes & Identifiants Réservés
 * **Compte E2E Préproduction :** `e2e-tester@nanko.dev`
   * Pré-provisionné dans l'instance Keycloak de préproduction.
   * Identifiants injectés via les secrets de repository GitHub `E2E_USERNAME` et `E2E_PASSWORD`.
+* **Identifiants Sas Préproduction (CI/CD) :**
+  * `PREPROD_HTTP_USER` et `PREPROD_HTTP_PASSWORD` injectés en secrets GitHub Actions pour autoriser le runner Playwright à traverser le sas Caddy.
