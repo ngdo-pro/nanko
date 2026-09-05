@@ -1,0 +1,34 @@
+# Domaine : Plateforme & Livraison Continue (platform) - Comportement & Processus
+
+## 1. Mission du Domaine (Le « Why »)
+Garantir l'intégrité, la traçabilité et la stabilité de la plateforme Nanko à travers une chaîne de livraison continue automatisée, la validation bout-en-bout (E2E) sur infrastructure réelle (préproduction) pour chaque Pull Request avant merge, et un versionnement sémantique (SemVer) strict de tous les artefacts déployés.
+
+## 2. Parcours & Processus Actifs
+
+### Parcours 1 : Validation automatisée E2E sur Pull Request (CI/CD)
+* Le développeur ouvre ou met à jour une Pull Request (`pull_request`: open, synchronize, reopen).
+* GitHub Actions calcule une version SemVer dynamique (`<base-tag>-pr.<pr_number>.<run_number>`).
+* Les conteneurs Docker (backend Symfony et frontend React) sont construits avec injection de `APP_VERSION` et poussés sur GitHub Container Registry (GHCR).
+* Watchtower sur le VPS de préproduction détecte la nouvelle image `:preprod` et redéploie le conteneur.
+* Le workflow CI interroge `https://api.preprod.nanko.dev/api/v1/version` en boucle d'attente active (*polling* toutes les 15s, timeout à 8 min) jusqu'à confirmation que la version active correspond exactement à celle calculée.
+* La suite de tests Playwright s'exécute contre l'environnement réel de préproduction (`https://app.preprod.nanko.dev`) avec l'utilisateur de test dédié (`e2e-tester@nanko.dev`).
+* Le merge de la PR est bloqué si le déploiement ou l'un des tests E2E échoue (*Required Status Check*).
+
+### Parcours 2 : Diagnostic de version déployée
+* Tout système tiers, développeur ou sonde de supervision peut interroger publiquement `GET /api/v1/version` sur n'importe quel environnement (`local`, `preprod`, `prod`).
+* L'API retourne instantanément l'état opérationnel, la version SemVer, le commit SHA et l'environnement d'exécution.
+
+## 3. Règles de Gestion & Invariants Opérationnels
+* **Règle 1 (Gate de préprod bloquante) :** Toute Pull Request doit obligatoirement valider l'ensemble des scénarios E2E Playwright sur l'infrastructure de préproduction réelle avant d'être éligible au merge sur `main`.
+* **Règle 2 (Sérialisation de l'environnement de préproduction) :** Pour éviter les conflits d'état sur l'environnement partagé de préproduction, les exécutions de PR sont strictement sérialisées via un groupe de concurrence GitHub Actions (`concurrency: group: preprod-shared-env, cancel-in-progress: false`).
+* **Règle 3 (Versionnement SemVer strict & traçable) :** Chaque build et conteneur porte une version SemVer traçable issue des tags Git (`git describe --tags --always`).
+* **Règle 4 (Zéro secret SSH en CI) :** Conformément à l'ADR-0010, aucun accès SSH ou webhook direct vers le serveur n'est octroyé à GitHub Actions ; le déploiement repose sur le polling de Watchtower.
+* **Règle 5 (Bypass CI pour changements non applicatifs) :** Si une Pull Request ne modifie que des éléments documentaires, de spécifications ou d'outillage (`.agents/`, `.claude/`, `.github/`, `.specs/`, `docs/`, `landing/`, fichiers Markdown), les étapes lourdes de build Docker, de déploiement préproduction et de tests E2E sont automatiquement ignorées pour libérer l'environnement partagé et valider le check en quelques secondes.
+
+## 4. Matrice des Échecs & Cas Limites
+| Situation | Comportement & Conséquence |
+|---|---|
+| Timeout de déploiement Watchtower (> 8 min sans mise à jour) | Échec immédiat du workflow CI avec message explicite, merge bloqué |
+| Échec d'un test Playwright en préproduction | Rapport de test et traces conservés en artefacts GitHub, merge bloqué |
+| Pull Requests simultanées | Mise en file d'attente séquentielle sans annulation des runs précédents |
+| Absence de tag Git dans le repository | Fallback sur `v0.0.0-dev` pour les environnements locaux ou non tagués |
