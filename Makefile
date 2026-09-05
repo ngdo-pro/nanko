@@ -1,12 +1,12 @@
 VPS ?= nanko-vps
 REMOTE_DIR ?= nanko
 
-.PHONY: help dev stop logs test-backend composer deptrac static-analysis lint lint-fix deploy-preprod deploy-prod
+.PHONY: help dev stop logs test-backend test-e2e test-e2e-ui composer deptrac static-analysis lint lint-fix deploy-preprod deploy-prod
 
 .DEFAULT_GOAL := help
 
 help: ## Show this help
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
 
 # Runs postgres + backend + frontend + landing from infra/local/compose.yaml
 # in the background, all dockerized -- no PHP/Composer/Node/pnpm needed on
@@ -47,6 +47,18 @@ test-backend: ## Run the backend test suite (phpunit)
 		php bin/console doctrine:database:create --if-not-exists --no-interaction && \
 		php bin/console doctrine:migrations:migrate --no-interaction && \
 		php bin/phpunit'
+
+# Runs Playwright E2E tests against the local dev stack.
+# Automatically ensures local containers (postgres, keycloak, backend, frontend) are running.
+# Usage: make test-e2e
+#        make test-e2e ARGS="--ui"
+test-e2e: ## Run E2E tests against local dev stack (starts dev stack if needed)
+	@docker compose -f infra/local/compose.yaml up -d
+	@until curl -s http://localhost:48080/realms/nanko/.well-known/openid-configuration > /dev/null 2>&1; do sleep 1; done
+	APP_BASE_URL=http://localhost:45173 pnpm --filter tests-e2e test $(ARGS)
+
+test-e2e-ui: ## Run E2E tests with Playwright interactive UI
+	@$(MAKE) test-e2e ARGS="--ui"
 
 # Runs composer inside the backend container -- there's no PHP/Composer on
 # the host. Usage: make composer ARGS="require --dev phpstan/phpstan-symfony"

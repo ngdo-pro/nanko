@@ -141,21 +141,21 @@ sequenceDiagram
 
 ## 8. Plan d'exécution séquentiel
 
-- [ ] **Phase 1 : Backend Symfony (`backend/`)**
-  - [ ] 1. Configurer le paramètre `app.version` dans `config/services.yaml` avec fallback par défaut (`v0.0.0-dev`).
-  - [ ] 2. Créer le contrôleur `VersionController` dans `backend/src/Adapter/Driver/Http/Controller/System/VersionController.php`.
-  - [ ] 3. Mettre à jour `backend/Dockerfile` pour accepter l'argument de build `ARG APP_VERSION` et l'exporter en `ENV APP_VERSION`.
-  - [ ] 4. Écrire le test d'intégration PHPUnit vérifiant la réponse de `GET /api/v1/version`.
-- [ ] **Phase 2 : Workflow GitHub Actions (`.github/workflows/`)**
-  - [ ] 1. Créer le workflow `.github/workflows/pr-preprod-e2e.yml` déclenché sur `pull_request`.
-  - [ ] 2. Ajouter l'étape de calcul SemVer dynamique à partir du dernier tag Git (`git describe --tags`).
-  - [ ] 3. Mettre à jour les étapes `docker/build-push-action` pour injecter `APP_VERSION`.
-  - [ ] 4. Ajouter le script de boucle d'attente HTTP vers `https://api.preprod.nanko.dev/api/v1/version`.
-  - [ ] 5. Ajouter l'étape d'exécution Playwright pointant sur `https://app.preprod.nanko.dev`.
-- [ ] **Phase 3 : Validation & Tests**
-  - [ ] 1. Tester localement le contrôleur `/api/v1/version`.
-  - [ ] 2. Valider la construction de l'image Docker avec l'argument `APP_VERSION`.
-  - [ ] 3. Valider la syntaxe du workflow GitHub Actions via linter/check.
+- [x] **Phase 1 : Backend Symfony (`backend/`)**
+  - [x] 1. Configurer le paramètre `app.version` dans `config/services.php` avec fallback par défaut (`v0.0.0-dev`).
+  - [x] 2. Créer le contrôleur `VersionController` dans `backend/src/Adapter/Driver/Http/Controller/System/VersionController.php`.
+  - [x] 3. Mettre à jour `backend/Dockerfile` pour accepter l'argument de build `ARG APP_VERSION` et l'exporter en `ENV APP_VERSION`.
+  - [x] 4. Écrire le test d'intégration PHPUnit vérifiant la réponse de `GET /api/v1/version`.
+- [x] **Phase 2 : Workflow GitHub Actions (`.github/workflows/`)**
+  - [x] 1. Créer le workflow `.github/workflows/pr-preprod-e2e.yml` déclenché sur `pull_request`.
+  - [x] 2. Ajouter l'étape de calcul SemVer dynamique à partir du dernier tag Git (`git describe --tags`).
+  - [x] 3. Mettre à jour les étapes `docker/build-push-action` pour injecter `APP_VERSION`.
+  - [x] 4. Ajouter le script de boucle d'attente HTTP vers `https://api.preprod.nanko.dev/api/v1/version`.
+  - [x] 5. Ajouter l'étape d'exécution Playwright pointant sur `https://app.preprod.nanko.dev`.
+- [x] **Phase 3 : Validation & Tests**
+  - [x] 1. Tester localement le contrôleur `/api/v1/version`.
+  - [x] 2. Valider la construction de l'image Docker avec l'argument `APP_VERSION`.
+  - [x] 3. Valider la syntaxe du workflow GitHub Actions via linter/check.
 
 ---
 

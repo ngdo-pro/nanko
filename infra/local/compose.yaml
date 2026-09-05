@@ -11,6 +11,7 @@ services:
       - "45432:5432"
     volumes:
       - nanko-postgres-data:/var/lib/postgresql/data
+      - ./init-postgres.sql:/docker-entrypoint-initdb.d/init-postgres.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U nanko -d nanko"]
       interval: 5s
@@ -28,6 +29,7 @@ services:
       DATABASE_URL: postgresql://nanko:nanko@postgres:5432/nanko?serverVersion=16&charset=utf8
       KEYCLOAK_JWKS_URL: http://keycloak:8080/realms/nanko/protocol/openid-connect/certs
       KEYCLOAK_ISSUER: http://localhost:48080/realms/nanko
+      CORS_ALLOW_ORIGIN: '^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$'
     ports:
       - "48000:8000"
     volumes:

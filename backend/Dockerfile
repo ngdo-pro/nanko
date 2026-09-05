@@ -37,9 +37,13 @@ RUN composer dump-autoload --no-dev --optimize
 # serve traffic: the runtime stage below does not inherit them, and the real
 # values are injected by docker-compose (infra/preprod|prod) at container
 # start.
+ARG APP_VERSION=v0.0.0-dev
+ARG APP_COMMIT=dev
 ENV APP_ENV=prod \
     APP_SECRET=build-time-placeholder \
-    DATABASE_URL="postgresql://app:placeholder@127.0.0.1:5432/app?serverVersion=16&charset=utf8"
+    DATABASE_URL="postgresql://app:placeholder@127.0.0.1:5432/app?serverVersion=16&charset=utf8" \
+    APP_VERSION=${APP_VERSION} \
+    APP_COMMIT=${APP_COMMIT}
 
 RUN APP_ENV=prod php bin/console cache:warmup --env=prod
 
@@ -78,6 +82,10 @@ WORKDIR /app
 # HTTP on the Docker network.
 ENV SERVER_NAME=:80
 ENV APP_ENV=prod
+ARG APP_VERSION=v0.0.0-dev
+ARG APP_COMMIT=dev
+ENV APP_VERSION=${APP_VERSION}
+ENV APP_COMMIT=${APP_COMMIT}
 
 # Copied directly from the build context (not from the builder stage, and
 # not under /app) so it survives independently of the app-code copy above.
