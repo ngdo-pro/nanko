@@ -57,6 +57,8 @@ services:
       com.centurylinklabs.watchtower.enable: "true"
       caddy: signoz.nanko.dev
       caddy.encode: gzip
+      caddy.basic_auth: "/*"
+      caddy.basic_auth.admin: "${SIGNOZ_BASICAUTH_HASH}"
       caddy.reverse_proxy: "{{upstreams 3301}}"
       caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
       caddy.header.X-Content-Type-Options: nosniff
@@ -90,6 +92,10 @@ services:
   signoz-provisioner:
     image: alpine:latest
     container_name: signoz-provisioner
+    environment:
+      - SIGNOZ_ADMIN_EMAIL=${SIGNOZ_ADMIN_EMAIL:-}
+      - SIGNOZ_ADMIN_PASSWORD=${SIGNOZ_ADMIN_PASSWORD:-}
+      - SIGNOZ_ADMIN_NAME=${SIGNOZ_ADMIN_NAME:-Nanko Admin}
     volumes:
       - ./dashboards:/dashboards:ro
       - ./provisioner/provision.sh:/provision.sh:ro

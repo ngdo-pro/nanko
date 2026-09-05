@@ -207,7 +207,7 @@ Pour permettre à Caddy de générer automatiquement les certificats TLS Let's E
 
 | Endpoint | Exposition | Sécurisation & Contrôle d'accès | Risque mitigé |
 |---|---|---|---|
-| **`signoz.nanko.dev`** (UI) | Publique avec restriction | 1. **Authentification applicative :** Compte administrateur SigNoz (créé lors de l'onboarding initial).<br>2. **Couche Caddy Basic Auth :** Protection de l'écran de login contre les bots et scanners du web.<br>3. **TLS strict :** Forcé en HTTPS (`HSTS max-age=31536000`). | Accès non autorisé aux métriques et traces internes de la plateforme. |
+| **`signoz.nanko.dev`** (UI) | Publique avec restriction stricte | 1. **Verrou Caddy HTTP Basic Auth :** Protection au niveau passerelle Caddy (`caddy.basic_auth: "/*"`) bloquant 100% des requêtes non authentifiées avant qu'elles n'atteignent le conteneur SigNoz.<br>2. **Pré-seeding automatique de l'admin (Zero-Trust) :** Le service `signoz-provisioner` enregistre automatiquement le compte superadmin au démarrage (`POST /api/v1/register`) via variables d'environnement secrètes (`SIGNOZ_ADMIN_EMAIL`, `SIGNOZ_ADMIN_PASSWORD`), fermant définitivement la fenêtre d'onboarding public.<br>3. **TLS strict :** Forcé en HTTPS (`HSTS max-age=31536000`). | Accès non autorisé, prise de contrôle de l'instance par un tiers et exposition des métriques de production. |
 | **`otlp.nanko.dev`** (Collector HTTP) | Publique (Frontend Web) | 1. **CORS strict :** Seules les origines autorisées (`app.nanko.dev`, `app.preprod.nanko.dev`, `localhost:*`) peuvent envoyer des traces.<br>2. **Rate Limiting Caddy :** Plafond à 120 requêtes / minute par IP.<br>3. **Taille maximale de payload :** Limite de `request_body max_size 2MB` pour interdire les requêtes surdimensionnées.<br>4. **Sanitization :** Le collecteur OTel filtre et supprime les headers sensibles (`Authorization`, cookies) avant stockage. | Déni de service (DDoS), saturation de ClickHouse et empoisonnement de métriques par des tiers. |
 | **Flux Backend & Keycloak** (`:4317` / `:4318`) | **Strictement Interne** (Docker) | Communication directe conteneur à conteneur via le réseau Docker privé `edge` (`http://signoz-otel-collector:4317`). **Aucun port interne n'est exposé sur l'IP publique du VPS**. | Interception réseau, fuite de données et attaques externes. |
 
@@ -250,9 +250,10 @@ Pour garantir une configuration 100% déclarative sans aucune création manuelle
      - `KeycloakLoginFailures` : Déclenché en cas de pic d'échecs de connexion OIDC.
    - Montés directement dans le conteneur AlertManager de SigNoz au démarrage.
 
-2. **Dashboards déclaratifs (`infra/signoz/dashboards/*.json`) :**
-   - Fichiers JSON de structure des dashboards personnalisés (ex: `overview-platform.json`).
-   - Provisioning automatique par le service `signoz-provisioner` au démarrage de la pile (appel idempotent à l'API SigNoz `POST /api/v1/dashboards`).
+2. **Dashboards déclaratifs & Admin Provisioning (`infra/signoz/dashboards/*.json`) :**
+   - Provisioning automatique par le service `signoz-provisioner` au démarrage de la pile :
+     - Appel idempotent à l'API SigNoz `POST /api/v1/register` pour créer le superadmin dès l'initialisation.
+     - Import automatique des tableaux de bord déclaratifs (`POST /api/v1/dashboards`).
 
 3. **APM Auto-généré :**
    - Tous les graphiques de base (RED metrics, requêtes DBAL, cartes de dépendances) sont créés nativement par SigNoz à partir des métadonnées OpenTelemetry sans aucun fichier supplémentaire.
