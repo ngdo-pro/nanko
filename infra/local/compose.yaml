@@ -85,7 +85,7 @@ services:
       VITE_KEYCLOAK_URL: http://localhost:48080
       VITE_KEYCLOAK_REALM: nanko
       VITE_KEYCLOAK_CLIENT_ID: nanko-web
-      VITE_OTEL_EXPORTER_URL: ""
+      VITE_OTEL_EXPORTER_URL: "http://localhost:44318/v1/traces"
       VITE_OTEL_SERVICE_NAME: nanko-frontend
       VITE_APP_ENV: local
     ports:

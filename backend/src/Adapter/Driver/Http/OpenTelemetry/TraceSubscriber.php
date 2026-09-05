@@ -159,6 +159,8 @@ final class TraceSubscriber implements EventSubscriberInterface
             if ($scope instanceof ScopeInterface) {
                 $scope->detach();
             }
+
+            $this->tracerProvider?->shutdown();
         } catch (\Throwable) {
             // Fail-open
         }
@@ -178,9 +180,17 @@ final class TraceSubscriber implements EventSubscriberInterface
         );
 
         if ($this->otlpEndpoint !== null && trim($this->otlpEndpoint) !== '') {
-            putenv('OTEL_EXPORTER_OTLP_ENDPOINT=' . $this->otlpEndpoint);
-            $_SERVER['OTEL_EXPORTER_OTLP_ENDPOINT'] = $this->otlpEndpoint;
-            $_ENV['OTEL_EXPORTER_OTLP_ENDPOINT'] = $this->otlpEndpoint;
+            $endpoint = trim($this->otlpEndpoint);
+            $baseEndpoint = (string) preg_replace('#/v1/traces/?$#', '', $endpoint);
+            $tracesEndpoint = str_ends_with($endpoint, '/v1/traces') ? $endpoint : rtrim($endpoint, '/') . '/v1/traces';
+
+            putenv('OTEL_EXPORTER_OTLP_ENDPOINT=' . $baseEndpoint);
+            $_SERVER['OTEL_EXPORTER_OTLP_ENDPOINT'] = $baseEndpoint;
+            $_ENV['OTEL_EXPORTER_OTLP_ENDPOINT'] = $baseEndpoint;
+
+            putenv('OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=' . $tracesEndpoint);
+            $_SERVER['OTEL_EXPORTER_OTLP_TRACES_ENDPOINT'] = $tracesEndpoint;
+            $_ENV['OTEL_EXPORTER_OTLP_TRACES_ENDPOINT'] = $tracesEndpoint;
 
             $factory = new SpanExporterFactory();
             $exporter = $factory->create();

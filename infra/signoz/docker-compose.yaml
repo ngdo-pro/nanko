@@ -1,11 +1,13 @@
 services:
   clickhouse:
-    image: clickhouse/clickhouse-server:24.1.2-alpine
+    image: clickhouse/clickhouse-server:25.1-alpine
     container_name: signoz-clickhouse
     restart: unless-stopped
     volumes:
       - signoz-clickhouse-data:/var/lib/clickhouse
       - ./clickhouse-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./clickhouse-config.xml:/etc/clickhouse-server/config.d/keeper.xml:ro
+      - ./clickhouse-users.xml:/etc/clickhouse-server/users.d/json.xml:ro
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "0.0.0.0:8123/ping"]
       interval: 10s
