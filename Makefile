@@ -115,6 +115,6 @@ deploy-prod: ## Deploy to prod (git pull + compose up on the VPS)
 
 deploy-signoz: ## Deploy SigNoz observability stack to VPS
 	ssh $(VPS) "cd $(REMOTE_DIR) && git pull --ff-only && \
-		docker compose -p signoz -f infra/signoz/docker-compose.yaml \
+		docker compose -p signoz -f infra/signoz/compose.yaml \
 		--env-file ~/.config/nanko/signoz.env up -d"
 
