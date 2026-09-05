@@ -26,6 +26,7 @@ services:
       KEYCLOAK_JWKS_URL: https://auth.nanko.dev/realms/nanko/protocol/openid-connect/certs
       KEYCLOAK_ISSUER: https://auth.nanko.dev/realms/nanko
       SERVER_NAME: ":80"
+      CORS_ALLOW_ORIGIN: '^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$|^https://[a-z0-9-]+\.nanko\.dev$'
     depends_on:
       postgres:
         condition: service_healthy
