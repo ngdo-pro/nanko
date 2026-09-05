@@ -42,9 +42,17 @@
 | Variable | Obligatoire | Valeur type | Rôle |
 |---|---|---|---|
 | `KC_TRACING_ENABLED` | Non | `"true"` | Active l'instrumentation native Quarkus OpenTelemetry |
-| `KC_TRACING_ENDPOINT` | Non | `http://otel-collector:4317` | Collecteur OTLP gRPC |
+| `KC_TRACING_ENDPOINT` | Non | `http://signoz-otel-collector:4317` | Collecteur OTLP gRPC (`http://otel-collector:4317` en local) |
 | `KC_TRACING_RESOURCE_ATTRIBUTES` | Non | `service.name=nanko-keycloak,deployment.environment=...` | Attributs OpenTelemetry du service d'identité |
 | `KC_METRICS_ENABLED` | Non | `"true"` | Active les métriques d'authentification Micrometer/Prometheus |
+
+### Variables de la Stack d'Observabilité SigNoz (`~/.config/nanko/signoz.env`)
+| Variable | Obligatoire | Rôle |
+|---|---|---|
+| `SIGNOZ_BASICAUTH_HASH` | Oui (VPS) | Hash bcrypt Caddy pour sécuriser l'accès à `https://signoz.nanko.dev` |
+| `SIGNOZ_ADMIN_EMAIL` | Oui (VPS) | Adresse email du compte superadmin initial créé au démarrage |
+| `SIGNOZ_ADMIN_PASSWORD` | Oui (VPS) | Mot de passe initial du compte superadmin créé par le provisioner |
+| `SIGNOZ_ADMIN_NAME` | Non | Nom d'affichage du superadmin (`Nanko Admin` par défaut) |
 
 ---
 

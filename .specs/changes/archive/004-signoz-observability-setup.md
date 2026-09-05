@@ -20,8 +20,8 @@
 
 * **In Scope (Ce qui est ajouté/modifié) :**
   - **Infrastructure (`infra/`) :**
-    - Configuration de la stack SigNoz auto-hébergée (SigNoz OTel Collector, ClickHouse, AlertManager, Query Service, Frontend UI).
-    - Stack partagée VPS (`~/infra/signoz/` / `infra/shared/signoz/`) connectée au réseau `edge` avec labels Caddy pour le sous-domaine `signoz.nanko.dev` et l'endpoint d'ingestion OTLP/HTTP public `otlp.nanko.dev` (pour le frontend).
+    - Configuration de la stack SigNoz auto-hébergée (`infra/signoz/compose.yaml`) avec ClickHouse 25.1, Keeper embarqué, cluster macros, conteneur d'auto-migration (`signoz-schema-migrator`), SigNoz OTel Collector, AlertManager, Query Service (flags `-use-trace-new-schema=true`, `-use-logs-new-schema=true`), et Frontend UI Nginx (redirection `/signup` vers `/login`).
+    - Stack partagée VPS (`infra/signoz/compose.yaml` déployé via `make deploy-signoz`) connectée au réseau `edge` avec labels Caddy pour le sous-domaine `signoz.nanko.dev` (protégé par HTTP Basic Auth `SIGNOZ_BASICAUTH_HASH`) et l'endpoint d'ingestion OTLP/HTTP public `otlp.nanko.dev` (pour le frontend, avec en-têtes CORS).
     - Stack locale optionnelle (`infra/local/compose.observability.yaml` ou commande Makefile dédiée `make signoz-up`) pour déboguer les traces en environnement de développement sans alourdir le démarrage standard `make dev`.
   - **Serveur d'Identité Keycloak (`infra/keycloak/` & compose stacks) :**
     - Activation de l'extension native Quarkus OpenTelemetry intégrée à Keycloak 26 via variables d'environnement (`KC_TRACING_ENABLED=true`, `KC_TRACING_ENDPOINT=http://otel-collector:4317`, `KC_METRICS_ENABLED=true`).
@@ -30,13 +30,15 @@
   - **Backend Symfony (`backend/`) :**
     - Intégration du SDK OpenTelemetry PHP et de l'exporteur OTLP (traces HTTP et requêtes Doctrine/DBAL).
     - Extraction et propagation automatique du header W3C `traceparent` sur les requêtes entrantes.
+    - Souscripteur `TraceSubscriber` réalisant le flush immédiat sur `kernel.terminate` via `$this->tracerProvider?->shutdown()` et la normalisation automatique des endpoints OTLP (suppression du suffixe `/v1/traces` superflu).
     - Configuration CORS dans `config/packages/nelmio_cors.yaml` autorisant les headers de traçage W3C (`traceparent`, `tracestate`).
-    - Variables de configuration OTel (`OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_SERVICE_NAME=nanko-backend`, `OTEL_PHP_AUTOLOAD_ENABLED`).
+    - Variables de configuration OTel (`OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_SERVICE_NAME=nanko-backend`, `OTEL_RESOURCE_ATTRIBUTES`).
   - **Frontend React (`frontend/`) :**
     - Intégration du SDK OpenTelemetry Web (`@opentelemetry/sdk-trace-web`, `@opentelemetry/instrumentation-fetch`, `@opentelemetry/exporter-trace-otlp-http`).
-    - Schéma Zod étendu dans `frontend/src/config/env.ts` avec `VITE_OTEL_EXPORTER_URL` (optionnel) et `VITE_OTEL_SERVICE_NAME` (`default: 'nanko-frontend'`).
+    - Schéma Zod étendu dans `frontend/src/config/env.ts` avec `VITE_OTEL_EXPORTER_URL` (optionnel), `VITE_OTEL_SERVICE_NAME` (`default: 'nanko-frontend'`), et `VITE_APP_ENV` (`default: 'local'`).
     - Module `frontend/src/config/telemetry.ts` pour l'initialisation résiliente de la télémétrie (fail-open complet : si SigNoz est indisponible ou non configuré, le frontend fonctionne normalement sans impacter l'expérience utilisateur).
     - Injection du contexte `traceparent` sur les requêtes `fetchWithAuth`.
+    - Propagation des arguments de build `VITE_OTEL_EXPORTER_URL` et `VITE_APP_ENV` dans `frontend/Dockerfile` et les workflows GitHub Actions `deploy-prod.yml` / `deploy-preprod.yml`.
   - **Tests & Validation (`tests-e2e/`) :**
     - Tests de non-régression validant la présence des en-têtes W3C `traceparent` dans les échanges HTTP.
     - Test de résilience garantissant le démarrage et le fonctionnement normal de l'application en cas d'indisponibilité du collecteur OTel.
