@@ -52,8 +52,6 @@ services:
     restart: unless-stopped
     command: start --optimized --import-realm
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://postgres:5432/nanko
       KC_DB_USERNAME: nanko
