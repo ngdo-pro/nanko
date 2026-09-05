@@ -2,12 +2,12 @@
 
 ## 1. Endpoints REST Actifs
 
-### `POST /api/v1/orgs`
+### `POST /api/v1/organisations`
 * **Authentification :** `ROLE_USER`
 * **Headers :** `Content-Type: application/json`, `Authorization: Bearer <token>`
 * **Description :** Création d'une nouvelle Organisation.
 
-#### Request Payload (`CreateOrgInput`)
+#### Request Payload (`CreateOrganisationInput`)
 ```json
 {
   "name": "Acme Corp",
@@ -25,7 +25,7 @@
     "createdAt": "2026-08-31T01:00:00Z"
   }
   ```
-* `409 Conflict` : `{ "code": "ORG_SLUG_EXISTS", "message": "Ce slug d'organisation est déjà utilisé." }`
+* `409 Conflict` : `{ "code": "ORGANISATION_SLUG_EXISTS", "message": "Ce slug d'organisation est déjà utilisé." }`
 * `422 Unprocessable Entity` : Violations de validation du nom/slug.
 
 ---
@@ -35,10 +35,10 @@
 ```typescript
 import { z } from 'zod';
 
-export const createOrgSchema = z.object({
+export const createOrganisationSchema = z.object({
   name: z.string().trim().min(2, 'Le nom doit comporter au moins 2 caractères'),
   slug: z.string().trim().regex(/^[a-z0-9-]+$/, 'Le slug ne peut contenir que des minuscules, chiffres et tirets')
 });
 
-export type CreateOrgInput = z.infer<typeof createOrgSchema>;
+export type CreateOrganisationInput = z.infer<typeof createOrganisationSchema>;
 ```
