@@ -16,6 +16,7 @@ env:
   ENVIRONMENT: preprod
   VITE_API_BASE_URL: https://api.preprod.nanko.dev
   VITE_KEYCLOAK_URL: https://auth.preprod.nanko.dev
+  VITE_OTEL_EXPORTER_URL: https://otlp.nanko.dev/v1/traces
   PREPROD_VERSION_URL: https://api.preprod.nanko.dev/api/v1/version
   APP_BASE_URL: https://app.preprod.nanko.dev
 
@@ -97,6 +98,8 @@ jobs:
           build-args: |
             VITE_API_BASE_URL=${{ env.VITE_API_BASE_URL }}
             VITE_KEYCLOAK_URL=${{ env.VITE_KEYCLOAK_URL }}
+            VITE_OTEL_EXPORTER_URL=${{ env.VITE_OTEL_EXPORTER_URL }}
+            VITE_APP_ENV=${{ env.ENVIRONMENT }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/nanko-frontend:preprod
             ghcr.io/${{ github.repository_owner }}/nanko-frontend:preprod-${{ steps.semver.outputs.commit }}
@@ -114,6 +117,9 @@ jobs:
 
       - name: Wait for Preprod deployment (Watchtower polling)
         if: steps.changes.outputs.app == 'true'
+        env:
+          PREPROD_HTTP_USER: ${{ secrets.PREPROD_HTTP_USER }}
+          PREPROD_HTTP_PASSWORD: ${{ secrets.PREPROD_HTTP_PASSWORD }}
         run: |
           EXPECTED_VERSION="${{ steps.semver.outputs.version }}"
           echo "Waiting for preprod (${PREPROD_VERSION_URL}) to serve version: ${EXPECTED_VERSION}"
@@ -121,8 +127,13 @@ jobs:
           ELAPSED=0
           INTERVAL=15
 
+          CURL_AUTH_FLAG=()
+          if [ -n "${PREPROD_HTTP_USER}" ] && [ -n "${PREPROD_HTTP_PASSWORD}" ]; then
+            CURL_AUTH_FLAG=(-u "${PREPROD_HTTP_USER}:${PREPROD_HTTP_PASSWORD}")
+          fi
+
           while [ $ELAPSED -lt $TIMEOUT ]; do
-            CURRENT_VERSION=$(curl -s --connect-timeout 5 --max-time 10 "${PREPROD_VERSION_URL}" | jq -r '.version // empty' 2>/dev/null || echo "")
+            CURRENT_VERSION=$(curl -s "${CURL_AUTH_FLAG[@]}" --connect-timeout 5 --max-time 10 "${PREPROD_VERSION_URL}" | jq -r '.version // empty' 2>/dev/null || echo "")
             echo "[$(date +'%T')] Current preprod version: '${CURRENT_VERSION}' (expected: '${EXPECTED_VERSION}')"
 
             if [ "$CURRENT_VERSION" = "$EXPECTED_VERSION" ]; then
@@ -162,8 +173,11 @@ jobs:
         if: steps.changes.outputs.app == 'true'
         env:
           APP_BASE_URL: ${{ env.APP_BASE_URL }}
+          API_BASE_URL: ${{ env.VITE_API_BASE_URL }}
           E2E_USERNAME: ${{ secrets.E2E_USERNAME }}
           E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+          PREPROD_HTTP_USER: ${{ secrets.PREPROD_HTTP_USER }}
+          PREPROD_HTTP_PASSWORD: ${{ secrets.PREPROD_HTTP_PASSWORD }}
         run: pnpm --filter tests-e2e exec playwright test
 
       - name: Upload Playwright report on failure

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { env } from '../../config/env'
 
 test.describe('Observabilité & Télémétrie OpenTelemetry', () => {
   test('Injection transparente du header W3C traceparent', async ({ page }) => {
@@ -14,20 +15,34 @@ test.describe('Observabilité & Télémétrie OpenTelemetry', () => {
     })
 
     await page.goto('/')
+    await expect(page.locator('.nav-logo')).toBeVisible()
 
     // Émission d'une requête API via le navigateur
-    const responseStatus = await page.evaluate(async () => {
-      try {
-        const response = await fetch('http://localhost:48000/api/v1/version', {
-          headers: {
+    const responseStatus = await page.evaluate(
+      async ({ apiUrl, authHeader }) => {
+        try {
+          const headers: Record<string, string> = {
             traceparent: `00-${Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}-${Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}-01`,
-          },
-        })
-        return response.status
-      } catch {
-        return null
-      }
-    })
+          }
+          if (authHeader) {
+            headers['Authorization'] = authHeader
+          }
+          const response = await fetch(`${apiUrl}/api/v1/version`, {
+            headers,
+          })
+          return response.status
+        } catch {
+          return null
+        }
+      },
+      {
+        apiUrl: env.apiBaseUrl,
+        authHeader:
+          env.preprodHttpUser && env.preprodHttpPassword
+            ? `Basic ${btoa(`${env.preprodHttpUser}:${env.preprodHttpPassword}`)}`
+            : undefined,
+      },
+    )
 
     expect(responseStatus).toBe(200)
     expect(capturedTraceparent).not.toBeNull()

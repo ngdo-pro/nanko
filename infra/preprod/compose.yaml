@@ -37,10 +37,13 @@ services:
       com.centurylinklabs.watchtower.enable: "true"
       caddy: api.preprod.nanko.dev
       caddy.encode: gzip
+      caddy.basic_auth: "/*"
+      caddy.basic_auth.${PREPROD_HTTP_USER:-nanko}: "${PREPROD_HTTP_HASH}"
       caddy.reverse_proxy: "{{upstreams 80}}"
       caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Frame-Options: DENY
+      caddy.header.X-Robots-Tag: "noindex, nofollow"
     # Under caddy-docker-proxy, the `caddy.reverse_proxy` label above resolves
     # the upstream automatically by container IP -- there's no separate
     # Caddyfile to keep in sync anymore. `container_name` is kept only for
@@ -94,10 +97,13 @@ services:
       com.centurylinklabs.watchtower.enable: "true"
       caddy: app.preprod.nanko.dev
       caddy.encode: gzip
+      caddy.basic_auth: "/*"
+      caddy.basic_auth.${PREPROD_HTTP_USER:-nanko}: "${PREPROD_HTTP_HASH}"
       caddy.reverse_proxy: "{{upstreams 8080}}"
       caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Frame-Options: DENY
+      caddy.header.X-Robots-Tag: "noindex, nofollow"
 
   landing:
     image: ghcr.io/ngdo-pro/nanko-landing:preprod
@@ -113,6 +119,7 @@ services:
       caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Frame-Options: DENY
+      caddy.header.X-Robots-Tag: "noindex, nofollow"
 
 networks:
   edge:

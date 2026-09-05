@@ -192,19 +192,19 @@ export default defineConfig({
 ## 9. Plan d'exécution séquentiel (Phases avec DoD)
 
 ### Phase 1 : Configuration des Tests E2E Playwright
-* Étendre `tests-e2e/config/env.ts` avec le schéma Zod pour `PREPROD_HTTP_USER` et `PREPROD_HTTP_PASSWORD`.
-* Valider `tests-e2e/config/env.test.ts` avec les tests unitaires du schéma.
-* Configurer `httpCredentials` conditionnel dans `tests-e2e/playwright.config.ts`.
-* **DoD Phase 1 :** `npm test` dans `tests-e2e/` passe à 100%. Les tests locaux continuent de fonctionner sans ces variables.
+* [x] Étendre `tests-e2e/config/env.ts` avec le schéma Zod pour `PREPROD_HTTP_USER` et `PREPROD_HTTP_PASSWORD`.
+* [x] Valider `tests-e2e/config/env.test.ts` avec les tests unitaires du schéma.
+* [x] Configurer `httpCredentials` conditionnel dans `tests-e2e/playwright.config.ts`.
+* [x] **DoD Phase 1 :** `npm test` dans `tests-e2e/` passe à 100%. Les tests locaux continuent de fonctionner sans ces variables.
 
 ### Phase 2 : Configuration Caddy Proxy en Préproduction
-* Ajouter les labels `caddy.basic_auth` et `caddy.header.X-Robots-Tag` sur `frontend` et `backend` dans `infra/preprod/compose.yaml`.
-* Documenter la génération du hash de mot de passe (`caddy hash-password`) dans le guide d'infrastructure.
-* **DoD Phase 2 :** `docker compose config` sur `infra/preprod/compose.yaml` est valide.
+* [x] Ajouter les labels `caddy.basic_auth` et `caddy.header.X-Robots-Tag` sur `frontend` et `backend` dans `infra/preprod/compose.yaml`.
+* [x] Documenter la génération du hash de mot de passe (`caddy hash-password`) dans le guide d'infrastructure.
+* [x] **DoD Phase 2 :** `docker compose config` sur `infra/preprod/compose.yaml` est valide.
 
 ### Phase 3 : Validation CI / CD
-* Mettre à jour le workflow de CI pour injecter les secrets `PREPROD_HTTP_USER` et `PREPROD_HTTP_PASSWORD` dans le step de test E2E.
-* **DoD Phase 3 :** La suite E2E Playwright s'exécute avec succès sur une préproduction protégée par Basic Auth.
+* [x] Mettre à jour le workflow de CI pour injecter les secrets `PREPROD_HTTP_USER` et `PREPROD_HTTP_PASSWORD` dans le step de test E2E.
+* [x] **DoD Phase 3 :** La suite E2E Playwright s'exécute avec succès sur une préproduction protégée par Basic Auth.
 
 ---
 
