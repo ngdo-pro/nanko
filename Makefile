@@ -36,7 +36,7 @@ logs: ## Follow logs of the local dev stack
 signoz-up: ## Start the optional local SigNoz observability stack
 	docker compose -f infra/local/compose.observability.yaml up -d
 	@echo
-	@echo "SigNoz UI:        http://localhost:43301"
+	@echo "SigNoz UI:        http://localhost:43301 (login: admin@nanko.dev / admin1234)"
 	@echo "OTel gRPC (4317): localhost:44317"
 	@echo "OTel HTTP (4318): localhost:44318"
 	@echo
