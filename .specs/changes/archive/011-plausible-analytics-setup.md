@@ -415,10 +415,10 @@ export function trackEvent(name: AnalyticsEventName, props?: Record<string, unkn
   - [x] 1. Créer le test Playwright `tests-e2e/tests/app/analytics.spec.ts` simulant la navigation et vérifiant la non-régression de l'application avec et sans mock Plausible.
   - [x] **Tests E2E :** Exécuter la suite Playwright (`pnpm --filter tests-e2e exec playwright test`).
 
-- [ ] **Phase 5 : Synchronisation documentaire (Automatisable via `/sync-current`)**
-  - [ ] 1. Répercuter le composant Plausible dans `.specs/current/domains/platform/tech.md`.
-  - [ ] 2. Répercuter les règles d'exemption de consentement et d'anti-PII dans `.specs/current/domains/platform/behavior.md`.
-  - [ ] 3. Archiver ce delta dans `.specs/changes/archive/011-plausible-analytics-setup.md`.
+- [x] **Phase 5 : Synchronisation documentaire (Automatisable via `/sync-current`)**
+  - [x] 1. Répercuter le composant Plausible dans `.specs/current/domains/platform/tech.md`.
+  - [x] 2. Répercuter les règles d'exemption de consentement et d'anti-PII dans `.specs/current/domains/platform/behavior.md`.
+  - [x] 3. Archiver ce delta dans `.specs/changes/archive/011-plausible-analytics-setup.md`.
 
 ---
 

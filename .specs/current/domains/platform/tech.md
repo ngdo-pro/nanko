@@ -85,12 +85,30 @@
     - Écouteurs globaux `window.addEventListener('error')` et `window.addEventListener('unhandledrejection')` dans `src/main.tsx` capturant les anomalies runtime et promesses rejetées.
     - Composant `AppErrorBoundary` interceptant tout plantage dans l'arbre de rendu React, affichant un écran d'incident élégant avec identifiant de trace, et journalisant l'erreur avec pile d'exécution via `logger.error`.
   - Arguments de build `VITE_OTEL_EXPORTER_URL`, `VITE_OTEL_LOGS_EXPORTER_URL`, `VITE_LOG_LEVEL` et `VITE_APP_ENV` intégrés dans `frontend/Dockerfile` et les workflows GitHub Actions.
+  - **Module d'Analytics Produit & Mesure d'Audience (`src/lib/analytics.ts`) :**
+    - Singleton d'analytics fail-open initialisé au démarrage de l'application dans `src/main.tsx` (`initAnalytics`).
+    - Émission de pages vues SPA et d'événements typés (`trackEvent`, `trackPageview`) via `window.plausible`.
+    - Filtre anti-PII strict (`sanitizeAnalyticsProps`) éliminant de manière préventive toute donnée nominative ou sensible (`forbiddenPiiKeys`) et n'autorisant que des primitives scalaires non identifiantes.
+    - Arguments de build `VITE_PLAUSIBLE_DOMAIN` et `VITE_PLAUSIBLE_API_HOST` déclarés dans `frontend/Dockerfile` et obligatoirement transmis dans tous les workflows de déploiement CI/CD.
+
+### Stack Plausible Analytics Auto-Hébergée (`infra/plausible/compose.yaml`)
+* **Conteneur applicatif unique stateless :** Image officielle `ghcr.io/plausible/community-edition:v2.1.4` exposant le port interne `:8000` sur le réseau Docker `edge`.
+* **Mutualisation totale des datastores (ADR-0007) :**
+  - **PostgreSQL 16 :** Utilisation de l'instance existante `nanko-prod-postgres` avec la base dédiée `plausible` (`PLAUSIBLE_DATABASE_URL`), sans conteneur SGBD additionnel.
+  - **ClickHouse :** Utilisation de l'instance existante de la stack SigNoz `signoz-clickhouse` avec la base dédiée `plausible_events_db` (`PLAUSIBLE_CLICKHOUSE_URL`), évitant toute duplication d'empreinte mémoire sur le VPS.
+* **Routage Caddy & TLS Automatique :** Caddy gère le reverse-proxy pour `plausible.nanko.dev`, les certificats TLS Let's Encrypt et les en-têtes de sécurité HSTS.
+* **Sécurité & Administration :** Clé secrète `SECRET_KEY_BASE` (64 octets minimum en base64), inscription publique désactivée (`DISABLE_REGISTRATION=invite_only`), et déploiement VPS via `make deploy-plausible` alimenté par `~/.config/nanko/plausible.env`.
+
+### Landing Page (`landing/index.html`)
+* **Intégration Plausible sans cookie :** Balise `<script defer data-domain="nanko.dev" data-api="https://plausible.nanko.dev/api/event" src="https://plausible.nanko.dev/js/script.tagged-events.js"></script>`.
+* **Balisage déclaratif des actions clés :** Classes HTML Plausible (`plausible-event-name=landing_cta_app_click`, `plausible-event-name=landing_theme_toggle`, `plausible-event-name=landing_docs_click`).
+* **Information réglementaire :** Mentions légales de transparence en pied de page détaillant la mesure d'audience anonyme exemptée de consentement préalable (CNIL / RGPD).
 
 ### Configuration Centralisée & Validée par Zod (`frontend/src/config/env.ts`, `tests-e2e/config/env.ts`)
 * Dépendance `zod` ajoutée à `frontend/package.json` (dépendance) et `tests-e2e/package.json` (devDépendance).
 * Chaque package expose un unique module `config/env.ts` qui parse `import.meta.env` (frontend) ou `process.env` (tests-e2e) via un schéma Zod, avec valeurs par défaut *zero-config* alignées sur Docker local.
 * Validation `safeParse` fail-fast : toute variable manquante ou mal formée lève une exception explicite au chargement plutôt que de propager un `undefined`.
-* Export figé (`Object.freeze`) d'un objet `env` fortement typé (`AppEnv`, `E2EEnv`), consommé exclusivement par `frontend/src/lib/api-client.ts`, `frontend/src/lib/keycloak.ts`, `frontend/src/config/telemetry.ts`, `frontend/src/config/logger.ts`, `tests-e2e/playwright.config.ts` et `tests-e2e/tests/helpers/keycloak.ts`.
+* Export figé (`Object.freeze`) d'un objet `env` fortement typé (`AppEnv`, `E2EEnv`), consommé exclusivement par `frontend/src/lib/api-client.ts`, `frontend/src/lib/keycloak.ts`, `frontend/src/config/telemetry.ts`, `frontend/src/config/logger.ts`, `frontend/src/lib/analytics.ts`, `tests-e2e/playwright.config.ts` et `tests-e2e/tests/helpers/keycloak.ts`.
 * Aucun accès direct à `import.meta.env` (hors `frontend/src/config/env.ts`) ni à `process.env` (hors `tests-e2e/config/env.ts`) ne subsiste dans le code applicatif ou les tests.
 
 ### Tests E2E Playwright (`tests-e2e/`)
@@ -105,6 +123,7 @@
 * `tests-e2e/tests/app/portal.spec.ts` validant le rendu du portail Nanko et ses interactions sans sélecteur CSS.
 * `tests-e2e/tests/app/robots.spec.ts` validant la présence de l'en-tête HTTP `X-Robots-Tag` (`noindex, nofollow`) sur l'application et la réponse standardisée `200 OK` sur `/robots.txt` (`User-agent: *`, `Disallow: /`).
 * `tests-e2e/tests/app/logging.spec.ts` validant la capture des exceptions par l'ErrorBoundary, l'affichage de l'identifiant d'incident et la résilience fail-open en cas d'indisponibilité du endpoint OTLP via `getByTestId('error-boundary-fallback')` et `getByTestId('incident-id')`.
+* `tests-e2e/tests/app/analytics.spec.ts` validant la résilience fail-open de l'application en l'absence de Plausible et confirmant l'absence stricte de cookies déposés par la mesure d'audience.
 
 ---
 
@@ -117,10 +136,12 @@
 * Le sas HTTP Basic Auth est strictement restreint à la préproduction : il ne s'applique ni au local ni à la production, et n'altère en rien les flux d'authentification applicatifs Keycloak OIDC.
 * La protection anti-indexation (`X-Robots-Tag` durci et consigne `Disallow: /` sur `/robots.txt`) est strictement cantonnée à la préproduction et aux outils internes (SigNoz), pour garantir l'étanchéité SEO totale sans impacter la découvrabilité du domaine de production.
 * **Invariant `data-qa` exclusif :** Aucun test E2E Playwright ciblant du code Nanko ne doit utiliser de sélecteur basé sur une classe CSS (`.classe`) ou un ID HTML (`#id`). L'API `page.getByTestId(...)` résout obligatoirement `[data-qa="..."]`. Seule la mire externe Keycloak fait exception.
+* **Invariant Analytics sans cookie & Anti-PII :** La mesure d'audience Plausible fonctionne sans aucun cookie ni fingerprint persistant (hachage éphémère d'IP rotatif 24h) et sans bannière de consentement. Aucun événement ne doit comporter de données personnelles identifiantes (`sanitizeAnalyticsProps`).
+* **Invariant Propagation Build-Args CI/CD :** Toute variable d'environnement `VITE_*` déclarée dans `frontend/src/config/env.ts` et `frontend/Dockerfile` doit obligatoirement être transmise en `build-args` dans tous les workflows de déploiement GitHub Actions (`deploy-prod.yml`, `deploy-preprod.yml`, `pr-preprod-e2e.yml`).
 
 ---
 
 ## 3. ADRs de Référence
-* `ADR-0007` : Postgres seul pour le MVP applicatif & exception documentée pour le datastore ClickHouse de SigNoz.
+* `ADR-0007` : Postgres seul pour le MVP applicatif & mutualisation des datastores pour l'observabilité (SigNoz ClickHouse) et l'analytics (Plausible réutilisant les conteneurs PostgreSQL et ClickHouse existants sans nouveau conteneur SGBD).
 * `ADR-0010` : Déploiement préproduction sans secret SSH via GHCR et Watchtower.
 

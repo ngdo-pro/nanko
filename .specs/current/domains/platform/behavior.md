@@ -47,6 +47,20 @@ Garantir l'intégrité, la traçabilité et la stabilité de la plateforme Nanko
 * **Observabilité SigNoz :**
   - L'équipe d'ingénierie navigue en 1 clic dans SigNoz depuis une trace HTTP lente ou en erreur vers l'ensemble des logs contextuels Backend et Frontend partageant le même `trace_id`.
 
+### Parcours 6 : Mesure d'audience anonyme et suivi produit sans consentement (Plausible Analytics)
+* **Landing Page (`www.nanko.dev`) :**
+  - Mesure d'audience automatique dès le chargement de la page via le script léger (< 1 Ko) `https://plausible.nanko.dev/js/script.tagged-events.js`.
+  - Suivi déclaratif des interactions clés par balisage de classes HTML (`plausible-event-name=landing_cta_app_click`, `plausible-event-name=landing_theme_toggle`, `plausible-event-name=landing_docs_click`).
+  - Information réglementaire transparente affichée en pied de page (mesure d'audience anonyme sans cookie ni profilage).
+* **Application React SPA (`app.nanko.dev`) :**
+  - Initialisation globale du module d'analytics (`frontend/src/lib/analytics.ts`) au démarrage dans `src/main.tsx`.
+  - Suivi automatique des transitions de pages (`pageview`) lors de chaque navigation dans le routeur React SPA (`history.pushState`).
+  - Déclenchement d'événements personnalisés typés lors des étapes clés du cycle de vie utilisateur (`trackEvent('login_initiated')`, `trackEvent('logout_initiated')`).
+  - Assainissement systématique des métadonnées contextuelles par le filtre anti-PII (`sanitizeAnalyticsProps`), garantissant qu'aucune donnée nominative, identifiant Keycloak ou information sensible n'est transmise.
+* **Résilience Fail-Open & Exemption Réglementaire :**
+  - Zéro cookie et zéro stockage persistant : aucun bandeau de consentement intrusif (CMP / Cookie Banner) requis (exemption formelle CNIL / RGPD).
+  - En cas de blocage réseau (bloqueur de publicité uBlock, Brave Shields) ou d'indisponibilité du serveur Plausible, l'application fonctionne de manière fluide et transparente sans aucune exception ni dégradation d'expérience.
+
 ## 3. Règles de Gestion & Invariants Opérationnels
 * **Règle 1 (Gate de préprod bloquante) :** Toute Pull Request doit obligatoirement valider l'ensemble des scénarios E2E Playwright sur l'infrastructure de préproduction réelle avant d'être éligible au merge sur `main`.
 * **Règle 2 (Sérialisation de l'environnement de préproduction) :** Pour éviter les conflits d'état sur l'environnement partagé de préproduction, les exécutions de PR sont strictement sérialisées via un groupe de concurrence GitHub Actions (`concurrency: group: preprod-shared-env, cancel-in-progress: false`).
@@ -65,6 +79,10 @@ Garantir l'intégrité, la traçabilité et la stabilité de la plateforme Nanko
 * **Règle 15 (Filtrage et seuil de télémétrie des logs) :** En préproduction et production, le Frontend restreint ses envois réseau vers OTLP aux niveaux `WARN` et `ERROR` avec déduplication locale, tandis que le Backend transmet à OTLP selon le seuil configuré par `OTEL_LOGS_LEVEL` (`INFO` par défaut).
 * **Règle 16 (Sanitization des logs applicatifs) :** Les attributs de log ne doivent jamais contenir de secrets en clair, mots de passe, tokens JWT ou en-têtes `Authorization: Bearer ...` (caviardage ou omission obligatoire).
 * **Règle 17 (Standardisation des sélecteurs E2E data-qa) :** Les tests End-to-End Playwright ciblant des composants Nanko doivent obligatoirement utiliser l'API `page.getByTestId(...)` résolvant des attributs `[data-qa="..."]` au format kebab-case (`[contexte]-[élément]-[action/état]`). Tout ciblage reposant sur des classes CSS (ex. `.nav-logo`) ou des sélecteurs de style est strictement interdit. Seule la mire d'authentification tierce Keycloak (`auth.nanko.dev`) fait exception avec ses identifiants natifs (`#username`, `#password`, `#kc-login`).
+* **Règle 18 (Exemption de consentement cookies - CNIL / RGPD) :** Plausible Analytics fonctionne sans aucun cookie, sans stockage persistant (`localStorage`), et avec un hachage d'IP journalier éphémère (sel rotatif détruit chaque jour à minuit). Aucun bandeau de consentement ni barrière d'acceptation cookies ne doit être présenté à l'utilisateur. Une mention d'information claire dans la politique de confidentialité / pied de page est obligatoire et suffisante.
+* **Règle 19 (Interdiction stricte de données personnelles identifiantes - Anti-PII) :** Il est strictement interdit d'émettre des données personnelles (PII : nom, prénom, email, UUID utilisateur Keycloak `sub`, IP brute, token de session) dans les événements analytiques. Le helper client `sanitizeAnalyticsProps` supprime automatiquement toute clé interdite (`forbiddenPiiKeys`) avant émission vers `/api/event`.
+* **Règle 20 (Résilience Fail-Open Analytics) :** Le blocage réseau ou l'échec de chargement de Plausible (bloqueurs de pub, indisponibilité serveur, timeout) ne doit jamais lever d'erreur ni altérer le fonctionnement normal du frontend React ou de la landing page.
+* **Règle 21 (Propagation obligatoire des variables d'environnement VITE_* dans la CI/CD) :** Toute variable d'environnement frontend préfixée `VITE_*` introduite dans `frontend/src/config/env.ts` et `frontend/Dockerfile` doit obligatoirement être déclarée et injectée en tant que `build-args` Docker dans l'ensemble des workflows GitHub Actions de build et déploiement (`deploy-prod.yml`, `deploy-preprod.yml`, `pr-preprod-e2e.yml`).
 
 ## 4. Matrice des Échecs & Cas Limites
 | Situation | Comportement & Conséquence |
@@ -82,3 +100,5 @@ Garantir l'intégrité, la traçabilité et la stabilité de la plateforme Nanko
 | Identifiants HTTP Basic Auth préproduction erronés | Réponse `401 Unauthorized`, réinvite native du navigateur ou échec explicite Playwright en CI |
 | Exception non gérée dans un composant React (crash UI) | `AppErrorBoundary` intercepte l'erreur, affiche l'écran de secours avec Trace ID, et émet un log `ERROR` vers SigNoz |
 | Échec d'envoi du log vers `/v1/logs` (ex: réseau coupé) | Abandon silencieux fail-open, aucun blocage du flux utilisateur, aucune boucle récursive |
+| Bloqueur de publicité bloquant `plausible.nanko.dev` ou `/api/event` | Abandon silencieux fail-open, aucune erreur bloquante dans la console, expérience utilisateur 100 % préservée |
+| Propriété PII passée à `trackEvent` (ex: `email: "user@test.com"`) | `sanitizeAnalyticsProps` supprime la propriété interdite, l'événement est émis sans la donnée personnelle |
