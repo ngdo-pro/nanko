@@ -33,6 +33,7 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318/v1/traces
       OTEL_SERVICE_NAME: nanko-backend
       OTEL_RESOURCE_ATTRIBUTES: service.name=nanko-backend,deployment.environment=local
+      OTEL_LOGS_LEVEL: info
     ports:
       - "48000:8000"
     volumes:
@@ -86,6 +87,8 @@ services:
       VITE_KEYCLOAK_REALM: nanko
       VITE_KEYCLOAK_CLIENT_ID: nanko-web
       VITE_OTEL_EXPORTER_URL: "http://localhost:44318/v1/traces"
+      VITE_OTEL_LOGS_EXPORTER_URL: "http://localhost:44318/v1/logs"
+      VITE_LOG_LEVEL: "info"
       VITE_OTEL_SERVICE_NAME: nanko-frontend
       VITE_APP_ENV: local
     ports:

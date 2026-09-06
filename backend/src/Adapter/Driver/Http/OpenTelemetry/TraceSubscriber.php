@@ -32,6 +32,7 @@ final class TraceSubscriber implements EventSubscriberInterface
         private readonly ?string $otlpEndpoint = null,
         private readonly string $serviceName = 'nanko-backend',
         private readonly string $environment = 'local',
+        private readonly ?OtelLogHandler $otelLogHandler = null,
     ) {}
 
     public static function getSubscribedEvents(): array
@@ -160,6 +161,7 @@ final class TraceSubscriber implements EventSubscriberInterface
                 $scope->detach();
             }
 
+            $this->otelLogHandler?->flush();
             $this->tracerProvider?->shutdown();
         } catch (\Throwable) {
             // Fail-open

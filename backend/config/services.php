@@ -18,6 +18,7 @@ return App::config([
         'otel.exporter_endpoint' => '%env(default::OTEL_EXPORTER_OTLP_ENDPOINT)%',
         'otel.service_name' => '%env(default:default_otel_service_name:OTEL_SERVICE_NAME)%',
         'default_otel_service_name' => 'nanko-backend',
+        'default_otel_logs_level' => 'info',
     ],
 
     'services' => [
@@ -71,6 +72,15 @@ return App::config([
                 '$otlpEndpoint' => '%otel.exporter_endpoint%',
                 '$serviceName' => '%otel.service_name%',
                 '$environment' => '%kernel.environment%',
+            ],
+        ],
+
+        \App\Adapter\Driver\Http\OpenTelemetry\OtelLogHandler::class => [
+            'arguments' => [
+                '$otlpEndpoint' => '%otel.exporter_endpoint%',
+                '$serviceName' => '%otel.service_name%',
+                '$environment' => '%kernel.environment%',
+                '$level' => '%env(default:default_otel_logs_level:OTEL_LOGS_LEVEL)%',
             ],
         ],
 
