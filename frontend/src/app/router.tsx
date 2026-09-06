@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/layout/AppLayout'
 import { ErrorBoundaryFallback } from '@/components/AppErrorBoundary'
 import { logger } from '@/config/logger'
 import { HomePage } from './routes/app/home'
+import { DocumentEditorPage } from './routes/app/document-editor'
 import { NotFoundPage } from './routes/not-found'
 
 function RouteErrorBoundary() {
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <HomePage />,
+      },
+      {
+        path: 'projects/:projectId/documents/:documentId',
+        element: <DocumentEditorPage />,
       },
       {
         path: '*',

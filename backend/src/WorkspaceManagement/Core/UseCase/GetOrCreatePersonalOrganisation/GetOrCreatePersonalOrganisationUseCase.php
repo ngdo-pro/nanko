@@ -47,7 +47,7 @@ final readonly class GetOrCreatePersonalOrganisationUseCase
 
         if ($personalOrg === null) {
             $orgId = OrganisationId::generate();
-            $slug = 'personal-' . substr($userId->toRfc4122(), 0, 8);
+            $slug = 'personal-' . $userId->toRfc4122();
 
             $personalOrg = Organisation::create(
                 id: $orgId,

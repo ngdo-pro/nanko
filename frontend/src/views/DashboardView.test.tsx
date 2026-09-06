@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { renderWithProviders, screen } from '@/testing/test-utils'
 import { DashboardView } from './DashboardView'
 import * as authModule from '@/features/auth'
 import * as workspaceModule from '@/features/workspaces'
@@ -100,7 +100,7 @@ describe('DashboardView', () => {
   })
 
   it('affiche le message de bienvenue avec l email de l utilisateur', () => {
-    render(<DashboardView />)
+    renderWithProviders(<DashboardView />)
 
     expect(screen.getByText('architect@nanko.dev')).toBeInTheDocument()
     expect(
@@ -109,7 +109,7 @@ describe('DashboardView', () => {
   })
 
   it('affiche la liste des projets et le projet actif', () => {
-    render(<DashboardView />)
+    renderWithProviders(<DashboardView />)
 
     expect(screen.getByText('Mes Projets')).toBeInTheDocument()
     expect(screen.getByText('Mon premier projet')).toBeInTheDocument()
@@ -118,7 +118,7 @@ describe('DashboardView', () => {
   })
 
   it('affiche l état vide sous le projet actif', () => {
-    render(<DashboardView />)
+    renderWithProviders(<DashboardView />)
 
     expect(
       screen.getByText('Projet : Mon premier projet')
@@ -134,14 +134,14 @@ describe('DashboardView', () => {
   })
 
   it('affiche le rappel syntaxique rapide', () => {
-    render(<DashboardView />)
+    renderWithProviders(<DashboardView />)
 
     expect(screen.getByText('RAPPEL SYNTAXIQUE RAPIDE')).toBeInTheDocument()
     expect(screen.getByText(/@id \[nom\]/i)).toBeInTheDocument()
   })
 
   it('permet de surcharger l email via prop userEmail', () => {
-    render(<DashboardView userEmail="custom@nanko.dev" />)
+    renderWithProviders(<DashboardView userEmail="custom@nanko.dev" />)
 
     expect(screen.getByText('custom@nanko.dev')).toBeInTheDocument()
   })
