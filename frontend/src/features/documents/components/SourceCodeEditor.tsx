@@ -5,6 +5,7 @@ export interface SourceCodeEditorProps {
   onChange: (newValue: string) => void
   onSave?: () => void
   disabled?: boolean
+  documentSlug?: string
 }
 
 export const SourceCodeEditor: React.FC<SourceCodeEditorProps> = ({
@@ -12,6 +13,7 @@ export const SourceCodeEditor: React.FC<SourceCodeEditorProps> = ({
   onChange,
   onSave,
   disabled = false,
+  documentSlug,
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -45,31 +47,43 @@ export const SourceCodeEditor: React.FC<SourceCodeEditorProps> = ({
   }
 
   const lines = value.split('\n')
+  const fileName = documentSlug ? `${documentSlug}.nanko` : 'document.nanko'
 
   return (
-    <div className="flex h-full font-mono text-sm bg-slate-950 border border-slate-800 rounded-lg overflow-hidden shadow-inner">
-      {/* Numérotation des lignes */}
-      <div
-        className="select-none py-4 px-3 bg-slate-900/50 text-slate-600 text-right border-r border-slate-800/80 font-mono text-xs leading-relaxed"
-        aria-hidden="true"
-      >
-        {lines.map((_, i) => (
-          <div key={i}>{i + 1}</div>
-        ))}
+    <div className="source-editor-panel" data-qa="source-code-editor">
+      {/* En-tête de l'onglet code */}
+      <div className="source-editor-header">
+        <div className="source-editor-tab">
+          <span className="tab-badge-nanko">NANKO</span>
+          <span>{fileName}</span>
+        </div>
+        <span className="source-editor-hints">
+          {lines.length} {lines.length === 1 ? 'ligne' : 'lignes'} &middot; Tab = 2 espaces &middot; Cmd+S
+        </span>
       </div>
 
-      {/* Zone d'édition du code */}
-      <textarea
-        ref={textareaRef}
-        className="flex-1 w-full p-4 bg-transparent text-slate-100 placeholder-slate-600 resize-none outline-none font-mono text-sm leading-relaxed focus:ring-0 selection:bg-brand/30"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder="@id mon-document&#10;@layer 0&#10;&#10;rectangle app &quot;Application&quot;&#10;circle db &quot;Database&quot;&#10;app -> db &quot;requêtes SQL&quot;"
-        disabled={disabled}
-        spellCheck={false}
-        data-qa="source-code-textarea"
-      />
+      {/* Corps avec numérotation et zone d'écriture */}
+      <div className="source-editor-body">
+        <div className="editor-line-numbers" aria-hidden="true">
+          {lines.map((_, i) => (
+            <div key={i} className="editor-line-number">
+              {i + 1}
+            </div>
+          ))}
+        </div>
+
+        <textarea
+          ref={textareaRef}
+          className="editor-textarea"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="@id mon-document&#10;@layer 0&#10;&#10;rectangle app &quot;Application&quot;&#10;circle db &quot;Database&quot;&#10;app -> db &quot;requêtes SQL&quot;"
+          disabled={disabled}
+          spellCheck={false}
+          data-qa="source-code-textarea"
+        />
+      </div>
     </div>
   )
 }

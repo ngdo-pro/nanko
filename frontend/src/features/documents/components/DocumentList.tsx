@@ -14,11 +14,11 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   onNewDocument,
 }) => {
   return (
-    <section className="dashboard-documents-section mt-8" data-qa="documents-section">
-      <div className="flex items-center justify-between mb-4">
+    <section className="dashboard-documents-section" data-qa="documents-section">
+      <div className="documents-section-header">
         <div>
-          <h2 className="text-xl font-bold text-slate-100">Mes Documents</h2>
-          <p className="text-sm text-slate-400">
+          <h2 className="documents-section-title">Mes Documents</h2>
+          <p className="documents-section-subtitle">
             Schémas d'architecture versionnés pour ce projet.
           </p>
         </div>
@@ -32,7 +32,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" data-qa="documents-grid">
+      <div className="documents-grid" data-qa="documents-grid">
         {documents.map((doc) => (
           <DocumentCard key={doc.id} document={doc} projectId={projectId} />
         ))}

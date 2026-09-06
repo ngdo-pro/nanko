@@ -59,51 +59,53 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-slate-950" data-qa="document-editor-view">
+    <div className="editor-studio" data-qa="document-editor-view">
       {/* Barre d'outils supérieure */}
-      <header className="flex items-center justify-between px-6 py-3 border-b border-slate-800 bg-slate-900/60 backdrop-blur">
-        <div className="flex items-center gap-4">
+      <header className="editor-topbar">
+        <div className="editor-topbar-left">
           <button
             type="button"
-            className="btn btn-secondary text-xs py-1.5 px-3"
+            className="btn btn-secondary"
             onClick={() => navigate('/')}
             data-qa="back-to-project-button"
           >
             &larr; Projets
           </button>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold text-slate-100" data-qa="document-title">
+          <div className="editor-doc-meta">
+            <div className="editor-doc-title-row">
+              <h1 className="editor-doc-title" data-qa="document-title">
                 {document.name}
               </h1>
-              <span className="project-badge-active text-xs px-2 py-0.5 rounded" data-qa="document-layer-badge">
+              <span className="badge-layer" data-qa="document-layer-badge">
                 Layer {document.layer}
               </span>
             </div>
-            <span className="text-xs font-mono text-slate-400">{document.slug}</span>
+            <span className="editor-doc-slug">{document.slug}</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="editor-topbar-right">
           {/* Badge d'état de sauvegarde */}
           {updateMutation.isPending ? (
-            <span className="text-xs text-amber-400 flex items-center gap-1.5">
-              <span className="animate-spin inline-block w-3 h-3 border-2 border-amber-400 border-t-transparent rounded-full" />
+            <span className="save-status-pill saving">
+              <span className="status-dot" />
               Sauvegarde...
             </span>
           ) : hasUnsavedChanges ? (
-            <span className="text-xs text-amber-400/90 font-medium" data-qa="unsaved-changes-badge">
+            <span className="save-status-pill unsaved" data-qa="unsaved-changes-badge">
+              <span className="status-dot" />
               Modifications non enregistrées
             </span>
           ) : (
-            <span className="text-xs text-emerald-400/90 font-medium" data-qa="saved-status-badge">
-              Enregistré &check;
+            <span className="save-status-pill saved" data-qa="saved-status-badge">
+              <span className="status-dot" />
+              Enregistré ✓
             </span>
           )}
 
           <button
             type="button"
-            className="btn btn-primary text-sm py-1.5 px-4"
+            className="btn btn-primary"
             onClick={handleSave}
             disabled={updateMutation.isPending}
             data-qa="save-document-button"
@@ -115,25 +117,22 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
       </header>
 
       {/* Zone de travail en 2 colonnes */}
-      <main className="flex-1 grid grid-cols-12 gap-4 p-4 min-h-0 overflow-hidden">
-        {/* Éditeur de code source (8 colonnes) */}
-        <section className="col-span-12 lg:col-span-8 h-full min-h-0 flex flex-col">
-          <SourceCodeEditor
-            value={code}
-            onChange={setCode}
-            onSave={handleSave}
-            disabled={updateMutation.isPending}
-          />
-        </section>
+      <div className="editor-workspace-grid">
+        {/* Éditeur de code source */}
+        <SourceCodeEditor
+          value={code}
+          onChange={setCode}
+          onSave={handleSave}
+          disabled={updateMutation.isPending}
+          documentSlug={document.slug}
+        />
 
-        {/* Volet d'inspection AST (4 colonnes) */}
-        <section className="col-span-12 lg:col-span-4 h-full min-h-0">
-          <AstInspector
-            ast={document.ast}
-            syntaxError={syntaxError}
-          />
-        </section>
-      </main>
+        {/* Volet d'inspection AST */}
+        <AstInspector
+          ast={document.ast}
+          syntaxError={syntaxError}
+        />
+      </div>
     </div>
   )
 }
@@ -153,9 +152,9 @@ export const DocumentEditorView: React.FC = () => {
 
   if (fetchError || !document || !projectId) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-6" data-qa="document-error-view">
-        <h2 className="text-xl font-bold text-red-400 mb-2">Document introuvable ou inaccessible</h2>
-        <p className="text-slate-400 mb-6 max-w-md">
+      <div className="card editor-error-state" data-qa="document-error-view">
+        <h2 className="editor-error-title">Document introuvable ou inaccessible</h2>
+        <p className="editor-error-text">
           Vous n'avez pas accès à ce document ou il a été supprimé.
         </p>
         <button
