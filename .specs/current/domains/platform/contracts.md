@@ -80,7 +80,36 @@
 * Parsing via `frontendEnvSchema.safeParse()` sur un objet extrait explicitement de `import.meta.env` (compatibilité substitution statique Vite/Rollup).
 * Échec de validation : `throw` immédiat + rendu d'un écran de secours HTML injecté dans `#root` listant les erreurs de schéma.
 * Export figé (`Object.freeze`) : `env.api.baseUrl`, `env.keycloak.{url,realm,clientId}`, `env.otel.{exporterUrl,serviceName,environment}`.
-* Consommé par `frontend/src/auth/httpClient.ts`, `frontend/src/auth/keycloak.ts`, et `frontend/src/config/telemetry.ts`.
+* Consommé par `frontend/src/lib/api-client.ts`, `frontend/src/lib/keycloak.ts`, et `frontend/src/config/telemetry.ts`.
+
+### Modèle Normalisé d'Erreur API (`frontend/src/types/api.ts`)
+```typescript
+export interface ApiValidationError {
+  violations: Array<{
+    propertyPath: string;
+    title: string;
+  }>;
+}
+
+export interface ApiBusinessError {
+  code: string;
+  message: string;
+}
+
+export type ApiErrorResponse = ApiValidationError | ApiBusinessError;
+
+export class ApiError extends Error {
+  status: number;
+  data?: ApiErrorResponse | unknown;
+
+  constructor(status: number, data?: ApiErrorResponse | unknown, message?: string) {
+    super(message ?? `HTTP Error ${status}`);
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+  }
+}
+```
 
 ### Tests E2E (`tests-e2e/config/env.ts`)
 | Variable | Obligatoire | Fallback par défaut | Validation |

@@ -29,7 +29,7 @@
 
 ## 2. Contrats & Types Frontend (TypeScript)
 
-### Type & Schéma Zod : `UserProfile` (`frontend/src/auth/schemas.ts`, `frontend/src/auth/types.ts`)
+### Type & Schéma Zod : `UserProfile` (`frontend/src/features/auth/types/index.ts`)
 ```typescript
 import { z } from 'zod';
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { userProfileSchema } from './schemas'
+import { userProfileSchema } from './types'
 
 describe('userProfileSchema', () => {
   it('valide avec succès un profil utilisateur conforme', () => {

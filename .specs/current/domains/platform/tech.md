@@ -61,16 +61,26 @@
   - SDK OpenTelemetry PHP (`open-telemetry/sdk`, `open-telemetry/exporter-otlp`, `open-telemetry/sem-conv`).
   - `App\Adapter\Driver\Http\OpenTelemetry\TraceSubscriber` : souscripteur HTTP extrayant et injectant `traceparent`, normalisant l'endpoint OTLP (suppression du `/v1/traces` superflu), et forçant le flush des batch spans lors de `kernel.terminate` via `$this->tracerProvider?->shutdown()`.
   - Résilience fail-open absolue (l'absence de collecteur n'interrompt ni ne ralentit aucune requête).
-* **Frontend React 19 :**
-  - SDK OpenTelemetry Web (`@opentelemetry/sdk-trace-web`, `@opentelemetry/exporter-trace-otlp-http`, `@opentelemetry/instrumentation-fetch`).
-  - `frontend/src/config/telemetry.ts` : initialisation résiliente et helper `injectTraceContext` propageant le contexte W3C `traceparent` sur les appels HTTP.
+* **Frontend React 19 (Architecture Bulletproof React) :**
+  - Standard modulaire piloté par les fonctionnalités (*feature-based*) selon [Bulletproof React](https://github.com/alan2207/bulletproof-react) :
+    - `src/app/` : racine applicative, composition hiérarchique des providers (`AppProvider` regroupant `AppErrorBoundary`, `QueryClientProvider`, `KeycloakProvider`), arbre de routage déclaratif (`AppRouter` avec `react-router` v7) et vues racines (`home.tsx`, `not-found.tsx`).
+    - `src/features/` : modules métier autonomes et étanches (ex. `features/auth/`), avec encapsulation stricte via barrel export (`index.ts`). Tout accès extérieur aux fichiers internes d'une feature est proscrit.
+    - `src/components/` : composants génériques partagés divisés en `ui/` (éléments atomiques : `Button`, `Spinner`, `AppErrorBoundary`) et `layout/` (`AppLayout`, `Navbar`, `Footer`).
+    - `src/lib/` : singletons et abstractions de bibliothèques tierces (`api-client.ts`, `keycloak.ts`, `react-query.ts`).
+    - `src/types/` : types transversaux partagés (`api.ts` pour `ApiError`, `ApiValidationError`, etc.).
+    - `src/utils/` : helpers purs (`cn.ts` pour composition de classes CSS).
+    - `src/testing/` : harnais de test unitaire et d'intégration (`test-utils.tsx` exportant `renderWithProviders`).
+  - **Résolution des Alias de Chemins (`@/*`) :** configuration unifiée dans `tsconfig.app.json` et `vite.config.ts` pointant sur `./src/*`.
+  - **Client API Universel (`src/lib/api-client.ts`) :** client HTTP encapsulant `fetch`, l'injection automatique du Bearer token JWT Keycloak avec refresh préventif et gestion des erreurs 401 (invalidation/clear du cache `QueryClient`), propagation du contexte de trace W3C `traceparent`, et typage unifié des erreurs sous forme d'`ApiError`.
+  - **Cache Serveur & Requêtes TanStack Query :** instance `QueryClient` centralisée (`src/lib/react-query.ts`) avec options par défaut optimisées (retry backoff, staleTime 5min, gcTime 15min).
+  - **Télémétrie OpenTelemetry Web :** SDK Web (`@opentelemetry/sdk-trace-web`, `@opentelemetry/exporter-trace-otlp-http`, `@opentelemetry/instrumentation-fetch`), initialisation dans `src/config/telemetry.ts` et propagation W3C `traceparent` assurée via `apiClient`.
   - Arguments de build `VITE_OTEL_EXPORTER_URL` et `VITE_APP_ENV` intégrés dans `frontend/Dockerfile` et les workflows GitHub Actions `deploy-prod.yml` et `deploy-preprod.yml`.
 
 ### Configuration Centralisée & Validée par Zod (`frontend/src/config/env.ts`, `tests-e2e/config/env.ts`)
 * Dépendance `zod` ajoutée à `frontend/package.json` (dépendance) et `tests-e2e/package.json` (devDépendance).
 * Chaque package expose un unique module `config/env.ts` qui parse `import.meta.env` (frontend) ou `process.env` (tests-e2e) via un schéma Zod, avec valeurs par défaut *zero-config* alignées sur Docker local.
 * Validation `safeParse` fail-fast : toute variable manquante ou mal formée lève une exception explicite au chargement plutôt que de propager un `undefined`.
-* Export figé (`Object.freeze`) d'un objet `env` fortement typé (`AppEnv`, `E2EEnv`), consommé exclusivement par `frontend/src/auth/httpClient.ts`, `frontend/src/auth/keycloak.ts`, `frontend/src/config/telemetry.ts`, `tests-e2e/playwright.config.ts` et `tests-e2e/tests/helpers/keycloak.ts`.
+* Export figé (`Object.freeze`) d'un objet `env` fortement typé (`AppEnv`, `E2EEnv`), consommé exclusivement par `frontend/src/lib/api-client.ts`, `frontend/src/lib/keycloak.ts`, `frontend/src/config/telemetry.ts`, `tests-e2e/playwright.config.ts` et `tests-e2e/tests/helpers/keycloak.ts`.
 * Aucun accès direct à `import.meta.env` (hors `frontend/src/config/env.ts`) ni à `process.env` (hors `tests-e2e/config/env.ts`) ne subsiste dans le code applicatif ou les tests.
 
 ### Tests E2E Playwright (`tests-e2e/`)

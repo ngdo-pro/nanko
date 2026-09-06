@@ -1,14 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { DashboardView } from './DashboardView'
-import * as useAuthModule from '../auth/useAuth'
+import * as authModule from '@/features/auth'
 
-vi.mock('../auth/useAuth')
+vi.mock('@/features/auth', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/features/auth')>()
+  return {
+    ...actual,
+    useAuth: vi.fn(),
+  }
+})
 
 describe('DashboardView', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(useAuthModule.useAuth).mockReturnValue({
+    vi.mocked(authModule.useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
       user: {
