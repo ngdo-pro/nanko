@@ -57,7 +57,6 @@
 ### Variables de la Stack d'Observabilité SigNoz (`~/.config/nanko/signoz.env`)
 | Variable | Obligatoire | Rôle |
 |---|---|---|
-| `SIGNOZ_BASICAUTH_HASH` | Oui (VPS) | Hash bcrypt Caddy pour sécuriser l'accès à `https://signoz.nanko.dev` |
 | `SIGNOZ_ADMIN_EMAIL` | Oui (VPS) | Adresse email du compte superadmin initial créé au démarrage |
 | `SIGNOZ_ADMIN_PASSWORD` | Oui (VPS) | Mot de passe initial du compte superadmin créé par le provisioner |
 | `SIGNOZ_ADMIN_NAME` | Non | Nom d'affichage du superadmin (`Nanko Admin` par défaut) |

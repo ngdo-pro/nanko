@@ -1,6 +1,6 @@
 services:
   clickhouse:
-    image: clickhouse/clickhouse-server:25.1-alpine
+    image: clickhouse/clickhouse-server:25.12-alpine
     container_name: signoz-clickhouse
     restart: unless-stopped
     volumes:
@@ -34,9 +34,8 @@ services:
     image: signoz/signoz-otel-collector:latest
     container_name: signoz-schema-migrator
     restart: "no"
+    entrypoint: ["/bin/sh", "-c"]
     command:
-      - sh
-      - -c
       - |
         /signoz-otel-collector migrate bootstrap --clickhouse-dsn=tcp://clickhouse:9000 &&
         /signoz-otel-collector migrate sync up --clickhouse-dsn=tcp://clickhouse:9000 &&
@@ -85,8 +84,6 @@ services:
       com.centurylinklabs.watchtower.enable: "true"
       caddy: signoz.nanko.dev
       caddy.encode: gzip
-      caddy.basic_auth: "/*"
-      caddy.basic_auth.admin: "${SIGNOZ_BASICAUTH_HASH}"
       caddy.reverse_proxy: "{{upstreams 3301}}"
       caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
       caddy.header.X-Content-Type-Options: nosniff
