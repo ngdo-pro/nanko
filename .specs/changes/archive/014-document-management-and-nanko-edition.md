@@ -529,9 +529,9 @@ export type UpdateDocumentInput = z.infer<typeof updateDocumentSchema>;
   - [x] 1. Scénario `document-management.spec.ts` validant la création d'un document, la saisie de code `.nanko` et la persistance du document après rechargement.
   - [x] 2. Exécution locale et validation préprod.
 
-- [ ] **Phase 5 : Synchronisation documentaire & Archivage**
-  - [ ] 1. Répercuter le delta dans `.specs/current/domains/workspace-management/`.
-  - [ ] 2. Déplacer vers `.specs/changes/archive/014-document-management-and-nanko-edition.md`.
+- [x] **Phase 5 : Synchronisation documentaire & Archivage**
+  - [x] 1. Répercuter le delta dans `.specs/current/domains/workspace-management/`.
+  - [x] 2. Déplacer vers `.specs/changes/archive/014-document-management-and-nanko-edition.md`.
 
 ---
 
