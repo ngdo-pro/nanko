@@ -40,7 +40,8 @@ services:
       caddy.@robots.path: /robots.txt
       caddy.respond: '@robots "User-agent: *\nDisallow: /\n" 200'
       caddy.header.@robots.Content-Type: "text/plain; charset=utf-8"
-      caddy.@protected.not.path: /robots.txt
+      caddy.@protected.not_0.path: /robots.txt
+      caddy.@protected.not_1.method: OPTIONS
       caddy.basicauth: "@protected"
       caddy.basicauth.nanko: "${PREPROD_HTTP_HASH}"
       caddy.reverse_proxy: "{{upstreams 80}}"
