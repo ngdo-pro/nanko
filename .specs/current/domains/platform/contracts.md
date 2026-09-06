@@ -32,8 +32,12 @@
   Disallow: /
   ```
 
----
+### `POST /v1/logs` (Endpoint d'ingestion OpenTelemetry OTLP/HTTP)
+* **Authentification :** `PUBLIC_ACCESS` (endpoint public d'ingestion télémétrique exposé sur `https://otlp.nanko.dev/v1/logs`, routé par Caddy vers le collecteur OTel `:4318`, ou accessible en interne Docker via `http://signoz-otel-collector:4318/v1/logs`)
+* **Headers de requête :** `Content-Type: application/json` ou `application/x-protobuf`
+* **Description :** Ingestion de logs selon la spécification OTLP Log Data Model v1. Reçoit les `LogRecord` bufferisés depuis le Backend Symfony et le Frontend React.
 
+---
 
 ## 2. Configuration d'Exécution & Variables d'Environnement
 
@@ -43,15 +47,17 @@
 | `APP_VERSION` | Non | `v0.0.0-dev` | Version SemVer injectée lors du build Docker ou au runtime |
 | `APP_COMMIT` | Non | `dev` | SHA du commit Git injecté lors du build Docker |
 | `APP_ENV` | Oui | `prod` | Nom de l'environnement Symfony (`local`, `test`, `preprod`, `prod`) |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | Non | `""` | Endpoint OTLP/HTTP pour export des traces (ex: `http://otel-collector:4318/v1/traces`) |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Non | `""` | Endpoint OTLP/HTTP pour export des traces et logs (ex: `http://otel-collector:4318` ou `http://otel-collector:4318/v1/traces`) |
 | `OTEL_SERVICE_NAME` | Non | `nanko-backend` | Nom du service dans SigNoz APM |
 | `OTEL_RESOURCE_ATTRIBUTES` | Non | `""` | Attributs OpenTelemetry standard (ex: `service.name=nanko-backend,deployment.environment=preprod`) |
+| `OTEL_LOGS_LEVEL` | Non | `info` | Seuil minimal des logs Monolog transmis à OTLP (`debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, `emergency`) |
 
 ### Paramètres Symfony (`config/services.php`)
 * `%app.version%` : mappé sur `%env(default:default_app_version:APP_VERSION)%`
 * `%app.commit%` : mappé sur `%env(default:default_app_commit:APP_COMMIT)%`
 * `%otel.exporter_endpoint%` : mappé sur `%env(default::OTEL_EXPORTER_OTLP_ENDPOINT)%`
 * `%otel.service_name%` : mappé sur `%env(default:default_otel_service_name:OTEL_SERVICE_NAME)%`
+* `%otel.logs_level%` : mappé sur `%env(default:default_otel_logs_level:OTEL_LOGS_LEVEL)%`
 
 ### Variables du Conteneur Keycloak 26
 | Variable | Obligatoire | Valeur type | Rôle |
@@ -88,13 +94,15 @@
 | `VITE_KEYCLOAK_REALM` | Non | `nanko` | Chaîne non vide |
 | `VITE_KEYCLOAK_CLIENT_ID` | Non | `nanko-web` | Chaîne non vide |
 | `VITE_OTEL_EXPORTER_URL` | Non | `""` | URL valide ou chaîne vide (mode no-op) |
+| `VITE_OTEL_LOGS_EXPORTER_URL` | Non | `""` | URL valide ou chaîne vide (auto-dérivé de traces si vide) |
+| `VITE_LOG_LEVEL` | Non | `warn` | Enum `'debug' \| 'info' \| 'warn' \| 'error'` |
 | `VITE_OTEL_SERVICE_NAME` | Non | `nanko-frontend` | Chaîne non vide |
 | `VITE_APP_ENV` | Non | `local` | Chaîne non vide |
 
 * Parsing via `frontendEnvSchema.safeParse()` sur un objet extrait explicitement de `import.meta.env` (compatibilité substitution statique Vite/Rollup).
 * Échec de validation : `throw` immédiat + rendu d'un écran de secours HTML injecté dans `#root` listant les erreurs de schéma.
-* Export figé (`Object.freeze`) : `env.api.baseUrl`, `env.keycloak.{url,realm,clientId}`, `env.otel.{exporterUrl,serviceName,environment}`.
-* Consommé par `frontend/src/lib/api-client.ts`, `frontend/src/lib/keycloak.ts`, et `frontend/src/config/telemetry.ts`.
+* Export figé (`Object.freeze`) : `env.api.baseUrl`, `env.keycloak.{url,realm,clientId}`, `env.otel.{exporterUrl,logsExporterUrl,logLevel,serviceName,environment}`.
+* Consommé par `frontend/src/lib/api-client.ts`, `frontend/src/lib/keycloak.ts`, `frontend/src/config/telemetry.ts` et `frontend/src/config/logger.ts`.
 
 ### Modèle Normalisé d'Erreur API (`frontend/src/types/api.ts`)
 ```typescript

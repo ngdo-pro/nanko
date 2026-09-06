@@ -62,8 +62,10 @@
   - Métriques d'authentification exposées et spans de validation de session/token exportés en gRPC direct via le réseau Docker `edge`.
 * **Backend Symfony 8 :**
   - SDK OpenTelemetry PHP (`open-telemetry/sdk`, `open-telemetry/exporter-otlp`, `open-telemetry/sem-conv`).
-  - `App\Adapter\Driver\Http\OpenTelemetry\TraceSubscriber` : souscripteur HTTP extrayant et injectant `traceparent`, normalisant l'endpoint OTLP (suppression du `/v1/traces` superflu), et forçant le flush des batch spans lors de `kernel.terminate` via `$this->tracerProvider?->shutdown()`.
-  - Résilience fail-open absolue (l'absence de collecteur n'interrompt ni ne ralentit aucune requête).
+  - `App\Adapter\Driver\Http\OpenTelemetry\TraceSubscriber` : souscripteur HTTP extrayant et injectant `traceparent`, normalisant l'endpoint OTLP (suppression du `/v1/traces` superflu), et forçant le flush des batch spans ainsi que des logs Monolog lors de `kernel.terminate` via `$this->tracerProvider?->shutdown()` et `$this->logHandler?->flush()`.
+  - `App\Adapter\Driver\Http\OpenTelemetry\OtelLogHandler` : handler Monolog personnalisé convertissant les `LogRecord` Monolog en structure OTLP v1, extrayant automatiquement `trace_id` et `span_id` depuis le `TracerProvider` actif, bufferisant les logs en mémoire et les expédiant par batch HTTP POST vers l'endpoint `/v1/logs` du collecteur.
+  - Configuration `backend/config/packages/monolog.php` chaînant le flux Docker local `stream` (`php://stderr`) et le handler `otel` conditionné par la présence de l'endpoint OTel et le seuil `%otel.logs_level%`.
+  - Résilience fail-open absolue (l'absence de collecteur n'interrompt ni ne ralentit aucune requête, et n'engendre aucune exception non gérée).
 * **Frontend React 19 (Architecture Bulletproof React) :**
   - Standard modulaire piloté par les fonctionnalités (*feature-based*) selon [Bulletproof React](https://github.com/alan2207/bulletproof-react) :
     - `src/app/` : racine applicative, composition hiérarchique des providers (`AppProvider` regroupant `AppErrorBoundary`, `QueryClientProvider`, `KeycloakProvider`), arbre de routage déclaratif (`AppRouter` avec `react-router` v7) et vues racines (`home.tsx`, `not-found.tsx`).
@@ -76,14 +78,19 @@
   - **Résolution des Alias de Chemins (`@/*`) :** configuration unifiée dans `tsconfig.app.json` et `vite.config.ts` pointant sur `./src/*`.
   - **Client API Universel (`src/lib/api-client.ts`) :** client HTTP encapsulant `fetch`, l'injection automatique du Bearer token JWT Keycloak avec refresh préventif et gestion des erreurs 401 (invalidation/clear du cache `QueryClient`), propagation du contexte de trace W3C `traceparent`, et typage unifié des erreurs sous forme d'`ApiError`.
   - **Cache Serveur & Requêtes TanStack Query :** instance `QueryClient` centralisée (`src/lib/react-query.ts`) avec options par défaut optimisées (retry backoff, staleTime 5min, gcTime 15min).
-  - **Télémétrie OpenTelemetry Web :** SDK Web (`@opentelemetry/sdk-trace-web`, `@opentelemetry/exporter-trace-otlp-http`, `@opentelemetry/instrumentation-fetch`), initialisation dans `src/config/telemetry.ts` et propagation W3C `traceparent` assurée via `apiClient`.
-  - Arguments de build `VITE_OTEL_EXPORTER_URL` et `VITE_APP_ENV` intégrés dans `frontend/Dockerfile` et les workflows GitHub Actions `deploy-prod.yml` et `deploy-preprod.yml`.
+  - **Télémétrie OpenTelemetry Web & Tracing :** SDK Web (`@opentelemetry/sdk-trace-web`, `@opentelemetry/exporter-trace-otlp-http`, `@opentelemetry/instrumentation-fetch`), initialisation dans `src/config/telemetry.ts` et propagation W3C `traceparent` assurée via `apiClient`.
+  - **Logger Unifié & Capture d'Erreurs (`src/config/logger.ts`, `src/components/AppErrorBoundary.tsx`) :**
+    - Module `src/config/logger.ts` fournissant une API unifiée (`debug`, `info`, `warn`, `error`), bufferisant et expédiant les logs OTLP HTTP (`POST /v1/logs`) avec extraction du `trace_id` actif depuis `@opentelemetry/api`.
+    - Déduplication anti-flood sur fenêtre glissante et verrou interne anti-récursion (tout échec d'envoi réseau du logger est étouffé silencieusement sans réinvoquer le logger).
+    - Écouteurs globaux `window.addEventListener('error')` et `window.addEventListener('unhandledrejection')` dans `src/main.tsx` capturant les anomalies runtime et promesses rejetées.
+    - Composant `AppErrorBoundary` interceptant tout plantage dans l'arbre de rendu React, affichant un écran d'incident élégant avec identifiant de trace, et journalisant l'erreur avec pile d'exécution via `logger.error`.
+  - Arguments de build `VITE_OTEL_EXPORTER_URL`, `VITE_OTEL_LOGS_EXPORTER_URL`, `VITE_LOG_LEVEL` et `VITE_APP_ENV` intégrés dans `frontend/Dockerfile` et les workflows GitHub Actions.
 
 ### Configuration Centralisée & Validée par Zod (`frontend/src/config/env.ts`, `tests-e2e/config/env.ts`)
 * Dépendance `zod` ajoutée à `frontend/package.json` (dépendance) et `tests-e2e/package.json` (devDépendance).
 * Chaque package expose un unique module `config/env.ts` qui parse `import.meta.env` (frontend) ou `process.env` (tests-e2e) via un schéma Zod, avec valeurs par défaut *zero-config* alignées sur Docker local.
 * Validation `safeParse` fail-fast : toute variable manquante ou mal formée lève une exception explicite au chargement plutôt que de propager un `undefined`.
-* Export figé (`Object.freeze`) d'un objet `env` fortement typé (`AppEnv`, `E2EEnv`), consommé exclusivement par `frontend/src/lib/api-client.ts`, `frontend/src/lib/keycloak.ts`, `frontend/src/config/telemetry.ts`, `tests-e2e/playwright.config.ts` et `tests-e2e/tests/helpers/keycloak.ts`.
+* Export figé (`Object.freeze`) d'un objet `env` fortement typé (`AppEnv`, `E2EEnv`), consommé exclusivement par `frontend/src/lib/api-client.ts`, `frontend/src/lib/keycloak.ts`, `frontend/src/config/telemetry.ts`, `frontend/src/config/logger.ts`, `tests-e2e/playwright.config.ts` et `tests-e2e/tests/helpers/keycloak.ts`.
 * Aucun accès direct à `import.meta.env` (hors `frontend/src/config/env.ts`) ni à `process.env` (hors `tests-e2e/config/env.ts`) ne subsiste dans le code applicatif ou les tests.
 
 ### Tests E2E Playwright (`tests-e2e/`)
@@ -92,6 +99,7 @@
 * Workflow CI `pr-preprod-e2e.yml` transmettant les secrets `PREPROD_HTTP_USER` et `PREPROD_HTTP_PASSWORD` lors de l'exécution du job Playwright.
 * `tests-e2e/tests/app/telemetry.spec.ts` validant la conformité du header W3C `traceparent` et la résilience fail-open.
 * `tests-e2e/tests/app/robots.spec.ts` validant la présence de l'en-tête HTTP `X-Robots-Tag` (`noindex, nofollow`) sur l'application et la réponse standardisée `200 OK` sur `/robots.txt` (`User-agent: *`, `Disallow: /`).
+* `tests-e2e/tests/app/logging.spec.ts` validant la capture des exceptions par l'ErrorBoundary, l'affichage de l'identifiant d'incident et la résilience fail-open en cas d'indisponibilité du endpoint OTLP.
 
 ---
 
@@ -100,6 +108,7 @@
 * Les runs de préproduction sont strictement sérialisés pour garantir l'isolation des tests E2E.
 * L'endpoint de diagnostic `/api/v1/version` est public, sans dépendance à la base de données, assurant un temps de réponse instantané et une disponibilité maximale en tant que health check applicatif.
 * La télémétrie OpenTelemetry applique un principe de **fail-open absolu** : aucun composant ne doit échouer ni bloquer en cas d'indisponibilité du collecteur.
+* Le transport des logs OpenTelemetry intègre une protection stricte contre les **boucles de récursion infinies** : un échec d'exporteur ne doit en aucun cas déclencher une nouvelle émission de log.
 * Le sas HTTP Basic Auth est strictement restreint à la préproduction : il ne s'applique ni au local ni à la production, et n'altère en rien les flux d'authentification applicatifs Keycloak OIDC.
 * La protection anti-indexation (`X-Robots-Tag` durci et consigne `Disallow: /` sur `/robots.txt`) est strictement cantonnée à la préproduction et aux outils internes (SigNoz), pour garantir l'étanchéité SEO totale sans impacter la découvrabilité du domaine de production.
 
@@ -108,3 +117,4 @@
 ## 3. ADRs de Référence
 * `ADR-0007` : Postgres seul pour le MVP applicatif & exception documentée pour le datastore ClickHouse de SigNoz.
 * `ADR-0010` : Déploiement préproduction sans secret SSH via GHCR et Watchtower.
+
