@@ -36,6 +36,6 @@ test.describe('Protection anti-indexation et directives robots en préproduction
     const robotsHeader = response.headers.get('x-robots-tag')
 
     expect(robotsHeader).not.toBeNull()
-    expect(robotsHeader?.toLowerCase()).toContain('noindex')
+    expect(robotsHeader?.toLowerCase()).toMatch(/noindex|none/)
   })
 })
