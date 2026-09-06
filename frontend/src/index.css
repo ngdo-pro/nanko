@@ -2,6 +2,7 @@
   color-scheme: light;
 
   --bg: #F7F4EF;
+  --canvas-bg: #FFFFFF;
   --surface: #FFFFFF;
   --surface-accent: #FFFFFF;
   --border: #E3DED4;
@@ -35,6 +36,7 @@
   color-scheme: dark;
 
   --bg: #04141A;
+  --canvas-bg: #011C25;
   --surface: #061A1F;
   --surface-accent: #08191F;
   --border: #123039;
@@ -64,6 +66,7 @@
     color-scheme: dark;
 
     --bg: #04141A;
+    --canvas-bg: #011C25;
     --surface: #061A1F;
     --surface-accent: #08191F;
     --border: #123039;

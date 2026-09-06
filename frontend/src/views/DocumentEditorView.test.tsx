@@ -5,6 +5,14 @@ import { renderWithProviders } from '@/testing/test-utils'
 import { DocumentEditorView } from './DocumentEditorView'
 import * as documentHooks from '@/features/documents'
 
+beforeAll(() => {
+  global.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  }
+})
+
 vi.mock('@/features/documents', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features/documents')>()
   return {
@@ -114,4 +122,95 @@ describe('DocumentEditorView', () => {
     expect(screen.getByTestId('document-error-view')).toBeInTheDocument()
     expect(screen.getByText(/Document introuvable/i)).toBeInTheDocument()
   })
+
+  it('permet de basculer entre les modes Split, Canvas et Code', async () => {
+    const user = userEvent.setup()
+
+    vi.mocked(documentHooks.useDocument).mockReturnValue({
+      data: {
+        id: 'doc-456',
+        projectId: 'proj-123',
+        name: 'Architecture Test',
+        slug: 'architecture-test',
+        layer: 0,
+        sourceCode: 'rectangle front "Front"',
+        ast: {
+          shapes: [{ id: 'front', type: 'rectangle', label: 'Front' }],
+          connectors: [],
+          layout: {},
+        },
+        createdAt: '2026-09-06T12:00:00Z',
+        updatedAt: '2026-09-06T12:00:00Z',
+      },
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof documentHooks.useDocument>)
+
+    renderWithProviders(<DocumentEditorView />)
+
+    // Mode initial : Split
+    expect(screen.getByTestId('layout-mode-split')).toHaveClass('is-active')
+    expect(screen.getByTestId('source-code-textarea')).toBeInTheDocument()
+    expect(screen.getByTestId('nanko-canvas')).toBeInTheDocument()
+
+    // Basculement vers Canvas
+    await user.click(screen.getByTestId('layout-mode-canvas'))
+    expect(screen.getByTestId('layout-mode-canvas')).toHaveClass('is-active')
+    expect(screen.getByTestId('nanko-canvas')).toBeInTheDocument()
+    expect(screen.queryByTestId('source-code-textarea')).not.toBeInTheDocument()
+
+    // Basculement vers Code
+    await user.click(screen.getByTestId('layout-mode-code'))
+    expect(screen.getByTestId('layout-mode-code')).toHaveClass('is-active')
+    expect(screen.getByTestId('source-code-textarea')).toBeInTheDocument()
+    expect(screen.queryByTestId('nanko-canvas')).not.toBeInTheDocument()
+
+    // Retour vers Split
+    await user.click(screen.getByTestId('layout-mode-split'))
+    expect(screen.getByTestId('layout-mode-split')).toHaveClass('is-active')
+    expect(screen.getByTestId('source-code-textarea')).toBeInTheDocument()
+    expect(screen.getByTestId('nanko-canvas')).toBeInTheDocument()
+  })
+
+  it('affiche correctement les shapes sur le canvas lors du clic sur le bouton Canvas après modification du code', async () => {
+    const user = userEvent.setup()
+
+    vi.mocked(documentHooks.useDocument).mockReturnValue({
+      data: {
+        id: 'doc-456',
+        projectId: 'proj-123',
+        name: 'Architecture Test',
+        slug: 'architecture-test',
+        layer: 0,
+        sourceCode: 'rectangle front "Front"',
+        ast: {
+          shapes: [{ id: 'front', type: 'rectangle', label: 'Front' }],
+          connectors: [],
+          layout: {},
+        },
+        createdAt: '2026-09-06T12:00:00Z',
+        updatedAt: '2026-09-06T12:00:00Z',
+      },
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof documentHooks.useDocument>)
+
+    renderWithProviders(<DocumentEditorView />)
+
+    // Modification du code dans l'éditeur
+    const textarea = screen.getByTestId('source-code-textarea')
+    await user.clear(textarea)
+    await user.type(textarea, 'rectangle api "API Gateway"{enter}circle db "Database"')
+
+    // Clic sur le bouton Canvas
+    const canvasBtn = screen.getByTestId('layout-mode-canvas')
+    await user.click(canvasBtn)
+
+    // Le canvas doit afficher les nouvelles shapes même avant sauvegarde
+    expect(screen.getByTestId('canvas-node-api')).toBeInTheDocument()
+    expect(screen.getByText('API Gateway')).toBeInTheDocument()
+    expect(screen.getByTestId('canvas-node-db')).toBeInTheDocument()
+    expect(screen.getByText('Database')).toBeInTheDocument()
+  })
 })
+
