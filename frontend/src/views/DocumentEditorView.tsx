@@ -1,6 +1,16 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import { useDocument, useUpdateDocument } from '@/features/documents'
+import {
+  useDocument,
+  useUpdateDocument,
+  NankoCanvas,
+  LayoutSelector,
+  type LayoutMode,
+  updateNankoSourceLayout,
+  updateNankoSourceBulkLayout,
+  parseNankoSource,
+  type NankoAst,
+} from '@/features/documents'
 import { SourceCodeEditor } from '@/features/documents/components/SourceCodeEditor'
 import { AstInspector } from '@/features/documents/components/AstInspector'
 import { Spinner } from '@/components/ui/Spinner'
@@ -17,6 +27,31 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
   const updateMutation = useUpdateDocument()
   const [code, setCode] = useState<string>(document.sourceCode)
   const [syntaxError, setSyntaxError] = useState<string | null>(null)
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>('split')
+
+  const { ast: parsedAst, syntaxError: localSyntaxError } = useMemo(
+    () => parseNankoSource(code),
+    [code],
+  )
+
+  const activeAst = useMemo<NankoAst>(() => {
+    if (parsedAst.shapes.length > 0 || parsedAst.connectors.length > 0) {
+      const mergedLayout = {
+        ...(document.ast?.layout ?? {}),
+        ...parsedAst.layout,
+      }
+      return {
+        ...parsedAst,
+        layout: mergedLayout,
+      }
+    }
+    if (code === document.sourceCode && document.ast) {
+      return document.ast
+    }
+    return parsedAst
+  }, [parsedAst, code, document.sourceCode, document.ast])
+
+  const effectiveSyntaxError = syntaxError || localSyntaxError
 
   const hasUnsavedChanges = code !== document.sourceCode
 
@@ -58,6 +93,14 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
     }
   }
 
+  const handleNodePositionChange = (nodeId: string, position: { x: number; y: number }) => {
+    setCode((prevCode) => updateNankoSourceLayout(prevCode, nodeId, position))
+  }
+
+  const handleAutoLayoutApplied = (layout: Record<string, { x: number; y: number }>) => {
+    setCode((prevCode) => updateNankoSourceBulkLayout(prevCode, layout))
+  }
+
   return (
     <div className="editor-studio" data-qa="document-editor-view">
       {/* Barre d'outils supérieure */}
@@ -82,6 +125,11 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
             </div>
             <span className="editor-doc-slug">{document.slug}</span>
           </div>
+        </div>
+
+        {/* Sélecteur de mode central */}
+        <div className="editor-topbar-center">
+          <LayoutSelector mode={layoutMode} onChange={setLayoutMode} />
         </div>
 
         <div className="editor-topbar-right">
@@ -116,22 +164,72 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
         </div>
       </header>
 
-      {/* Zone de travail en 2 colonnes */}
-      <div className="editor-workspace-grid">
-        {/* Éditeur de code source */}
-        <SourceCodeEditor
-          value={code}
-          onChange={setCode}
-          onSave={handleSave}
-          disabled={updateMutation.isPending}
-          documentSlug={document.slug}
-        />
+      {/* Alerte erreur de syntaxe */}
+      {effectiveSyntaxError && (
+        <div
+          className="syntax-error-card editor-syntax-error-banner"
+          role="alert"
+          data-qa="syntax-error-alert"
+          style={{ marginBottom: '1rem' }}
+        >
+          <div className="syntax-error-header">
+            <span>⚠️</span>
+            <span>Erreur de syntaxe .nanko</span>
+          </div>
+          <p style={{ margin: 0 }}>{effectiveSyntaxError}</p>
+        </div>
+      )}
 
-        {/* Volet d'inspection AST */}
-        <AstInspector
-          ast={document.ast}
-          syntaxError={syntaxError}
-        />
+      {/* Zone de travail selon le mode sélectionné */}
+      <div className={`editor-workspace-container layout-${layoutMode}`}>
+        {layoutMode === 'split' && (
+          <div className="editor-workspace-grid mode-split">
+            <SourceCodeEditor
+              value={code}
+              onChange={setCode}
+              onSave={handleSave}
+              disabled={updateMutation.isPending}
+              documentSlug={document.slug}
+            />
+            <NankoCanvas
+              ast={activeAst}
+              syntaxError={effectiveSyntaxError}
+              onNodePositionChange={handleNodePositionChange}
+              onAutoLayoutApplied={handleAutoLayoutApplied}
+            />
+          </div>
+        )}
+
+        {layoutMode === 'canvas' && (
+          <div className="editor-workspace-canvas-only mode-canvas">
+            <NankoCanvas
+              ast={activeAst}
+              syntaxError={effectiveSyntaxError}
+              onNodePositionChange={handleNodePositionChange}
+              onAutoLayoutApplied={handleAutoLayoutApplied}
+            />
+          </div>
+        )}
+
+        {layoutMode === 'code' && (
+          <div className="editor-workspace-code-only mode-code">
+            <div className="code-editor-full">
+              <SourceCodeEditor
+                value={code}
+                onChange={setCode}
+                onSave={handleSave}
+                disabled={updateMutation.isPending}
+                documentSlug={document.slug}
+              />
+            </div>
+            <div className="code-ast-inspector-side">
+              <AstInspector
+                ast={activeAst}
+                syntaxError={effectiveSyntaxError}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

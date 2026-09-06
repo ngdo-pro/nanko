@@ -97,6 +97,18 @@ describe('Documents Schemas', () => {
         expect(result.data.layout).toEqual({})
       }
     })
+
+    it('tolère un tableau vide pour layout et le transforme en objet vide', () => {
+      const result = nankoAstSchema.safeParse({
+        shapes: [],
+        connectors: [],
+        layout: [],
+      })
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.layout).toEqual({})
+      }
+    })
   })
 
   describe('documentDetailSchema', () => {

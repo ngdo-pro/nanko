@@ -901,6 +901,7 @@
   flex-direction: column;
   gap: 1.25rem;
   width: 100%;
+  flex: 1;
 }
 
 .editor-topbar {
@@ -1326,5 +1327,396 @@
   max-width: 420px;
   margin: 0;
 }
+
+/* --------------------------------------------------------------------------
+   CANVAS INTERACTIF & REACT FLOW (Spec 015 - Palette 4A Blueprint)
+   -------------------------------------------------------------------------- */
+
+.editor-topbar-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+.layout-selector-group {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--code-bg);
+  border: 1px solid var(--border);
+  padding: 2px;
+  gap: 2px;
+}
+
+.layout-selector-btn {
+  padding: 0.35rem 0.85rem;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.layout-selector-btn:hover {
+  color: var(--heading);
+}
+
+.layout-selector-btn.is-active {
+  background-color: var(--surface);
+  color: var(--brand);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.editor-workspace-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.editor-workspace-grid.mode-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  height: calc(100vh - 220px);
+  min-height: 600px;
+  flex: 1;
+}
+
+.editor-workspace-canvas-only.mode-canvas {
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 220px);
+  min-height: 650px;
+  flex: 1;
+}
+
+.editor-workspace-code-only.mode-code {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1rem;
+  height: calc(100vh - 220px);
+  min-height: 600px;
+  flex: 1;
+}
+
+.code-editor-full {
+  height: 100%;
+  min-height: 550px;
+}
+
+.code-ast-inspector-side {
+  height: 100%;
+  min-height: 550px;
+}
+
+/* Conteneur principal Nanko Canvas */
+.nanko-canvas-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 600px;
+  background-color: var(--canvas-bg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.nanko-canvas-container .react-flow,
+.nanko-canvas-container .react-flow.dark,
+.nanko-canvas-container .react-flow.light {
+  width: 100% !important;
+  height: 100% !important;
+  flex: 1 1 auto;
+  min-height: 600px;
+  background-color: var(--canvas-bg) !important;
+  --xy-background-color: var(--canvas-bg);
+  --xy-background-color-default: var(--canvas-bg);
+}
+
+/* Badge pause syntaxe */
+.canvas-syntax-pause-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background-color: var(--accent-soft-bg);
+  border: 1px solid var(--accent);
+  color: var(--accent-current-text);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.pause-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--accent);
+  animation: status-pulse 1.8s infinite;
+}
+
+@keyframes status-pulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+/* État vide du canvas */
+.canvas-empty-state {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding: 1.5rem 2rem;
+  background-color: var(--surface);
+  border: 1px dashed var(--border-strong);
+  max-width: 440px;
+  pointer-events: none;
+}
+
+.canvas-empty-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.canvas-empty-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.canvas-empty-subtitle code {
+  background-color: var(--bg);
+  padding: 0.15rem 0.35rem;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  font-family: var(--font-mono);
+}
+
+/* Nœuds personnalisés Blueprint */
+.nanko-node {
+  border-radius: 0;
+  font-family: var(--font-mono);
+  position: relative;
+  box-sizing: border-box;
+  cursor: grab;
+  user-select: none;
+}
+
+.nanko-node:active {
+  cursor: grabbing;
+}
+
+.nanko-node-rectangle {
+  min-width: 190px;
+  background-color: var(--surface);
+  border: 1.5px solid var(--border-strong);
+}
+
+.nanko-node-rectangle:hover {
+  border-color: var(--brand);
+}
+
+.nanko-node-rectangle.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.nanko-node-circle {
+  min-width: 160px;
+  background-color: var(--surface);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 20px;
+}
+
+.nanko-node-circle:hover {
+  border-color: var(--brand);
+}
+
+.nanko-node-circle.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.nanko-node-text {
+  min-width: 140px;
+  background-color: color-mix(in srgb, var(--surface) 75%, transparent);
+  border: 1px dashed var(--border-soft);
+}
+
+.nanko-node-text:hover {
+  border-color: var(--brand);
+}
+
+.nanko-node-text.is-selected {
+  border-color: var(--accent);
+}
+
+.nanko-node-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3rem 0.65rem;
+  border-bottom: 1px solid var(--border);
+  background-color: color-mix(in srgb, var(--bg) 60%, transparent);
+}
+
+.nanko-node-badge {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.nanko-node-id {
+  font-size: 0.72rem;
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.nanko-node-body {
+  padding: 0.6rem 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.nanko-node-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--heading);
+  word-break: break-word;
+}
+
+/* Ports de connexion Handles (7px carrés avec débordement de 3.5px) */
+.nanko-handle {
+  width: 7px !important;
+  height: 7px !important;
+  border-radius: 0 !important;
+  background-color: var(--surface) !important;
+  border: 1.5px solid var(--brand) !important;
+  transition: transform 0.12s ease, background-color 0.12s ease;
+}
+
+.nanko-handle:hover {
+  background-color: var(--brand) !important;
+  transform: scale(1.4);
+}
+
+.nanko-handle-left {
+  left: -4px !important;
+}
+
+.nanko-handle-right {
+  right: -4px !important;
+}
+
+.nanko-handle-top {
+  top: -4px !important;
+}
+
+.nanko-handle-bottom {
+  bottom: -4px !important;
+}
+
+/* Labels d'arêtes */
+.nanko-edge-label-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nanko-edge-label {
+  background-color: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--heading);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 0.15rem 0.45rem;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Barre de contrôles flottante */
+.canvas-custom-controls {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  padding: 3px;
+  gap: 2px;
+  margin: 16px;
+}
+
+.canvas-control-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  height: 28px;
+  min-width: 28px;
+  padding: 0 0.5rem;
+  border: none;
+  background: transparent;
+  color: var(--heading);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.canvas-control-btn:hover {
+  background-color: var(--code-bg);
+  color: var(--brand);
+}
+
+.canvas-control-btn.is-active {
+  background-color: color-mix(in srgb, var(--brand) 15%, transparent);
+  color: var(--brand);
+}
+
+.btn-auto-layout {
+  font-weight: 600;
+}
+
+.canvas-control-divider {
+  width: 1px;
+  height: 18px;
+  background-color: var(--border);
+  margin: 0 2px;
+}
+
+.nanko-minimap {
+  background-color: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+}
+
 
 

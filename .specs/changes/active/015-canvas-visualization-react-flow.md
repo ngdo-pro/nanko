@@ -368,31 +368,31 @@ export function updateNankoSourceLayout(
 
 ## 9. Plan d'exécution séquentiel
 
-- [ ] **Phase 1 : Dépendances & Algorithmes de Layout (`frontend/`)**
-  - [ ] 1. Installer `@xyflow/react`, `@dagrejs/dagre` et `@types/dagre` dans `frontend/package.json`.
-  - [ ] 2. Implémenter et tester unitairement `syncLayoutToSource.ts` (injection et mise à jour de `!LAYOUT` dans le code source).
-  - [ ] 3. Implémenter et tester unitairement `dagreLayout.ts` (calcul automatique des coordonnées pour les shapes sans position).
+- [x] **Phase 1 : Dépendances & Algorithmes de Layout (`frontend/`)**
+  - [x] 1. Installer `@xyflow/react`, `@dagrejs/dagre` et `@types/dagre` dans `frontend/package.json`.
+  - [x] 2. Implémenter et tester unitairement `syncLayoutToSource.ts` (injection et mise à jour de `!LAYOUT` dans le code source).
+  - [x] 3. Implémenter et tester unitairement `dagreLayout.ts` (calcul automatique des coordonnées pour les shapes sans position).
 
-- [ ] **Phase 2 : Nœuds, Arêtes & Composants React Flow (`frontend/src/features/documents/components/canvas/`)**
-  - [ ] 1. Créer les composants de nœuds personnalisés (`RectangleNode`, `CircleNode`, `TextNode`) avec handles de connexion et classes Tailwind dark-theme.
-  - [ ] 2. Créer le composant d'arête personnalisée (`NankoEdge`) avec flèche de direction et label lisible.
-  - [ ] 3. Assembler le composant principal `NankoCanvas` avec `ReactFlowProvider`, `Background` (dots), `Controls` et `MiniMap`.
+- [x] **Phase 2 : Nœuds, Arêtes & Composants React Flow (`frontend/src/features/documents/components/canvas/`)**
+  - [x] 1. Créer les composants de nœuds personnalisés (`RectangleNode`, `CircleNode`, `TextNode`) avec handles de connexion et classes Tailwind dark-theme.
+  - [x] 2. Créer le composant d'arête personnalisée (`NankoEdge`) avec flèche de direction et label lisible.
+  - [x] 3. Assembler le composant principal `NankoCanvas` avec `ReactFlowProvider`, `Background` (dots), `Controls` et `MiniMap`.
 
-- [ ] **Phase 3 : Intégration dans `DocumentEditorView` & Agencement (`frontend/src/views/`)**
-  - [ ] 1. Ajouter le sélecteur de disposition (`Split`, `Canvas`, `Code`) dans `DocumentEditorHeader`.
-  - [ ] 2. Intégrer `NankoCanvas` dans la vue d'édition en remplacement ou en complément de l'inspecteur d'AST textuel.
-  - [ ] 3. Brancher l'événement `onNodeDragStop` sur `updateNankoSourceLayout` pour mettre à jour l'état du code source et marquer le document comme non enregistré.
-  - [ ] 4. Ajouter le bouton d'action « Auto-Layout » permettant de recalculer l'agencement global d'un clic.
-  - [ ] **Quality Gates Frontend :** `pnpm --filter frontend typecheck`, `pnpm --filter frontend lint` et `pnpm --filter frontend test`.
+- [x] **Phase 3 : Intégration dans `DocumentEditorView` & Agencement (`frontend/src/views/`)**
+  - [x] 1. Ajouter le sélecteur de disposition (`Split`, `Canvas`, `Code`) dans `DocumentEditorHeader`.
+  - [x] 2. Intégrer `NankoCanvas` dans la vue d'édition en remplacement ou en complément de l'inspecteur d'AST textuel.
+  - [x] 3. Brancher l'événement `onNodeDragStop` sur `updateNankoSourceLayout` pour mettre à jour l'état du code source et marquer le document comme non enregistré.
+  - [x] 4. Ajouter le bouton d'action « Auto-Layout » permettant de recalculer l'agencement global d'un clic.
+  - [x] **Quality Gates Frontend :** `pnpm --filter frontend typecheck`, `pnpm --filter frontend lint` et `pnpm --filter frontend test`.
 
-- [ ] **Phase 4 : Tests E2E Playwright (`tests-e2e/`)**
-  - [ ] 1. Écrire le scénario `tests/app/canvas-visualization.spec.ts` :
+- [x] **Phase 4 : Tests E2E Playwright (`tests-e2e/`)**
+  - [x] 1. Écrire le scénario `tests/app/canvas-visualization.spec.ts` :
     - Vérification du rendu visuel des nœuds React Flow.
     - Basculement entre les modes Split, Canvas plein écran et Code.
     - Déplacement d'un nœud via glisser-déposer sur le Canvas.
     - Vérification de la mise à jour de la section `!LAYOUT` dans l'éditeur.
     - Sauvegarde via `Cmd+S` et persistance confirmée après rechargement de la page.
-  - [ ] **Quality Gates E2E :** Exécution réussie des tests Playwright.
+  - [x] **Quality Gates E2E :** Exécution réussie des tests Playwright.
 
 - [ ] **Phase 5 : Synchronisation documentaire & Archivage**
   - [ ] 1. Répercuter le delta dans `.specs/current/domains/workspace-management/`.
