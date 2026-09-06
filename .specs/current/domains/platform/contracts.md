@@ -18,7 +18,22 @@
   }
   ```
 
+### `GET /robots.txt`
+* **Authentification :** `PUBLIC_ACCESS` (accessible sans authentification, exempté de Basic Auth sur tous les sous-domaines de préproduction)
+* **Headers de réponse :**
+  - `Content-Type: text/plain; charset=utf-8`
+  - `X-Robots-Tag: noindex, nofollow, noarchive, nosnippet, notranslate, noimageindex`
+* **Description :** Directive d'exclusion globale RFC 9309 interceptée nativement au niveau Caddy pour interdire l'exploration de tous les robots et crawlers sur la préproduction (`app`, `auth`, `www`, `api`).
+
+#### Réponses
+* `200 OK` :
+  ```text
+  User-agent: *
+  Disallow: /
+  ```
+
 ---
+
 
 ## 2. Configuration d'Exécution & Variables d'Environnement
 
@@ -141,14 +156,18 @@ export class ApiError extends Error {
 
 ---
 
-## 5. Protocole HTTP Basic Auth (RFC 7617) — Préproduction
-* **Sous-domaines cibles :** `app.preprod.nanko.dev`
-* **En-tête de challenge (requête anonyme) :** `WWW-Authenticate: Basic realm="Nanko Preproduction"`
+## 5. Protocole HTTP Basic Auth (RFC 7617) & Directives Anti-Indexation — Préproduction
+* **Sous-domaines cibles Basic Auth :** `app.preprod.nanko.dev`, `api.preprod.nanko.dev`, `www.preprod.nanko.dev` (exemption systématique de `/robots.txt`).
+* **Sous-domaine IAM :** `auth.preprod.nanko.dev` (exempt de Basic Auth, protégé par mire OIDC et `X-Robots-Tag`).
+* **Stack Observabilité :** `signoz.nanko.dev` (protégée par Basic Auth et `X-Robots-Tag`).
+* **En-tête de challenge (requête anonyme hors robots.txt) :** `WWW-Authenticate: Basic realm="Nanko Preproduction"`
 * **En-tête de requête attendu :** `Authorization: Basic <base64(user:password)>`
 * **Codes retour :**
   - Sans en-tête / échec : `401 Unauthorized`
   - Avec identifiants valides : code de statut du service sous-jacent (`200 OK`, etc.)
-* **En-tête anti-indexation systématique :** `X-Robots-Tag: "noindex, nofollow"`
+  - Requête `GET /robots.txt` : `200 OK` direct sans challenge
+* **En-tête anti-indexation systématique :**
+  `X-Robots-Tag: "noindex, nofollow, noarchive, nosnippet, notranslate, noimageindex"` (appliqué sur l'intégralité des réponses HTTP de préproduction et SigNoz).
 
 ---
 
