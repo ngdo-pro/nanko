@@ -685,6 +685,7 @@ make lint
 # 2. Frontend
 pnpm --filter frontend typecheck
 pnpm --filter frontend lint
+pnpm --filter frontend test
 
 # 3. End-to-End
 pnpm --filter tests-e2e test
