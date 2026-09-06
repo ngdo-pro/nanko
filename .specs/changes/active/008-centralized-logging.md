@@ -357,37 +357,37 @@ export const frontendEnvSchema = z.object({
 
 ## 9. Plan d'exécution séquentiel
 
-- [ ] **Phase 1 : Backend Symfony (`backend/`)**
-  - [ ] 1. Créer le handler Monolog `App\Adapter\Driver\Http\OpenTelemetry\OtelLogHandler` :
+- [x] **Phase 1 : Backend Symfony (`backend/`)**
+  - [x] 1. Créer le handler Monolog `App\Adapter\Driver\Http\OpenTelemetry\OtelLogHandler` :
     - Conversion des enregistrements Monolog en structure OTLP LogRecord.
     - Extraction automatique de `trace_id` et `span_id` depuis le `TracerProvider` actif.
     - Transmission HTTP batch vers `/v1/logs` du collecteur.
-  - [ ] 2. Mettre à jour `backend/config/packages/monolog.php` pour ajouter le handler `otel` chaîné au handler `main` (`stream`), avec le niveau défini par `OTEL_LOGS_LEVEL`.
-  - [ ] 3. Intégrer le flush des logs dans `TraceSubscriber::onKernelTerminate` ou écouteur dédié.
-  - [ ] **Validation Architecture & Tests Backend :**
+  - [x] 2. Mettre à jour `backend/config/packages/monolog.php` pour ajouter le handler `otel` chaîné au handler `main` (`stream`), avec le niveau défini par `OTEL_LOGS_LEVEL`.
+  - [x] 3. Intégrer le flush des logs dans `TraceSubscriber::onKernelTerminate` ou écouteur dédié.
+  - [x] **Validation Architecture & Tests Backend :**
     - `make deptrac`
     - `make static-analysis`
     - `make test-backend`
 
-- [ ] **Phase 2 : Frontend React (`frontend/`)**
-  - [ ] 1. Mettre à jour `frontend/src/config/env.ts` avec `VITE_OTEL_LOGS_EXPORTER_URL` et `VITE_LOG_LEVEL`.
-  - [ ] 2. Créer le module `frontend/src/config/logger.ts` :
+- [x] **Phase 2 : Frontend React (`frontend/`)**
+  - [x] 1. Mettre à jour `frontend/src/config/env.ts` avec `VITE_OTEL_LOGS_EXPORTER_URL` et `VITE_LOG_LEVEL`.
+  - [x] 2. Créer le module `frontend/src/config/logger.ts` :
     - Interface unifiée `logger.info`, `logger.warn`, `logger.error`, `logger.debug`.
     - Exporteur fail-open vers `otlp.nanko.dev/v1/logs`.
     - Injection du `trace_id` actif.
     - Anti-boucle et déduplication des erreurs fréquentes.
-  - [ ] 3. Ajouter les écouteurs globaux d'erreurs non gérées (`window.onerror`, `window.onunhandledrejection`) dans `main.tsx`.
-  - [ ] 4. Créer le composant `frontend/src/components/AppErrorBoundary.tsx` et encapsuler l'arborescence racine dans `main.tsx`.
-  - [ ] **Validation Frontend :**
+  - [x] 3. Ajouter les écouteurs globaux d'erreurs non gérées (`window.onerror`, `window.onunhandledrejection`) dans `main.tsx`.
+  - [x] 4. Créer le composant `frontend/src/components/AppErrorBoundary.tsx` et encapsuler l'arborescence racine dans `main.tsx`.
+  - [x] **Validation Frontend :**
     - `pnpm --filter frontend typecheck`
     - `pnpm --filter frontend lint`
 
-- [ ] **Phase 3 : Tests E2E & Validation d'Intégration (`tests-e2e/`)**
-  - [ ] 1. Créer un test `tests-e2e/tests/app/logging.spec.ts` validant :
+- [x] **Phase 3 : Tests E2E & Validation d'Intégration (`tests-e2e/`)**
+  - [x] 1. Créer un test `tests-e2e/tests/app/logging.spec.ts` validant :
     - L'interception d'une erreur React par `AppErrorBoundary` et l'affichage de l'identifiant d'incident.
     - La transmission sans blocage du log vers le endpoint OTLP mocké ou intercepté.
     - Le comportement fail-open en cas d'indisponibilité du endpoint OTLP.
-  - [ ] **Validation E2E :**
+  - [x] **Validation E2E :**
     - `pnpm --filter tests-e2e exec playwright test`
 
 - [ ] **Phase 4 : Synchronisation documentaire (Automatisable via `/sync-current`)**

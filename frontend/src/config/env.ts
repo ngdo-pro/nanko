@@ -23,6 +23,13 @@ export const frontendEnvSchema = z.object({
     .optional()
     .or(z.literal(''))
     .default(''),
+  VITE_OTEL_LOGS_EXPORTER_URL: z
+    .string()
+    .url('VITE_OTEL_LOGS_EXPORTER_URL doit être une URL valide')
+    .optional()
+    .or(z.literal(''))
+    .default(''),
+  VITE_LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('warn'),
   VITE_OTEL_SERVICE_NAME: z.string().min(1).default('nanko-frontend'),
   VITE_APP_ENV: z.string().min(1).default('local'),
 })
@@ -34,6 +41,8 @@ const rawEnv = {
   VITE_KEYCLOAK_REALM: import.meta.env?.VITE_KEYCLOAK_REALM,
   VITE_KEYCLOAK_CLIENT_ID: import.meta.env?.VITE_KEYCLOAK_CLIENT_ID,
   VITE_OTEL_EXPORTER_URL: import.meta.env?.VITE_OTEL_EXPORTER_URL,
+  VITE_OTEL_LOGS_EXPORTER_URL: import.meta.env?.VITE_OTEL_LOGS_EXPORTER_URL,
+  VITE_LOG_LEVEL: import.meta.env?.VITE_LOG_LEVEL,
   VITE_OTEL_SERVICE_NAME: import.meta.env?.VITE_OTEL_SERVICE_NAME,
   VITE_APP_ENV: import.meta.env?.VITE_APP_ENV,
 }
@@ -89,6 +98,8 @@ export const env = Object.freeze({
   },
   otel: {
     exporterUrl: parsed.data.VITE_OTEL_EXPORTER_URL,
+    logsExporterUrl: parsed.data.VITE_OTEL_LOGS_EXPORTER_URL,
+    logLevel: parsed.data.VITE_LOG_LEVEL,
     serviceName: parsed.data.VITE_OTEL_SERVICE_NAME,
     environment: parsed.data.VITE_APP_ENV,
   },

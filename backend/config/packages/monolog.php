@@ -13,6 +13,10 @@ return App::config([
                 'level' => 'info',
                 'formatter' => 'monolog.formatter.json',
             ],
+            'otel' => [
+                'type' => 'service',
+                'id' => \App\Adapter\Driver\Http\OpenTelemetry\OtelLogHandler::class,
+            ],
         ],
     ],
 ]);
