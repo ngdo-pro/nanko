@@ -19,6 +19,7 @@ Utilisez ce skill lorsque l'utilisateur demande d'implémenter une spécificatio
 3. **Implémentation Frontend (`frontend/`) :**
    * Schémas Zod et types dans `frontend/src/features/[feature]/schemas.ts`.
    * Hooks TanStack Query et composants UI (gestion des 5 états : Idle, Submitting, Error Validation, Error Server, Success).
+   * **Variables d'environnement `VITE_*` :** En cas d'ajout ou modification de variables dans `frontend/src/config/env.ts` et `frontend/Dockerfile`, répercuter obligatoirement les variables et `build-args` dans TOUS les workflows CI/CD (`.github/workflows/deploy-prod.yml`, `deploy-preprod.yml`, `pr-preprod-e2e.yml`).
 4. **Implémentation E2E (`tests-e2e/`) :**
    * Tests Playwright dans `tests-e2e/tests/` d'après les scénarios Gherkin.
 5. **Quality Gates :**

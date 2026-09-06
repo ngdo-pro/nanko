@@ -205,6 +205,12 @@ Les applications Frontend et Landing doivent autoriser l'exécution du script Pl
 | `VITE_PLAUSIBLE_DOMAIN` | `frontend` / `landing` | Tous | Domaine déclaré dans Plausible (`nanko.dev` ou `preprod.nanko.dev`). |
 | `VITE_PLAUSIBLE_API_HOST` | `frontend` / `landing` | Tous | URL du serveur Plausible (`https://plausible.nanko.dev`). |
 
+### 5.2. Propagation dans les Workflows CI/CD GitHub Actions
+Puisque le frontend React est compilé statiquement avec Vite (`pnpm build`) lors de la construction Docker (`frontend/Dockerfile`), les variables préfixées `VITE_*` doivent obligatoirement être transmises en tant que `build-args` Docker dans tous les workflows de déploiement et de test :
+* `.github/workflows/deploy-prod.yml` : `VITE_PLAUSIBLE_DOMAIN=nanko.dev`, `VITE_PLAUSIBLE_API_HOST=https://plausible.nanko.dev`.
+* `.github/workflows/deploy-preprod.yml` : `VITE_PLAUSIBLE_DOMAIN=preprod.nanko.dev`, `VITE_PLAUSIBLE_API_HOST=https://plausible.nanko.dev`.
+* `.github/workflows/pr-preprod-e2e.yml` : `VITE_PLAUSIBLE_DOMAIN=preprod.nanko.dev`, `VITE_PLAUSIBLE_API_HOST=https://plausible.nanko.dev`.
+
 ---
 
 ## 6. Architecture & Implémentation Client (Landing & Frontend)
@@ -394,9 +400,10 @@ export function trackEvent(name: AnalyticsEventName, props?: Record<string, unkn
 
 - [x] **Phase 2 : Configuration & Frontend Client (`frontend/`)**
   - [x] 1. Enrichir `frontend/src/config/env.ts` avec les variables `VITE_PLAUSIBLE_DOMAIN` et `VITE_PLAUSIBLE_API_HOST`.
-  - [x] 2. Créer le module `frontend/src/lib/analytics.ts` avec `initAnalytics`, `trackEvent`, le catalogue d'événements et le filtre anti-PII.
-  - [x] 3. Initialiser analytics dans `frontend/src/main.tsx` et instrumenter les transitions de routes dans `AppLayout.tsx`.
-  - [x] 4. Rédiger les tests unitaires frontend dans `frontend/src/lib/analytics.test.ts` (validation anti-PII, fail-open, no-op en mode test).
+  - [x] 2. Propager les variables `VITE_PLAUSIBLE_*` dans `frontend/Dockerfile` et les workflows GitHub Actions (`deploy-prod.yml`, `deploy-preprod.yml`, `pr-preprod-e2e.yml`).
+  - [x] 3. Créer le module `frontend/src/lib/analytics.ts` avec `initAnalytics`, `trackEvent`, le catalogue d'événements et le filtre anti-PII.
+  - [x] 4. Initialiser analytics dans `frontend/src/main.tsx` et instrumenter les transitions de routes dans `AppLayout.tsx`.
+  - [x] 5. Rédiger les tests unitaires frontend dans `frontend/src/lib/analytics.test.ts` (validation anti-PII, fail-open, no-op en mode test).
   - [x] **Tests & Types Frontend :** Valider avec `pnpm --filter frontend typecheck`, `pnpm --filter frontend test` et `pnpm --filter frontend lint`.
 
 - [x] **Phase 3 : Landing Page (`landing/`)**
