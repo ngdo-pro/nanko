@@ -42,7 +42,7 @@ services:
       caddy.header.@robots.Content-Type: "text/plain; charset=utf-8"
       caddy.@protected.not.path: /robots.txt
       caddy.basicauth: "@protected"
-      caddy.basicauth.${PREPROD_HTTP_USER:-nanko}: "${PREPROD_HTTP_HASH}"
+      caddy.basicauth.nanko: "${PREPROD_HTTP_HASH}"
       caddy.reverse_proxy: "{{upstreams 80}}"
       caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
       caddy.header.X-Content-Type-Options: nosniff
@@ -110,7 +110,7 @@ services:
       caddy.header.@robots.Content-Type: "text/plain; charset=utf-8"
       caddy.@protected.not.path: /robots.txt
       caddy.basicauth: "@protected"
-      caddy.basicauth.${PREPROD_HTTP_USER:-nanko}: "${PREPROD_HTTP_HASH}"
+      caddy.basicauth.nanko: "${PREPROD_HTTP_HASH}"
       caddy.reverse_proxy: "{{upstreams 8080}}"
       caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
       caddy.header.X-Content-Type-Options: nosniff
