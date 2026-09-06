@@ -33,11 +33,14 @@
 ### Infrastructure & Déploiement VPS (`infra/`)
 * **Watchtower :** Scrutation automatique des digests d'images GHCR (polling 5 minutes) assurant un déploiement continu sans exposition de clés SSH privées (respect de l'ADR-0010).
 * **Reverse Proxy Caddy :** Gestion automatique des certificats Let's Encrypt TLS et routage dynamique des sous-domaines (`api.preprod.nanko.dev`, `app.preprod.nanko.dev`, `auth.preprod.nanko.dev`, `signoz.nanko.dev`, `otlp.nanko.dev`).
-* **Sécurisation Préproduction (Sas HTTP Basic Auth & Robots) :**
-  * `infra/preprod/compose.yaml` : configuration du label `caddy.basic_auth: "/*"` et `caddy.basic_auth.${PREPROD_HTTP_USER:-nanko}: "${PREPROD_HTTP_HASH}"` sur le service `frontend` (`app.preprod.nanko.dev`).
-  * Les mots de passe sont hachés en Bcrypt sur le serveur VPS via `caddy hash-password` et stockés dans `~/.config/nanko/preprod.env`.
-  * Directive anti-indexation systématique appliquée sur tous les services de préproduction via `caddy.header.X-Robots-Tag: "noindex, nofollow"`.
-  * L'environnement de production et l'environnement local demeurent exempts de Basic Auth.
+* **Sécurisation Préproduction (Sas HTTP Basic Auth & Protection Anti-Indexation RFC 9309) :**
+  * `infra/preprod/compose.yaml` :
+    - Configuration du matcher `caddy.@robots: "path /robots.txt"` avec réponse immédiate `caddy.respond.@robots: "User-agent: *\nDisallow: /\n" 200` et `caddy.header.@robots.Content-Type: "text/plain; charset=utf-8"` sur `frontend`, `landing`, `backend` et `keycloak`.
+    - Configuration du sas Basic Auth sur `frontend`, `landing` et `backend` via le matcher d'exclusion `caddy.@protected: "not path /robots.txt"`, `caddy.basic_auth.@protected: "/*"` et `caddy.basic_auth.@protected.${PREPROD_HTTP_USER:-nanko}: "${PREPROD_HTTP_HASH}"`.
+    - Les mots de passe sont hachés en Bcrypt sur le serveur VPS via `caddy hash-password` et stockés dans `~/.config/nanko/preprod.env`.
+    - Directive anti-indexation systématique et durcie appliquée sur TOUS les services exposés de préproduction (`frontend`, `landing`, `backend`, `keycloak`) ainsi que dans `infra/signoz/compose.yaml` (`signoz-frontend`) via le label :
+      `caddy.header.X-Robots-Tag: "noindex, nofollow, noarchive, nosnippet, notranslate, noimageindex"`.
+  * L'environnement de production et l'environnement local demeurent exempts de Basic Auth et de `noindex` (préservation du SEO de production).
 
 ### Observabilité & Monitoring Distribué (SigNoz & OpenTelemetry)
 * **Stack SigNoz Auto-Hébergée (`infra/signoz/compose.yaml`) :**
@@ -88,6 +91,7 @@
 * Injection conditionnelle de `httpCredentials: { username, password }` dans `playwright.config.ts` lorsque `env.preprodHttpUser` et `env.preprodHttpPassword` sont définis, autorisant l'exécution transparente de la suite de tests E2E contre une préproduction protégée.
 * Workflow CI `pr-preprod-e2e.yml` transmettant les secrets `PREPROD_HTTP_USER` et `PREPROD_HTTP_PASSWORD` lors de l'exécution du job Playwright.
 * `tests-e2e/tests/app/telemetry.spec.ts` validant la conformité du header W3C `traceparent` et la résilience fail-open.
+* `tests-e2e/tests/app/robots.spec.ts` validant la présence de l'en-tête HTTP `X-Robots-Tag` (`noindex, nofollow`) sur l'application et la réponse standardisée `200 OK` sur `/robots.txt` (`User-agent: *`, `Disallow: /`).
 
 ---
 
@@ -97,6 +101,7 @@
 * L'endpoint de diagnostic `/api/v1/version` est public, sans dépendance à la base de données, assurant un temps de réponse instantané et une disponibilité maximale en tant que health check applicatif.
 * La télémétrie OpenTelemetry applique un principe de **fail-open absolu** : aucun composant ne doit échouer ni bloquer en cas d'indisponibilité du collecteur.
 * Le sas HTTP Basic Auth est strictement restreint à la préproduction : il ne s'applique ni au local ni à la production, et n'altère en rien les flux d'authentification applicatifs Keycloak OIDC.
+* La protection anti-indexation (`X-Robots-Tag` durci et consigne `Disallow: /` sur `/robots.txt`) est strictement cantonnée à la préproduction et aux outils internes (SigNoz), pour garantir l'étanchéité SEO totale sans impacter la découvrabilité du domaine de production.
 
 ---
 

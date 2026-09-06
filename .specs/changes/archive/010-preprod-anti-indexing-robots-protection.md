@@ -251,10 +251,10 @@ Disallow: /
   - [x] 2. Exécuter les tests frontend : `pnpm --filter frontend test`, `pnpm --filter frontend typecheck`, `pnpm --filter frontend lint`.
   - [x] 3. Exécuter les tests Playwright complets : `make test-e2e`.
 
-- [ ] **Phase 4 : Synchronisation documentaire (via `/sync-current 010`)**
-  - [ ] 1. Mettre à jour `.specs/current/domains/platform/behavior.md` (Règle 12 enrichie).
-  - [ ] 2. Mettre à jour `.specs/current/domains/platform/tech.md` (Configuration Caddy anti-indexation).
-  - [ ] 3. Archiver cette spécification sous `.specs/changes/archive/010-preprod-anti-indexing-robots-protection.md`.
+- [x] **Phase 4 : Synchronisation documentaire (via `/sync-current 010`)**
+  - [x] 1. Mettre à jour `.specs/current/domains/platform/behavior.md` (Règle 12 enrichie).
+  - [x] 2. Mettre à jour `.specs/current/domains/platform/tech.md` (Configuration Caddy anti-indexation).
+  - [x] 3. Archiver cette spécification sous `.specs/changes/archive/010-preprod-anti-indexing-robots-protection.md`.
 
 ---
 
