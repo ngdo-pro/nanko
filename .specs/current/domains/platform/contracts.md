@@ -37,6 +37,37 @@
 * **Headers de requête :** `Content-Type: application/json` ou `application/x-protobuf`
 * **Description :** Ingestion de logs selon la spécification OTLP Log Data Model v1. Reçoit les `LogRecord` bufferisés depuis le Backend Symfony et le Frontend React.
 
+### `GET /js/script.tagged-events.js` (ou `/js/script.js`)
+* **Authentification :** `PUBLIC_ACCESS` (script public d'audience servi sur `https://plausible.nanko.dev/js/...`)
+* **Headers de réponse :**
+  - `Content-Type: application/javascript; charset=utf-8`
+  - `Access-Control-Allow-Origin: *`
+  - `Cache-Control: public, max-age=86400, must-revalidate`
+* **Description :** Script client léger (< 1 Ko) de Plausible Analytics collectant les visites anonymes et les événements balisés (`plausible-event-name=...`).
+
+### `POST /api/event` (Endpoint d'ingestion Plausible Analytics)
+* **Authentification :** `PUBLIC_ACCESS` (endpoint public exposé sur `https://plausible.nanko.dev/api/event`, routé par Caddy vers Plausible `:8000`)
+* **Headers de requête :**
+  - `Content-Type: application/json`
+  - `User-Agent: <ua_client>`
+* **Payload :**
+  ```json
+  {
+    "name": "pageview",
+    "url": "https://www.nanko.dev/",
+    "domain": "nanko.dev",
+    "props": {
+      "theme": "dark"
+    }
+  }
+  ```
+* **Headers de réponse :**
+  - `Access-Control-Allow-Origin: *`
+  - `Access-Control-Allow-Credentials: true`
+* **Codes retour :**
+  - `202 Accepted` : événement accepté et mis en tampon pour ClickHouse (`text/plain: ok`).
+  - `400 Bad Request` : payload invalide ou domaine non reconnu.
+
 ---
 
 ## 2. Configuration d'Exécution & Variables d'Environnement
@@ -82,6 +113,18 @@
 | `SIGNOZ_ADMIN_PASSWORD` | Oui (VPS) | Mot de passe initial du compte superadmin créé par le provisioner |
 | `SIGNOZ_ADMIN_NAME` | Non | Nom d'affichage du superadmin (`Nanko Admin` par défaut) |
 
+### Variables de la Stack Plausible Analytics (`~/.config/nanko/plausible.env`)
+| Variable | Obligatoire | Rôle |
+|---|---|---|
+| `PLAUSIBLE_BASE_URL` | Oui (VPS) | URL publique racine (`https://plausible.nanko.dev`) |
+| `PLAUSIBLE_SECRET_KEY_BASE` | Oui (VPS) | Clé secrète de session chiffrée (minimum 64 octets en base64) |
+| `PLAUSIBLE_DATABASE_URL` | Oui (VPS) | Chaîne de connexion PostgreSQL vers `nanko-prod-postgres:5432/plausible` |
+| `PLAUSIBLE_CLICKHOUSE_URL` | Oui (VPS) | Chaîne de connexion ClickHouse vers `http://signoz-clickhouse:8123/plausible_events_db` |
+| `PLAUSIBLE_DISABLE_REGISTRATION` | Non | `invite_only` (interdit l'inscription publique sauvage) |
+| `PLAUSIBLE_ADMIN_NAME` | Non | Nom de l'administrateur initial (`Nanko Admin`) |
+| `PLAUSIBLE_ADMIN_EMAIL` | Non | Email de l'administrateur initial (`admin@nanko.dev`) |
+| `PLAUSIBLE_ADMIN_PWD` | Non | Mot de passe initial de l'administrateur |
+
 ---
 
 ## 3. Schémas de Validation Zod — Configuration Frontend & E2E
@@ -98,11 +141,13 @@
 | `VITE_LOG_LEVEL` | Non | `warn` | Enum `'debug' \| 'info' \| 'warn' \| 'error'` |
 | `VITE_OTEL_SERVICE_NAME` | Non | `nanko-frontend` | Chaîne non vide |
 | `VITE_APP_ENV` | Non | `local` | Chaîne non vide |
+| `VITE_PLAUSIBLE_DOMAIN` | Non | `""` | Chaîne (nom de domaine Plausible ex: `nanko.dev`) |
+| `VITE_PLAUSIBLE_API_HOST` | Non | `""` | URL valide ou chaîne vide (ex: `https://plausible.nanko.dev`) |
 
 * Parsing via `frontendEnvSchema.safeParse()` sur un objet extrait explicitement de `import.meta.env` (compatibilité substitution statique Vite/Rollup).
 * Échec de validation : `throw` immédiat + rendu d'un écran de secours HTML injecté dans `#root` listant les erreurs de schéma.
-* Export figé (`Object.freeze`) : `env.api.baseUrl`, `env.keycloak.{url,realm,clientId}`, `env.otel.{exporterUrl,logsExporterUrl,logLevel,serviceName,environment}`.
-* Consommé par `frontend/src/lib/api-client.ts`, `frontend/src/lib/keycloak.ts`, `frontend/src/config/telemetry.ts` et `frontend/src/config/logger.ts`.
+* Export figé (`Object.freeze`) : `env.api.baseUrl`, `env.keycloak.{url,realm,clientId}`, `env.otel.{exporterUrl,logsExporterUrl,logLevel,serviceName,environment}`, `env.plausible.{domain,apiHost}`.
+* Consommé par `frontend/src/lib/api-client.ts`, `frontend/src/lib/keycloak.ts`, `frontend/src/config/telemetry.ts`, `frontend/src/config/logger.ts` et `frontend/src/lib/analytics.ts`.
 
 ### Modèle Normalisé d'Erreur API (`frontend/src/types/api.ts`)
 ```typescript
@@ -185,3 +230,24 @@ export class ApiError extends Error {
   * Identifiants injectés via les secrets de repository GitHub `E2E_USERNAME` et `E2E_PASSWORD`.
 * **Identifiants Sas Préproduction (CI/CD) :**
   * `PREPROD_HTTP_USER` et `PREPROD_HTTP_PASSWORD` injectés en secrets GitHub Actions pour autoriser le runner Playwright à traverser le sas Caddy.
+* **Compte Administrateur Plausible Analytics :** `admin@nanko.dev`
+  * Pré-provisionné dans l'instance Plausible mutualisée (`users`).
+  * Mot de passe stocké de façon sécurisée dans `~/.config/nanko/plausible.env` sur le VPS.
+
+---
+
+## 7. Contrat Événementiel & Schéma Anti-PII Plausible Analytics (`frontend/src/lib/analytics.ts`)
+
+### Événements Normalisés
+| Nom d'événement (`AnalyticsEventName`) | Source | Déclenchement | Propriétés admises |
+|---|---|---|---|
+| `pageview` | Landing & Frontend SPA | Chargement initial ou transition de route SPA | — |
+| `landing_cta_app_click` | Landing | Clic sur le bouton CTA principal vers l'app | — |
+| `landing_theme_toggle` | Landing | Clic sur le sélecteur de thème | `theme: "light" \| "dark" \| "system"` |
+| `landing_docs_click` | Landing | Clic sur la documentation d'architecture | `target: string` |
+| `login_initiated` | Frontend SPA | Clic sur « Se connecter » (redirection OIDC) | — |
+| `logout_initiated` | Frontend SPA | Clic sur « Se déconnecter » dans le menu utilisateur | — |
+
+### Règle d'Assainissement Anti-PII
+* **Clés interdites (Blacklist PII) :** `email`, `user`, `username`, `name`, `password`, `token`, `jwt`, `sub`, `id_token`, `phone`, `ip`.
+* **Filtrage :** Toute métadonnée fournie à `trackEvent` est assainie par `sanitizeAnalyticsProps`. Les clés interdites sont supprimées de façon silencieuse et seules les valeurs primitives (`string`, `number`, `boolean`) sont sérialisées.

@@ -46,3 +46,31 @@ Les logs applicatifs émis par le Backend Symfony et le Frontend React sont norm
 | `deployment.environment` | string | `local` / `preprod` / `prod` | `local` / `preprod` / `prod` | Environnement d'exécution |
 | `attributes` | map<string, value> | Contexte Monolog (`context` + `extra`) | Contexte additionnel (`stack`, `componentStack`, `url`, `userAgent`) | Paires clé-valeur de diagnostic |
 
+---
+
+## 5. Modèle de Données Analytics — Plausible Community Edition
+
+### 5.1. Datastores Mutualisés (ADR-0007)
+* **Base Relationnelle PostgreSQL (`plausible`) :** Hébergée sur l'instance `nanko-prod-postgres` existante (PostgreSQL 16). Stocke l'état d'administration, les comptes utilisateurs (`users`), les domaines déclarés (`sites`), les autorisations (`site_memberships`) et les clés API (`api_keys`).
+* **Base Analytique ClickHouse (`plausible_events_db`) :** Hébergée sur l'instance `signoz-clickhouse` existante. Stocke les séries temporelles d'audience haute performance compressées en colonnes.
+
+### 5.2. Schéma ClickHouse Principal (`plausible_events_db`)
+| Table ClickHouse | Moteur de Table | Rôle |
+|---|---|---|
+| `events_v2` | `MergeTree` | Enregistrements individuels de pages vues et d'événements personnalisés |
+| `sessions_v2` | `SharedReplacingMergeTree` | Sessions de navigation agrégées par visiteur éphémère |
+| `location_data` | `Dictionary` / `MergeTree` | Dictionnaire de géolocalisation anonymisée (pays, région, ville) |
+
+### 5.3. Structure d'un Enregistrement d'Événement (`events_v2`)
+| Colonne ClickHouse | Type | Description |
+|---|---|---|
+| `timestamp` | `DateTime` | Horodatage UTC de l'événement |
+| `name` | `LowCardinality(String)` | Nom de l'événement (`pageview`, `login_initiated`, etc.) |
+| `hostname` | `LowCardinality(String)` | Domaine source (`nanko.dev`, `preprod.nanko.dev`) |
+| `pathname` | `String` | Chemin d'accès de la ressource (`/`, `/pricing`, `/dashboard`) |
+| `user_id` | `UInt64` | Hachage anonyme éphémère rotatif : `hash(IP + UA + sel_journalier)` (sel détruit toutes les 24h) |
+| `session_id` | `UInt64` | Identifiant éphémère de session |
+| `operating_system` | `LowCardinality(String)` | Système d'exploitation extrait du User-Agent (ex. `Mac OS`, `Linux`) |
+| `browser` | `LowCardinality(String)` | Navigateur extrait du User-Agent (ex. `Chrome`, `Firefox`) |
+| `country_code` | `LowCardinality(FixedString(2))` | Code pays ISO-3166-1 extrait de l'IP sans stockage de l'IP |
+
