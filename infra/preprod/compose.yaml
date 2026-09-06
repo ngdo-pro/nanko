@@ -42,6 +42,7 @@ services:
       caddy.header.@robots.Content-Type: "text/plain; charset=utf-8"
       caddy.@protected.not_0.path: /robots.txt
       caddy.@protected.not_1.method: OPTIONS
+      caddy.@protected.not_2.header_regexp: Authorization ^Bearer\s+
       caddy.basicauth: "@protected"
       caddy.basicauth.nanko: "${PREPROD_HTTP_HASH}"
       caddy.reverse_proxy: "{{upstreams 80}}"
