@@ -46,7 +46,7 @@ describe('App Root Component', () => {
     expect(screen.queryByText('Projets')).not.toBeInTheDocument()
   })
 
-  it('affiche DashboardView et les liens de navigation lorsque l utilisateur est connecté', () => {
+  it('affiche DashboardView lorsque l utilisateur est connecté', () => {
     vi.mocked(useAuthHook.useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
@@ -64,8 +64,7 @@ describe('App Root Component', () => {
     render(<App />)
 
     expect(screen.getByTestId('dashboard-view')).toBeInTheDocument()
-    expect(screen.getByText('Projets')).toBeInTheDocument()
-    expect(screen.getByText('Organisations')).toBeInTheDocument()
+    expect(screen.getByText('Mes Projets')).toBeInTheDocument()
     expect(screen.getAllByText('developer@nanko.dev')).toHaveLength(2)
   })
 })

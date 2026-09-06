@@ -51,6 +51,7 @@ return App::config([
                 '../src/Core/UseCase/**/*Command.php',
                 '../src/Core/UseCase/**/*Query.php',
                 '../src/*/Adapter/Driver/Http/Security/SecurityUser.php',
+                '../src/*/Adapter/Driver/Http/Dto/',
                 // Core/Port holds only interfaces. No exclude needed: the
                 // resource loader (Symfony\Component\DependencyInjection\
                 // Loader\FileLoader::registerClasses()) already skips
@@ -65,6 +66,15 @@ return App::config([
         //   SomeRepositoryPort::class => ['alias' => DoctrineSomeRepository::class],
         \App\AuthAndIdentity\Core\Port\User\Repository::class => [
             'alias' => \App\AuthAndIdentity\Adapter\Driven\Persistence\User\DoctrineRepository::class,
+        ],
+        \App\WorkspaceManagement\Core\Port\Organisation\Repository::class => [
+            'alias' => \App\WorkspaceManagement\Adapter\Driven\Persistence\Organisation\DoctrineRepository::class,
+        ],
+        \App\WorkspaceManagement\Core\Port\OrganisationMember\Repository::class => [
+            'alias' => \App\WorkspaceManagement\Adapter\Driven\Persistence\OrganisationMember\DoctrineRepository::class,
+        ],
+        \App\WorkspaceManagement\Core\Port\Project\Repository::class => [
+            'alias' => \App\WorkspaceManagement\Adapter\Driven\Persistence\Project\DoctrineRepository::class,
         ],
 
         \App\Adapter\Driver\Http\OpenTelemetry\TraceSubscriber::class => [

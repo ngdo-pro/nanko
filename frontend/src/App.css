@@ -564,3 +564,232 @@
 .footer-links a:hover {
   color: var(--brand);
 }
+
+/* --------------------------------------------------------------------------
+   WORKSPACE & PROJECT MANAGEMENT
+   -------------------------------------------------------------------------- */
+.nav-workspaces {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.project-switcher,
+.organisation-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.project-switcher-label,
+.organisation-switcher-label {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.project-switcher-select,
+.organisation-switcher-select {
+  background-color: var(--bg);
+  color: var(--heading);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.project-switcher-select:hover,
+.organisation-switcher-select:hover {
+  border-color: var(--brand);
+}
+
+/* Projects Section in Dashboard */
+.dashboard-projects-section {
+  margin-bottom: 2rem;
+}
+
+.projects-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.projects-title {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.project-card {
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-align: left;
+}
+
+.project-card:hover {
+  border-color: var(--brand);
+  transform: translateY(-1px);
+}
+
+.project-card.active {
+  border-color: var(--brand);
+  background-color: color-mix(in srgb, var(--brand) 6%, var(--surface));
+  box-shadow: 0 0 0 1px var(--brand);
+}
+
+.project-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.project-card-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--heading);
+}
+
+.project-badge-active {
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: var(--brand);
+  background: color-mix(in srgb, var(--brand) 15%, transparent);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.project-card-slug {
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--muted);
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 460px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.modal-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--heading);
+  margin: 0;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.btn-icon:hover {
+  color: var(--heading);
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--heading);
+}
+
+.input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  background-color: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--heading);
+  font-size: 0.9rem;
+  transition: border-color 0.15s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--brand);
+}
+
+.form-hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.alert-error {
+  background-color: color-mix(in srgb, #ef4444 10%, transparent);
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  padding: 0.65rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+

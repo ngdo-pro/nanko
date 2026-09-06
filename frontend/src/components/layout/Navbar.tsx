@@ -2,6 +2,7 @@ import React from 'react'
 import { BrandLogo } from '../BrandLogo'
 import { ThemeSwitch } from '../ThemeSwitch'
 import { UserMenu, useAuth } from '@/features/auth'
+import { OrganisationSwitcher, ProjectSwitcher } from '@/features/workspaces'
 
 export const Navbar: React.FC = () => {
   const { isAuthenticated } = useAuth()
@@ -11,18 +12,10 @@ export const Navbar: React.FC = () => {
       <div className="nav-left">
         <BrandLogo withTagline={true} />
         {isAuthenticated && (
-          <ul className="nav-links">
-            <li>
-              <a href="#projets" className="nav-link" data-qa="nav-link-projects">
-                Projets
-              </a>
-            </li>
-            <li>
-              <a href="#organisations" className="nav-link" data-qa="nav-link-organisations">
-                Organisations
-              </a>
-            </li>
-          </ul>
+          <div className="nav-workspaces" data-qa="nav-workspaces">
+            <OrganisationSwitcher />
+            <ProjectSwitcher />
+          </div>
         )}
       </div>
       <div className="nav-right">
