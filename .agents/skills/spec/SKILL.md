@@ -24,7 +24,7 @@ Utilisez ce skill lorsque l'utilisateur demande de concevoir, spécifier ou cadr
      - Diagramme Mermaid (Flux & interactions)
      - Delta Modèle de données & DBAL / Doctrine
      - Delta Contrats d'API (Symfony / DTOs / Codes HTTP)
-     - Configuration Réseau, Prérequis DNS & Sécurisation des Endpoints (Entrées DNS A/CNAME, exposition publique/interne, CORS, Rate Limiting, TLS, secrets)
+     - Configuration Réseau, Prérequis DNS, Variables d'Environnement & CI/CD (Entrées DNS A/CNAME, exposition publique/interne, CORS, Rate Limiting, TLS, secrets, build-args Docker et workflows GitHub Actions)
      - Wireframes ASCII & JSX
      - Schéma Zod & Matrice des 5 états UI
      - Invariants & Cas limites (Edge cases)

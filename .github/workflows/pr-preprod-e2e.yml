@@ -17,6 +17,8 @@ env:
   VITE_API_BASE_URL: https://api.preprod.nanko.dev
   VITE_KEYCLOAK_URL: https://auth.preprod.nanko.dev
   VITE_OTEL_EXPORTER_URL: https://otlp.nanko.dev/v1/traces
+  VITE_PLAUSIBLE_DOMAIN: preprod.nanko.dev
+  VITE_PLAUSIBLE_API_HOST: https://plausible.nanko.dev
   PREPROD_VERSION_URL: https://api.preprod.nanko.dev/api/v1/version
   APP_BASE_URL: https://app.preprod.nanko.dev
 
@@ -100,6 +102,8 @@ jobs:
             VITE_KEYCLOAK_URL=${{ env.VITE_KEYCLOAK_URL }}
             VITE_OTEL_EXPORTER_URL=${{ env.VITE_OTEL_EXPORTER_URL }}
             VITE_APP_ENV=${{ env.ENVIRONMENT }}
+            VITE_PLAUSIBLE_DOMAIN=${{ env.VITE_PLAUSIBLE_DOMAIN }}
+            VITE_PLAUSIBLE_API_HOST=${{ env.VITE_PLAUSIBLE_API_HOST }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/nanko-frontend:preprod
             ghcr.io/${{ github.repository_owner }}/nanko-frontend:preprod-${{ steps.semver.outputs.commit }}
