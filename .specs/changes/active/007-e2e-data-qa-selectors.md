@@ -152,26 +152,26 @@ Les attributs `data-qa` doivent respecter la convention :
 
 ## 8. Plan d'exécution séquentiel (Phasé avec DoD)
 
-- [ ] **Phase 1 : Configuration Playwright (`tests-e2e/`)**
-  - [ ] 1. Mettre à jour `tests-e2e/playwright.config.ts` avec `testIdAttribute: 'data-qa'` dans la section `use`.
-  - [ ] 2. Documenter la convention `data-qa` dans `tests-e2e/README.md`.
-  - [ ] **DoD :** Playwright compile et résout `page.getByTestId` vers `data-qa`.
+- [x] **Phase 1 : Configuration Playwright (`tests-e2e/`)**
+  - [x] 1. Mettre à jour `tests-e2e/playwright.config.ts` avec `testIdAttribute: 'data-qa'` dans la section `use`.
+  - [x] 2. Documenter la convention `data-qa` dans `tests-e2e/README.md`.
+  - [x] **DoD :** Playwright compile et résout `page.getByTestId` vers `data-qa`.
 
-- [ ] **Phase 2 : Instrumentation du Frontend (`frontend/src/`)**
-  - [ ] 1. Remplacer tous les attributs `data-testid` par `data-qa` dans `frontend/src/components/UserMenu.tsx`.
-  - [ ] 2. Ajouter l'attribut `data-qa="nav-logo"` sur le logo de navigation dans `frontend/src/App.tsx`.
-  - [ ] 3. Vérifier que les linters et le typage TypeScript passent : `pnpm --filter frontend typecheck && pnpm --filter frontend lint`.
-  - [ ] **DoD :** Aucun attribut `data-testid` résiduel dans le code source de `frontend/src/`.
+- [x] **Phase 2 : Instrumentation du Frontend (`frontend/src/`)**
+  - [x] 1. Remplacer tous les attributs `data-testid` par `data-qa` dans `frontend/src/features/auth/components/UserMenu.tsx`.
+  - [x] 2. Ajouter l'attribut `data-qa="nav-logo"` sur le logo de navigation dans `frontend/src/components/BrandLogo.tsx`.
+  - [x] 3. Vérifier que les linters et le typage TypeScript passent : `pnpm --filter frontend typecheck && pnpm --filter frontend lint`.
+  - [x] **DoD :** Aucun attribut `data-testid` résiduel dans le code source de `frontend/src/`.
 
-- [ ] **Phase 3 : Refactorisation des Spécifications E2E (`tests-e2e/tests/app/`)**
-  - [ ] 1. Refactoriser `tests-e2e/tests/app/telemetry.spec.ts` pour remplacer `page.locator('.nav-logo')` par `page.getByTestId('nav-logo')`.
-  - [ ] 2. Vérifier `tests-e2e/tests/app/auth.spec.ts` : confirmer le fonctionnement des appels `page.getByTestId('login-button')`, `page.getByTestId('user-menu')`, `page.getByTestId('user-email')` avec le nouvel attribut `data-qa`.
-  - [ ] **DoD :** Aucun sélecteur de classe CSS résiduel dans `tests-e2e/tests/app/`.
+- [x] **Phase 3 : Refactorisation des Spécifications E2E (`tests-e2e/tests/app/`)**
+  - [x] 1. Refactoriser `tests-e2e/tests/app/telemetry.spec.ts` pour remplacer `page.locator('.nav-logo')` par `page.getByTestId('nav-logo')`.
+  - [x] 2. Vérifier `tests-e2e/tests/app/auth.spec.ts` : confirmer le fonctionnement des appels `page.getByTestId('login-button')`, `page.getByTestId('user-menu')`, `page.getByTestId('user-email')` avec le nouvel attribut `data-qa`.
+  - [x] **DoD :** Aucun sélecteur de classe CSS résiduel dans `tests-e2e/tests/app/`.
 
-- [ ] **Phase 4 : Validation des Quality Gates & Exécution**
-  - [ ] 1. Exécuter la suite complète de tests E2E Playwright : `pnpm --filter tests-e2e exec playwright test`.
-  - [ ] 2. Vérifier l'absence de régression globale : `make test-backend`, `pnpm --filter frontend typecheck`.
-  - [ ] **DoD :** 100% des tests Playwright passent au vert contre l'environnement local.
+- [x] **Phase 4 : Validation des Quality Gates & Exécution**
+  - [x] 1. Exécuter la suite complète de tests E2E Playwright : `pnpm --filter tests-e2e exec playwright test`.
+  - [x] 2. Vérifier l'absence de régression globale : `make test-backend`, `pnpm --filter frontend typecheck`.
+  - [x] **DoD :** 100% des tests Playwright passent au vert contre l'environnement local.
 
 ---
 

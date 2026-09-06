@@ -6,7 +6,6 @@ export const NotFoundPage: React.FC = () => {
   return (
     <div
       className="not-found-container"
-      data-testid="not-found-view"
       data-qa="not-found-view"
       style={{
         display: 'flex',

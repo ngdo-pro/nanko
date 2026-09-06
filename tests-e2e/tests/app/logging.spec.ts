@@ -21,7 +21,7 @@ test.describe('Observabilité & Centralisation des Logs Applicatifs Fullstack', 
     await page.goto('/?trigger_crash=true')
 
     // L'écran de secours AppErrorBoundary doit être rendu
-    const fallback = page.locator('[data-testid="error-boundary-fallback"]')
+    const fallback = page.getByTestId('error-boundary-fallback')
     await expect(fallback).toBeVisible({ timeout: 5000 })
     await expect(fallback).toContainText('Une anomalie inattendue est survenue')
 
@@ -29,7 +29,7 @@ test.describe('Observabilité & Centralisation des Logs Applicatifs Fullstack', 
     const incidentLabel = fallback.locator('text=Identifiant d\'incident :')
     await expect(incidentLabel).toBeVisible()
 
-    const incidentIdElement = fallback.locator('.select-all')
+    const incidentIdElement = fallback.getByTestId('incident-id')
     await expect(incidentIdElement).toBeVisible()
     const displayedIncidentId = (await incidentIdElement.textContent())?.trim()
 
@@ -37,8 +37,8 @@ test.describe('Observabilité & Centralisation des Logs Applicatifs Fullstack', 
     expect(displayedIncidentId).toMatch(/^[0-9a-f]{32}$/)
 
     // Vérifier les boutons d'action
-    const reloadBtn = fallback.locator('role=button[name="Recharger l\'application"]')
-    const homeBtn = fallback.locator('role=button[name="Retour à l\'accueil"]')
+    const reloadBtn = fallback.getByTestId('reload-button')
+    const homeBtn = fallback.getByTestId('home-button')
     await expect(reloadBtn).toBeVisible()
     await expect(homeBtn).toBeVisible()
 
@@ -85,7 +85,7 @@ test.describe('Observabilité & Centralisation des Logs Applicatifs Fullstack', 
     await page.goto('/')
 
     // L'application fonctionne normalement sans blocage
-    const logo = page.locator('.nav-logo')
+    const logo = page.getByTestId('nav-logo')
     await expect(logo).toBeVisible({ timeout: 5000 })
     await expect(logo).toHaveText('NANKO')
 

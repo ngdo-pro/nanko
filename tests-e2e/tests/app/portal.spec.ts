@@ -5,7 +5,7 @@ test.describe('Accueil et Identité Visuelle Nanko', () => {
     await page.goto('/')
 
     // Marque Nanko et logo visibles
-    const navLogo = page.locator('.nav-logo')
+    const navLogo = page.getByTestId('nav-logo')
     await expect(navLogo).toBeVisible()
     await expect(navLogo).toHaveText('NANKO')
 

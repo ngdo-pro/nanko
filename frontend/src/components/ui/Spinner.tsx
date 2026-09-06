@@ -18,7 +18,6 @@ export const Spinner: React.FC<SpinnerProps> = ({
   return (
     <div
       className={cn('app-loading-state', className)}
-      data-testid="app-loading"
       data-qa={dataQa}
     >
       <BrandIcon size={size} className="spinner-logo" />

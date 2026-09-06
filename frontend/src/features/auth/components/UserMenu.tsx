@@ -8,7 +8,6 @@ export const UserMenu: React.FC = () => {
     return (
       <div
         className="user-menu-loading"
-        data-testid="user-menu-loading"
         data-qa="user-menu-loading"
       >
         <span className="spinner-dot" aria-label="Chargement...">...</span>
@@ -21,7 +20,6 @@ export const UserMenu: React.FC = () => {
       <button
         type="button"
         className="btn btn-secondary btn-login"
-        data-testid="login-button"
         data-qa="login-button"
         onClick={() => void login()}
       >
@@ -36,7 +34,6 @@ export const UserMenu: React.FC = () => {
   return (
     <div
       className="user-menu-authenticated"
-      data-testid="user-menu"
       data-qa="user-menu"
     >
       <div
@@ -49,7 +46,6 @@ export const UserMenu: React.FC = () => {
       </div>
       <span
         className="user-email"
-        data-testid="user-email"
         data-qa="user-email"
       >
         {email}
@@ -57,7 +53,6 @@ export const UserMenu: React.FC = () => {
       <button
         type="button"
         className="btn btn-ghost btn-logout"
-        data-testid="logout-button"
         data-qa="logout-button"
         onClick={() => void logout()}
       >

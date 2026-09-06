@@ -13,6 +13,7 @@ export default defineConfig({
   },
   use: {
     baseURL: env.appBaseUrl,
+    testIdAttribute: "data-qa",
     trace: "on-first-retry",
     ...(env.preprodHttpUser && env.preprodHttpPassword
       ? {

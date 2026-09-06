@@ -37,7 +37,6 @@ export class AppErrorBoundary extends Component<Props, State> {
       return (
         <div
           className="error-boundary-container"
-          data-testid="app-error-boundary"
           data-qa="app-error-boundary"
           style={{
             display: 'flex',
