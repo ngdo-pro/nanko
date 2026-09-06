@@ -1,6 +1,6 @@
 services:
   clickhouse:
-    image: clickhouse/clickhouse-server:25.1-alpine
+    image: clickhouse/clickhouse-server:25.12-alpine
     restart: unless-stopped
     volumes:
       - nanko-local-signoz-clickhouse:/var/lib/clickhouse
@@ -27,9 +27,8 @@ services:
   signoz-schema-migrator:
     image: signoz/signoz-otel-collector:latest
     restart: "no"
+    entrypoint: ["/bin/sh", "-c"]
     command:
-      - sh
-      - -c
       - |
         /signoz-otel-collector migrate bootstrap --clickhouse-dsn=tcp://clickhouse:9000 &&
         /signoz-otel-collector migrate sync up --clickhouse-dsn=tcp://clickhouse:9000 &&
