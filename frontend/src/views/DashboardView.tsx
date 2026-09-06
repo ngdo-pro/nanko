@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useAuth } from '@/features/auth'
 import { useWorkspace, CreateProjectModal } from '@/features/workspaces'
+import { useDocuments, DocumentList, CreateDocumentModal } from '@/features/documents'
 
 export interface DashboardViewProps {
   userEmail?: string
@@ -10,6 +11,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ userEmail }) => {
   const { user } = useAuth()
   const { activeProject, projects, setActiveProject, isLoading } = useWorkspace()
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isDocModalOpen, setIsDocModalOpen] = useState(false)
+
+  const { data: documents = [] } = useDocuments(
+    activeProject?.id,
+    !!activeProject,
+  )
 
   const displayEmail = userEmail || user?.email || 'architecte'
 
@@ -72,50 +79,56 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ userEmail }) => {
         )}
       </section>
 
-      {/* État vide incitatif du projet actif */}
-      <div className="card dashboard-empty-state" data-qa="empty-documents-card">
-        <div className="empty-state-icon" aria-hidden="true">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/>
-            <line x1="16" y1="17" x2="8" y2="17"/>
-            <polyline points="10 9 9 9 8 9"/>
-          </svg>
-        </div>
+      {/* Section Documents : liste si existants, état vide sinon */}
+      {activeProject && documents.length > 0 ? (
+        <DocumentList
+          documents={documents}
+          projectId={activeProject.id}
+          onNewDocument={() => setIsDocModalOpen(true)}
+        />
+      ) : (
+        <div className="card dashboard-empty-state" data-qa="empty-documents-card">
+          <div className="empty-state-icon" aria-hidden="true">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </div>
 
-        <h2 className="empty-state-title">
-          {activeProject
-            ? `Projet : ${activeProject.name}`
-            : "Aucun document d'architecture pour le moment"}
-        </h2>
-        <p className="empty-state-description">
-          Commencez par initialiser un nouveau document d'architecture dans ce projet ou importez un fichier <code>.nanko</code> existant.
-        </p>
+          <h2 className="empty-state-title">
+            {activeProject
+              ? `Projet : ${activeProject.name}`
+              : "Aucun document d'architecture pour le moment"}
+          </h2>
+          <p className="empty-state-description">
+            Commencez par initialiser un nouveau document d'architecture dans ce projet ou importez un fichier <code>.nanko</code> existant.
+          </p>
 
-        <div className="empty-state-actions">
-          <button
-            type="button"
-            className="btn btn-primary"
-            data-qa="new-document-button"
-            onClick={() => {
-              alert('Initialisation de document bientôt disponible dans le studio Nanko.')
-            }}
-          >
-            + Nouveau Document
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            data-qa="import-document-button"
-            onClick={() => {
-              alert('Import de fichier .nanko bientôt disponible.')
-            }}
-          >
-            &uarr; Importer un .nanko
-          </button>
+          <div className="empty-state-actions">
+            <button
+              type="button"
+              className="btn btn-primary"
+              data-qa="new-document-button"
+              onClick={() => setIsDocModalOpen(true)}
+            >
+              + Nouveau Document
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              data-qa="import-document-button"
+              onClick={() => {
+                alert('Import de fichier .nanko bientôt disponible.')
+              }}
+            >
+              &uarr; Importer un .nanko
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Aide-mémoire syntaxique */}
       <section className="dashboard-syntax-reminder" data-qa="syntax-reminder">
@@ -124,13 +137,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ userEmail }) => {
         </div>
         <div className="syntax-content">
           <code>
-            @id [nom] &middot; @version [layer:semver] &middot; @satisfies [layer:range] &middot; rectangle &middot; connector
+            @id [nom] &middot; @layer [0] &middot; rectangle &middot; circle &middot; text &middot; connector
           </code>
         </div>
       </section>
 
-      {/* Modale de création de projet */}
+      {/* Modales */}
       <CreateProjectModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      {activeProject && (
+        <CreateDocumentModal
+          isOpen={isDocModalOpen}
+          onClose={() => setIsDocModalOpen(false)}
+          projectId={activeProject.id}
+        />
+      )}
     </div>
   )
 }
