@@ -1,5 +1,5 @@
 import React from 'react'
-import { useAuth } from '../auth/useAuth'
+import { useAuth } from '@/features/auth'
 
 export const NANKO_CODE_PREVIEW = `@id platform-overview
 @version app:1.2.0

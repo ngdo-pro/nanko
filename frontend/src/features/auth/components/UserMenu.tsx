@@ -1,5 +1,5 @@
 import React from 'react'
-import { useAuth } from '../auth/useAuth'
+import { useAuth } from '../hooks/useAuth'
 
 export const UserMenu: React.FC = () => {
   const { isAuthenticated, isLoading, user, login, logout } = useAuth()

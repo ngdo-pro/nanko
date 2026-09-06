@@ -457,50 +457,50 @@ Pour tout composant de feature dépendant de données asynchrones (ex. `UserMenu
 
 ## 9. Plan d'exécution séquentiel
 
-- [ ] **Phase 1 : Outillage, Dépendances & Alias de Chemins**
-  - [ ] 1. Installer `react-router` (v7) et `@tanstack/react-query` dans `frontend/`.
-  - [ ] 2. Configurer l'alias `@/*` dans `frontend/tsconfig.app.json` et `frontend/tsconfig.json` (`baseUrl: "."`, `paths: { "@/*": ["src/*"] }`).
-  - [ ] 3. Configurer l'alias `@/*` dans `frontend/vite.config.ts` via `node:path` / `fileURLToPath`.
-  - [ ] 4. Valider la compilation avec `pnpm --filter frontend typecheck`.
+- [x] **Phase 1 : Outillage, Dépendances & Alias de Chemins**
+  - [x] 1. Installer `react-router` (v7) et `@tanstack/react-query` dans `frontend/`.
+  - [x] 2. Configurer l'alias `@/*` dans `frontend/tsconfig.app.json` et `frontend/tsconfig.json` (`baseUrl: "."`, `paths: { "@/*": ["src/*"] }`).
+  - [x] 3. Configurer l'alias `@/*` dans `frontend/vite.config.ts` via `node:path` / `fileURLToPath`.
+  - [x] 4. Valider la compilation avec `pnpm --filter frontend typecheck`.
 
-- [ ] **Phase 2 : Fondations Lib & Types Partagés (`frontend/src/lib/`, `frontend/src/types/`, `frontend/src/utils/`)**
-  - [ ] 1. Créer `src/types/api.ts` (types génériques d'erreurs et réponses API).
-  - [ ] 2. Créer `src/utils/cn.ts` (helper de concaténation de classes).
-  - [ ] 3. Créer `src/lib/react-query.ts` (instance `queryClient` configurée avec defaults stricts).
-  - [ ] 4. Créer `src/lib/api-client.ts` (client universel fetch avec JWT, Trace Context OTel et gestion d'erreurs).
-  - [ ] 5. Déplacer et renommer `src/auth/keycloak.ts` dans `src/lib/keycloak.ts`.
+- [x] **Phase 2 : Fondations Lib & Types Partagés (`frontend/src/lib/`, `frontend/src/types/`, `frontend/src/utils/`)**
+  - [x] 1. Créer `src/types/api.ts` (types génériques d'erreurs et réponses API).
+  - [x] 2. Créer `src/utils/cn.ts` (helper de concaténation de classes).
+  - [x] 3. Créer `src/lib/react-query.ts` (instance `queryClient` configurée avec defaults stricts).
+  - [x] 4. Créer `src/lib/api-client.ts` (client universel fetch avec JWT, Trace Context OTel et gestion d'erreurs).
+  - [x] 5. Déplacer et renommer `src/auth/keycloak.ts` dans `src/lib/keycloak.ts`.
 
-- [ ] **Phase 3 : Migration Feature Auth (`frontend/src/features/auth/`)**
-  - [ ] 1. Déplacer les composants d'authentification sous `src/features/auth/components/` (`UserMenu.tsx`, `ProtectedRoute.tsx`).
-  - [ ] 2. Déplacer `KeycloakProvider.tsx`, `context.ts`, `useAuth.ts` sous `src/features/auth/hooks/` et `src/features/auth/components/`.
-  - [ ] 3. Créer `src/features/auth/api/getUser.ts` avec hook `useUserProfile` basé sur TanStack Query.
-  - [ ] 4. Créer `src/features/auth/types/index.ts` avec les définitions et schémas Zod.
-  - [ ] 5. Créer `src/features/auth/index.ts` (barrel export exportant uniquement l'API publique de la feature).
+- [x] **Phase 3 : Migration Feature Auth (`frontend/src/features/auth/`)**
+  - [x] 1. Déplacer les composants d'authentification sous `src/features/auth/components/` (`UserMenu.tsx`, `ProtectedRoute.tsx`).
+  - [x] 2. Déplacer `KeycloakProvider.tsx`, `context.ts`, `useAuth.ts` sous `src/features/auth/hooks/` et `src/features/auth/components/`.
+  - [x] 3. Créer `src/features/auth/api/getUser.ts` avec hook `useUserProfile` basé sur TanStack Query.
+  - [x] 4. Créer `src/features/auth/types/index.ts` avec les définitions et schémas Zod.
+  - [x] 5. Créer `src/features/auth/index.ts` (barrel export exportant uniquement l'API publique de la feature).
 
-- [ ] **Phase 4 : Composants UI Partagés & Layouts (`frontend/src/components/`)**
-  - [ ] 1. Créer `src/components/ui/` (composants atomiques `Spinner.tsx`, `Button.tsx`, `ErrorBoundary.tsx`).
-  - [ ] 2. Créer `src/components/layout/` (`AppLayout.tsx`, `Navbar.tsx`, `Footer.tsx`) en préservant tous les sélecteurs `data-qa`.
+- [x] **Phase 4 : Composants UI Partagés & Layouts (`frontend/src/components/`)**
+  - [x] 1. Créer `src/components/ui/` (composants atomiques `Spinner.tsx`, `Button.tsx`, `ErrorBoundary.tsx`).
+  - [x] 2. Créer `src/components/layout/` (`AppLayout.tsx`, `Navbar.tsx`, `Footer.tsx`) en préservant tous les sélecteurs `data-qa`.
 
-- [ ] **Phase 5 : Couche Applicative & Routage Déclaratif (`frontend/src/app/`)**
-  - [ ] 1. Créer `src/app/provider.tsx` (`AppProvider` composant `QueryClientProvider`, `KeycloakProvider`, etc.).
-  - [ ] 2. Créer `src/app/routes/` avec `home.tsx` et `not-found.tsx`.
-  - [ ] 3. Créer `src/app/router.tsx` avec `createBrowserRouter`.
-  - [ ] 4. Refactoriser `src/app/App.tsx` pour monter `AppProvider` et `AppRouter`.
-  - [ ] 5. Nettoyer les anciens fichiers orphelins (`src/auth/`, ancien `src/components/UserMenu.tsx`, ancien `src/App.css` si rendu obsolète).
+- [x] **Phase 5 : Couche Applicative & Routage Déclaratif (`frontend/src/app/`)**
+  - [x] 1. Créer `src/app/provider.tsx` (`AppProvider` composant `QueryClientProvider`, `KeycloakProvider`, etc.).
+  - [x] 2. Créer `src/app/routes/` avec `home.tsx` et `not-found.tsx`.
+  - [x] 3. Créer `src/app/router.tsx` avec `createBrowserRouter`.
+  - [x] 4. Refactoriser `src/app/App.tsx` pour monter `AppProvider` et `AppRouter`.
+  - [x] 5. Nettoyer les anciens fichiers orphelins (`src/auth/`, ancien `src/components/UserMenu.tsx`, ancien `src/App.css` si rendu obsolète).
 
-- [ ] **Phase 6 : Harnais de Test UI (`frontend/src/testing/`)**
-  - [ ] 1. Créer `src/testing/test-utils.tsx` (méthode `renderWithProviders` encapsulant les providers TanStack Query et router).
-  - [ ] 2. Ajouter un test unitaire validant le client API et le barrel file de la feature auth.
+- [x] **Phase 6 : Harnais de Test UI (`frontend/src/testing/`)**
+  - [x] 1. Créer `src/testing/test-utils.tsx` (méthode `renderWithProviders` encapsulant les providers TanStack Query et router).
+  - [x] 2. Ajouter un test unitaire validant le client API et le barrel file de la feature auth.
 
-- [ ] **Phase 7 : Validation des Quality Gates & Non-Régression**
-  - [ ] 1. Exécuter `pnpm --filter frontend typecheck` pour valider l'absence d'erreurs TypeScript.
-  - [ ] 2. Exécuter `pnpm --filter frontend lint` pour valider l'absence d'erreurs Oxlint.
-  - [ ] 3. Exécuter `pnpm --filter frontend build` pour vérifier le bundling Vite de production.
-  - [ ] 4. Exécuter la suite de tests E2E `pnpm --filter tests-e2e exec playwright test` pour confirmer l'absence absolue de régression fonctionnelle.
+- [x] **Phase 7 : Validation des Quality Gates & Non-Régression**
+  - [x] 1. Exécuter `pnpm --filter frontend typecheck` pour valider l'absence d'erreurs TypeScript.
+  - [x] 2. Exécuter `pnpm --filter frontend lint` pour valider l'absence d'erreurs Oxlint.
+  - [x] 3. Exécuter `pnpm --filter frontend build` pour vérifier le bundling Vite de production.
+  - [x] 4. Exécuter la suite de tests E2E `pnpm --filter tests-e2e exec playwright test` pour confirmer l'absence absolue de régression fonctionnelle.
 
-- [ ] **Phase 8 : Synchronisation Documentaire (via `/sync-current`)**
-  - [ ] 1. Mettre à jour `.specs/current/domains/platform/tech.md` pour acter la topologie Bulletproof React.
-  - [ ] 2. Déplacer cette spec dans `.specs/changes/archive/009-bulletproof-react-architecture.md`.
+- [x] **Phase 8 : Synchronisation Documentaire (via `/sync-current`)**
+  - [x] 1. Mettre à jour `.specs/current/domains/platform/tech.md` pour acter la topologie Bulletproof React.
+  - [x] 2. Déplacer cette spec dans `.specs/changes/archive/009-bulletproof-react-architecture.md`.
 
 ---
 

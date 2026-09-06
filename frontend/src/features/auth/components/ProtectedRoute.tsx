@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from 'react'
-import { useAuth } from './useAuth'
+import { useAuth } from '../hooks/useAuth'
 
 interface ProtectedRouteProps {
   children: ReactNode

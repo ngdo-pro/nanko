@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef, type ReactNode } from 'react'
-import { keycloak } from './keycloak'
-import { fetchWithAuth } from './httpClient'
-import { AuthContext } from './context'
-import type { AuthContextType, UserProfile } from './types'
+import { keycloak } from '@/lib/keycloak'
+import { apiClient } from '@/lib/api-client'
+import { AuthContext } from '../context'
+import type { AuthContextType, UserProfile } from '../types'
 
 interface KeycloakProviderProps {
   children: ReactNode
@@ -29,7 +29,9 @@ export function KeycloakProvider({ children }: KeycloakProviderProps) {
         setIsAuthenticated(authenticated)
         if (authenticated && keycloak.token) {
           setToken(keycloak.token)
-          const parsed = keycloak.tokenParsed as { email?: string; preferred_username?: string; sub?: string } | undefined
+          const parsed = keycloak.tokenParsed as
+            | { email?: string; preferred_username?: string; sub?: string }
+            | undefined
           if (parsed) {
             setUser({
               id: parsed.sub ?? '',
@@ -39,9 +41,8 @@ export function KeycloakProvider({ children }: KeycloakProviderProps) {
             })
           }
           try {
-            const res = await fetchWithAuth('/api/v1/me')
-            if (res.ok) {
-              const profile = (await res.json()) as UserProfile
+            const profile = await apiClient<UserProfile>('/api/v1/me')
+            if (profile) {
               setUser(profile)
             }
           } catch {
@@ -50,7 +51,6 @@ export function KeycloakProvider({ children }: KeycloakProviderProps) {
         }
       })
       .catch((err) => {
-        // En cas d'erreur réseau vers Keycloak en local
         console.error('Erreur initialisation Keycloak', err)
       })
       .finally(() => {

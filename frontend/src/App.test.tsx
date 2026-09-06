@@ -1,9 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import App from './App'
-import * as useAuthModule from './auth/useAuth'
+import * as useAuthHook from '@/features/auth/hooks/useAuth'
 
-vi.mock('./auth/useAuth')
+vi.mock('@/features/auth/hooks/useAuth')
+vi.mock('@/features/auth/components/KeycloakProvider', () => ({
+  KeycloakProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}))
 
 describe('App Root Component', () => {
   beforeEach(() => {
@@ -11,7 +14,7 @@ describe('App Root Component', () => {
   })
 
   it('affiche l écran de chargement lorsque Keycloak est en cours d initialisation', () => {
-    vi.mocked(useAuthModule.useAuth).mockReturnValue({
+    vi.mocked(useAuthHook.useAuth).mockReturnValue({
       isAuthenticated: false,
       isLoading: true,
       user: null,
@@ -27,7 +30,7 @@ describe('App Root Component', () => {
   })
 
   it('affiche UnauthenticatedView lorsque l utilisateur n est pas connecté', () => {
-    vi.mocked(useAuthModule.useAuth).mockReturnValue({
+    vi.mocked(useAuthHook.useAuth).mockReturnValue({
       isAuthenticated: false,
       isLoading: false,
       user: null,
@@ -44,7 +47,7 @@ describe('App Root Component', () => {
   })
 
   it('affiche DashboardView et les liens de navigation lorsque l utilisateur est connecté', () => {
-    vi.mocked(useAuthModule.useAuth).mockReturnValue({
+    vi.mocked(useAuthHook.useAuth).mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
       user: {
