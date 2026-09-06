@@ -27,7 +27,7 @@ Le besoin est d'obtenir une mesure d'audience fine, légère et auto-hébergée,
 
 ### In Scope (Ce qui est ajouté/modifié)
 * **Infrastructure Auto-Hébergée Mutualisée (`infra/plausible/compose.yaml`) :**
-  * Déploiement du conteneur unique stateless Plausible Community Edition (`plausible/analytics`).
+  * Déploiement du conteneur unique stateless Plausible Community Edition (`ghcr.io/plausible/community-edition`).
   * **Mutualisation PostgreSQL :** Réutilisation stricte de l'instance PostgreSQL 16 existante (base dédiée `plausible`), sans aucun nouveau conteneur de base de données relationnelle (conformité ADR-0007).
   * **Mutualisation ClickHouse :** Réutilisation de l'instance ClickHouse existante de la stack SigNoz (`signoz-clickhouse`, base dédiée `plausible_events_db`), évitant toute duplication d'empreinte mémoire sur le VPS.
   * Exposition via Caddy Proxy sous le sous-domaine dédié `plausible.nanko.dev` (ou `plausible.preprod.nanko.dev`) avec TLS Let's Encrypt automatique et HSTS.
@@ -387,7 +387,7 @@ export function trackEvent(name: AnalyticsEventName, props?: Record<string, unkn
 - [x] **Phase 1 : Infrastructure & Stack Plausible Mutualisée (`infra/plausible/`)**
   - [x] 1. Initialiser la base de données PostgreSQL `plausible` sur l'instance `postgres:16-alpine` existante.
   - [x] 2. Initialiser la base ClickHouse `plausible_events_db` sur l'instance `signoz-clickhouse` existante.
-  - [x] 3. Créer `infra/plausible/compose.yaml` avec le conteneur unique stateless `plausible` (`plausible/analytics`) relié au réseau `edge`.
+  - [x] 3. Créer `infra/plausible/compose.yaml` avec le conteneur unique stateless `plausible` (`ghcr.io/plausible/community-edition`) relié au réseau `edge`.
   - [x] 4. Configurer les labels Caddy pour le sous-domaine `plausible.nanko.dev` avec gestion automatique TLS et protection des routes d'administration.
   - [x] 5. Ajouter la cible Makefile `deploy-plausible` permettant le déploiement sur le VPS OVH sans secret CI (ADR-0010).
   - [x] **Validation Infra :** Vérifier la conformité de la syntaxe Docker Compose (`docker compose -f infra/plausible/compose.yaml config`).
