@@ -95,11 +95,16 @@
 
 ### Tests E2E Playwright (`tests-e2e/`)
 * `tests-e2e/playwright.config.ts` configuré avec support de la variable `APP_BASE_URL` pour cibler indifféremment l'environnement local (`http://localhost:5173`) ou l'environnement de préproduction (`https://app.preprod.nanko.dev`), désormais exposée via `tests-e2e/config/env.ts`.
+* Déclaration explicite de `testIdAttribute: "data-qa"` dans l'objet `use` de `playwright.config.ts`, configurant nativement `page.getByTestId(...)` pour cibler les balises DOM `[data-qa="..."]`.
+* Standardisation exclusive des sélecteurs de composants Nanko sur `data-qa` au format `kebab-case` (`[contexte]-[élément]-[action/état]`), découplant totalement les tests des styles visuels ou classes CSS.
+* Configuration de React Testing Library dans `frontend/src/test/setup.ts` via `configure({ testIdAttribute: 'data-qa' })`, unifiant les sélecteurs de tests unitaires et E2E tout en éliminant 100% des attributs `data-testid` résiduels dans le code applicatif.
+* Exception isolée et documentée pour les formulaires de l'IdP tiers Keycloak (`#username`, `#password`, `#kc-login`).
 * Injection conditionnelle de `httpCredentials: { username, password }` dans `playwright.config.ts` lorsque `env.preprodHttpUser` et `env.preprodHttpPassword` sont définis, autorisant l'exécution transparente de la suite de tests E2E contre une préproduction protégée.
 * Workflow CI `pr-preprod-e2e.yml` transmettant les secrets `PREPROD_HTTP_USER` et `PREPROD_HTTP_PASSWORD` lors de l'exécution du job Playwright.
-* `tests-e2e/tests/app/telemetry.spec.ts` validant la conformité du header W3C `traceparent` et la résilience fail-open.
+* `tests-e2e/tests/app/telemetry.spec.ts` validant la conformité du header W3C `traceparent` et la résilience fail-open via `page.getByTestId('nav-logo')`.
+* `tests-e2e/tests/app/portal.spec.ts` validant le rendu du portail Nanko et ses interactions sans sélecteur CSS.
 * `tests-e2e/tests/app/robots.spec.ts` validant la présence de l'en-tête HTTP `X-Robots-Tag` (`noindex, nofollow`) sur l'application et la réponse standardisée `200 OK` sur `/robots.txt` (`User-agent: *`, `Disallow: /`).
-* `tests-e2e/tests/app/logging.spec.ts` validant la capture des exceptions par l'ErrorBoundary, l'affichage de l'identifiant d'incident et la résilience fail-open en cas d'indisponibilité du endpoint OTLP.
+* `tests-e2e/tests/app/logging.spec.ts` validant la capture des exceptions par l'ErrorBoundary, l'affichage de l'identifiant d'incident et la résilience fail-open en cas d'indisponibilité du endpoint OTLP via `getByTestId('error-boundary-fallback')` et `getByTestId('incident-id')`.
 
 ---
 
@@ -111,6 +116,7 @@
 * Le transport des logs OpenTelemetry intègre une protection stricte contre les **boucles de récursion infinies** : un échec d'exporteur ne doit en aucun cas déclencher une nouvelle émission de log.
 * Le sas HTTP Basic Auth est strictement restreint à la préproduction : il ne s'applique ni au local ni à la production, et n'altère en rien les flux d'authentification applicatifs Keycloak OIDC.
 * La protection anti-indexation (`X-Robots-Tag` durci et consigne `Disallow: /` sur `/robots.txt`) est strictement cantonnée à la préproduction et aux outils internes (SigNoz), pour garantir l'étanchéité SEO totale sans impacter la découvrabilité du domaine de production.
+* **Invariant `data-qa` exclusif :** Aucun test E2E Playwright ciblant du code Nanko ne doit utiliser de sélecteur basé sur une classe CSS (`.classe`) ou un ID HTML (`#id`). L'API `page.getByTestId(...)` résout obligatoirement `[data-qa="..."]`. Seule la mire externe Keycloak fait exception.
 
 ---
 
