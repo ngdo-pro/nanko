@@ -7,7 +7,7 @@ function ThrowingComponent({ shouldThrow }: { shouldThrow: boolean }) {
   if (shouldThrow) {
     throw new Error('Test component render explosion')
   }
-  return <div data-testid="normal-content">Everything is fine</div>
+  return <div data-qa="normal-content">Everything is fine</div>
 }
 
 describe('AppErrorBoundary Component', () => {

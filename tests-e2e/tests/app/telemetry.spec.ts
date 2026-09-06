@@ -15,7 +15,7 @@ test.describe('Observabilité & Télémétrie OpenTelemetry', () => {
     })
 
     await page.goto('/')
-    await expect(page.locator('.nav-logo')).toBeVisible()
+    await expect(page.getByTestId('nav-logo')).toBeVisible()
 
     // Émission d'une requête API via le navigateur
     const responseStatus = await page.evaluate(
@@ -60,7 +60,7 @@ test.describe('Observabilité & Télémétrie OpenTelemetry', () => {
     await page.goto('/')
 
     // L'application frontend démarre normalement sans crash ni écran blanc
-    const logo = page.locator('.nav-logo')
+    const logo = page.getByTestId('nav-logo')
     await expect(logo).toBeVisible()
     await expect(logo).toHaveText('NANKO')
 

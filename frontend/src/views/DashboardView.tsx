@@ -10,7 +10,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ userEmail }) => {
   const displayEmail = userEmail || user?.email || 'architecte'
 
   return (
-    <div className="dashboard-container" data-testid="dashboard-view" data-qa="dashboard-view">
+    <div className="dashboard-container" data-qa="dashboard-view">
       {/* En-tête de bienvenue */}
       <header className="dashboard-header">
         <div className="dashboard-welcome-tag" data-qa="workspace-status">

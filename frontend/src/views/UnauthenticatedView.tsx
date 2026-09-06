@@ -20,7 +20,7 @@ export const UnauthenticatedView: React.FC = () => {
   const { login } = useAuth()
 
   return (
-    <div className="portal-container" data-testid="unauthenticated-view" data-qa="unauthenticated-view">
+    <div className="portal-container" data-qa="unauthenticated-view">
       <section className="portal-hero">
         <div className="hero-badge" data-qa="hero-badge">
           DIAGRAMMES C4 · DSL VERSIONNÉ
@@ -49,7 +49,6 @@ export const UnauthenticatedView: React.FC = () => {
             <button
               type="button"
               className="btn btn-primary btn-cta"
-              data-testid="portal-login-button"
               data-qa="portal-login-button"
               onClick={() => void login()}
             >

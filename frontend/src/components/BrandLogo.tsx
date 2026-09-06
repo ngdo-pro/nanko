@@ -66,7 +66,6 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       <a
         href={href}
         className="nav-logo"
-        data-testid="nav-logo"
         data-qa="nav-logo"
         aria-label="Nanko, accueil"
       >
