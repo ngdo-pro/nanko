@@ -32,6 +32,21 @@ Garantir l'intégrité, la traçabilité et la stabilité de la plateforme Nanko
 * **Accès humain (Développeurs & QA) :** Une invite d'authentification native du navigateur s'affiche lors de la première navigation. Après validation des identifiants (`PREPROD_HTTP_USER`), la session HTTP est maintenue par le navigateur et la navigation dans l'application ainsi que l'authentification Keycloak OIDC se déroulent normalement.
 * **Exécution automatisée E2E (CI) :** Le runner Playwright injecte nativement les identifiants Basic Auth (`httpCredentials`) configurés via les secrets de repository (`PREPROD_HTTP_USER`, `PREPROD_HTTP_PASSWORD`) de façon 100% transparente, validant les parcours nominaux sans contourner ni altérer le flux Keycloak.
 
+### Parcours 5 : Centralisation des logs applicatifs et gestion des incidents Frontend (OpenTelemetry & SigNoz)
+* **Frontend React (Capture & Remontée Fail-Open) :**
+  - Un module unifié (`src/config/logger.ts`) expose les méthodes typées (`debug`, `info`, `warn`, `error`).
+  - Les erreurs globales non interceptées (`window.onerror`, `window.onunhandledrejection`) et les crashs de composants React sont interceptés nativement.
+  - Le composant `AppErrorBoundary` encapsule l'application racine. En cas d'exception non gérée, il affiche un écran de repli élégant et rassurant contenant le Trace ID W3C de l'incident et des actions de reprise (« Recharger l'application », « Retour à l'accueil »), évitant tout écran blanc bloquant.
+  - Les logs de sévérité `WARN` et `ERROR` sont transmis de manière asynchrone non-bloquante au format OTLP HTTP (`POST /v1/logs`) avec le `trace_id` actif et les attributs de contexte (`service.name`, `deployment.environment`, stack trace, url).
+  - Un mécanisme d'anti-flood déduplique les erreurs répétitives identiques sur fenêtre glissante pour préserver la bande passante client et l'ingestion ClickHouse.
+* **Backend Symfony (Corrélation Monolog ➔ OTLP) :**
+  - Le handler Monolog `App\Adapter\Driver\Http\OpenTelemetry\OtelLogHandler` convertit chaque enregistrement de log Monolog en `LogRecord` OTLP.
+  - Chaque log est automatiquement enrichi avec le `trace_id` et le `span_id` du span OpenTelemetry actif via le SDK OpenTelemetry.
+  - Les logs sont stockés en tampon mémoire et flushés par lot vers le collecteur OTLP HTTP (`POST /v1/logs`) à l'événement `kernel.terminate`.
+  - Le niveau minimal d'émission vers OTLP est configurable via `OTEL_LOGS_LEVEL` (`info` par défaut), tandis que le flux local `php://stderr` continue de consigner l'intégralité des logs conteneur.
+* **Observabilité SigNoz :**
+  - L'équipe d'ingénierie navigue en 1 clic dans SigNoz depuis une trace HTTP lente ou en erreur vers l'ensemble des logs contextuels Backend et Frontend partageant le même `trace_id`.
+
 ## 3. Règles de Gestion & Invariants Opérationnels
 * **Règle 1 (Gate de préprod bloquante) :** Toute Pull Request doit obligatoirement valider l'ensemble des scénarios E2E Playwright sur l'infrastructure de préproduction réelle avant d'être éligible au merge sur `main`.
 * **Règle 2 (Sérialisation de l'environnement de préproduction) :** Pour éviter les conflits d'état sur l'environnement partagé de préproduction, les exécutions de PR sont strictement sérialisées via un groupe de concurrence GitHub Actions (`concurrency: group: preprod-shared-env, cancel-in-progress: false`).
@@ -45,6 +60,10 @@ Garantir l'intégrité, la traçabilité et la stabilité de la plateforme Nanko
 * **Règle 10 (Migrations de schéma ClickHouse autonomes) :** Tout déploiement de la stack d'observabilité (local ou VPS) exécute automatiquement les migrations de schéma SigNoz (`bootstrap`, `sync up`, `async up`) via le conteneur dédié `signoz-schema-migrator` avant le démarrage des services `otel-collector` et `signoz-query-service`.
 * **Règle 11 (Sas de sécurité HTTP Basic Auth en préproduction) :** L'accès aux applications web de préproduction (`app.preprod.nanko.dev`, `api.preprod.nanko.dev`, `www.preprod.nanko.dev`) est protégé par une authentification HTTP Basic Auth au niveau du reverse proxy Caddy (`caddy.basic_auth`), à l'exception explicite de `/robots.txt`. La production et le développement local restent exempts de Basic Auth.
 * **Règle 12 (Protection Anti-Indexation et Directive Robots stricte) :** Tous les sous-domaines de préproduction (`app.preprod.nanko.dev`, `www.preprod.nanko.dev`, `api.preprod.nanko.dev`, `auth.preprod.nanko.dev`) ainsi que la stack d'observabilité (`signoz.nanko.dev`) renvoient obligatoirement l'en-tête de réponse HTTP durci `X-Robots-Tag: "noindex, nofollow, noarchive, nosnippet, notranslate, noimageindex"`. L'endpoint `/robots.txt` renvoie sans authentification une consigne d'exclusion universelle (`User-agent: *\nDisallow: /`) pour interdire le crawl de l'ensemble des moteurs et robots d'exploration.
+* **Règle 13 (Corrélation Trace-Log obligatoire) :** Tout log Backend ou Frontend transmis à OpenTelemetry est obligatoirement enrichi avec le `trace_id` et le `span_id` W3C actifs s'ils existent, garantissant la liaison bidirectionnelle traces ↔ logs dans SigNoz.
+* **Règle 14 (Fail-Open et protection anti-récursion sur les logs) :** Tout dysfonctionnement de l'ingestion de logs (erreur réseau, collecteur indisponible, timeout) est silencieusement ignoré sans lever d'exception ni altérer l'UI ou les requêtes API. Une erreur survenue au sein de l'exporteur de logs ne doit jamais être re-capturée par le logger (protection stricte contre la récursion infinie).
+* **Règle 15 (Filtrage et seuil de télémétrie des logs) :** En préproduction et production, le Frontend restreint ses envois réseau vers OTLP aux niveaux `WARN` et `ERROR` avec déduplication locale, tandis que le Backend transmet à OTLP selon le seuil configuré par `OTEL_LOGS_LEVEL` (`INFO` par défaut).
+* **Règle 16 (Sanitization des logs applicatifs) :** Les attributs de log ne doivent jamais contenir de secrets en clair, mots de passe, tokens JWT ou en-têtes `Authorization: Bearer ...` (caviardage ou omission obligatoire).
 
 ## 4. Matrice des Échecs & Cas Limites
 | Situation | Comportement & Conséquence |
@@ -60,3 +79,5 @@ Garantir l'intégrité, la traçabilité et la stabilité de la plateforme Nanko
 | Requête sur `/robots.txt` sur n'importe quel sous-domaine de préproduction | Réponse immédiate `200 OK` (`text/plain`) avec `User-agent: *\nDisallow: /`, sans challenge Basic Auth |
 | Découverte de sous-domaines via Certificate Transparency (CT logs) | Tout bot explorateur recevant `/robots.txt` abandonne le crawl, et toute réponse HTTP porte `X-Robots-Tag` interdisant l'indexation |
 | Identifiants HTTP Basic Auth préproduction erronés | Réponse `401 Unauthorized`, réinvite native du navigateur ou échec explicite Playwright en CI |
+| Exception non gérée dans un composant React (crash UI) | `AppErrorBoundary` intercepte l'erreur, affiche l'écran de secours avec Trace ID, et émet un log `ERROR` vers SigNoz |
+| Échec d'envoi du log vers `/v1/logs` (ex: réseau coupé) | Abandon silencieux fail-open, aucun blocage du flux utilisateur, aucune boucle récursive |

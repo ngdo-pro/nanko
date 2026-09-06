@@ -390,9 +390,9 @@ export const frontendEnvSchema = z.object({
   - [x] **Validation E2E :**
     - `pnpm --filter tests-e2e exec playwright test`
 
-- [ ] **Phase 4 : Synchronisation documentaire (Automatisable via `/sync-current`)**
-  - [ ] 1. Mettre à jour `.specs/current/domains/platform/tech.md` et `behavior.md` avec l'architecture de centralisation des logs.
-  - [ ] 2. Archiver cette spécification dans `.specs/changes/archive/008-centralized-logging.md`.
+- [x] **Phase 4 : Synchronisation documentaire (Automatisable via `/sync-current`)**
+  - [x] 1. Mettre à jour `.specs/current/domains/platform/tech.md` et `behavior.md` avec l'architecture de centralisation des logs.
+  - [x] 2. Archiver cette spécification dans `.specs/changes/archive/008-centralized-logging.md`.
 
 ---
 
