@@ -15,8 +15,12 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      default: {}
-      edge: {}
+      default:
+        aliases:
+          - postgres
+      edge:
+        aliases:
+          - nanko-prod-postgres
 
   backend:
     image: ghcr.io/ngdo-pro/nanko-backend:prod
@@ -25,7 +29,7 @@ services:
     environment:
       APP_ENV: prod
       APP_SECRET: ${APP_SECRET}
-      DATABASE_URL: postgresql://nanko:${POSTGRES_PASSWORD}@postgres:5432/nanko?serverVersion=16&charset=utf8
+      DATABASE_URL: postgresql://nanko:${POSTGRES_PASSWORD}@nanko-prod-postgres:5432/nanko?serverVersion=16&charset=utf8
       KEYCLOAK_JWKS_URL: https://auth.nanko.dev/realms/nanko/protocol/openid-connect/certs
       KEYCLOAK_ISSUER: https://auth.nanko.dev/realms/nanko
       SERVER_NAME: ":80"
@@ -60,7 +64,7 @@ services:
     command: start --import-realm
     environment:
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/nanko
+      KC_DB_URL: jdbc:postgresql://nanko-prod-postgres:5432/nanko
       KC_DB_USERNAME: nanko
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
       KC_DB_SCHEMA: keycloak

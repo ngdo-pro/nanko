@@ -22,7 +22,7 @@ services:
     environment:
       APP_ENV: prod
       APP_SECRET: ${APP_SECRET}
-      DATABASE_URL: postgresql://nanko:${POSTGRES_PASSWORD}@postgres:5432/nanko?serverVersion=16&charset=utf8
+      DATABASE_URL: postgresql://nanko:${POSTGRES_PASSWORD}@nanko-preprod-postgres:5432/nanko?serverVersion=16&charset=utf8
       KEYCLOAK_JWKS_URL: https://auth.preprod.nanko.dev/realms/nanko/protocol/openid-connect/certs
       KEYCLOAK_ISSUER: https://auth.preprod.nanko.dev/realms/nanko
       SERVER_NAME: ":80"
@@ -65,7 +65,7 @@ services:
     command: start --import-realm
     environment:
       KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/nanko
+      KC_DB_URL: jdbc:postgresql://nanko-preprod-postgres:5432/nanko
       KC_DB_USERNAME: nanko
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
       KC_DB_SCHEMA: keycloak
