@@ -1,6 +1,6 @@
 services:
   plausible:
-    image: plausible/analytics:v2.1.4
+    image: ghcr.io/plausible/community-edition:v2.1.4
     container_name: plausible
     restart: unless-stopped
     command: sh -c "sleep 10 && /entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"
