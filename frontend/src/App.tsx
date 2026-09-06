@@ -1,136 +1,71 @@
-import { useState } from 'react'
+import React from 'react'
+import { BrandLogo, BrandIcon } from './components/BrandLogo'
+import { ThemeSwitch } from './components/ThemeSwitch'
 import { UserMenu } from './components/UserMenu'
 import { useAuth } from './auth/useAuth'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { UnauthenticatedView } from './views/UnauthenticatedView'
+import { DashboardView } from './views/DashboardView'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
-  const { isAuthenticated } = useAuth()
+export const App: React.FC = () => {
+  const { isAuthenticated, isLoading } = useAuth()
 
   return (
-    <>
+    <div className="app-container">
+      {/* Barre de navigation principale */}
       <header className="navbar">
         <div className="nav-left">
-          <a href="/" className="nav-logo">NANKO</a>
+          <BrandLogo withTagline={true} />
           {isAuthenticated && (
             <ul className="nav-links">
-              <li><a href="#projets" className="nav-link">Projets</a></li>
-              <li><a href="#organisations" className="nav-link">Organisations</a></li>
+              <li>
+                <a href="#projets" className="nav-link" data-qa="nav-link-projects">
+                  Projets
+                </a>
+              </li>
+              <li>
+                <a href="#organisations" className="nav-link" data-qa="nav-link-organisations">
+                  Organisations
+                </a>
+              </li>
             </ul>
           )}
         </div>
-        <UserMenu />
+        <div className="nav-right">
+          <ThemeSwitch />
+          <UserMenu />
+        </div>
       </header>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
 
-      <div className="ticks"></div>
+      {/* Contenu principal */}
+      <main className="app-main">
+        {isLoading ? (
+          <div className="app-loading-state" data-testid="app-loading" data-qa="app-loading">
+            <BrandIcon size={54} className="spinner-logo" />
+            <p className="loading-message">Initialisation de la session...</p>
+          </div>
+        ) : isAuthenticated ? (
+          <DashboardView />
+        ) : (
+          <UnauthenticatedView />
+        )}
+      </main>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      {/* Pied de page Nanko */}
+      <footer className="app-footer">
+        <span>&copy; 2026 NANKO &middot; Architecture de code</span>
+        <span className="footer-links">
+          <a
+            href="https://www.nanko.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-qa="footer-link-docs"
+          >
+            Documentation &amp; Vision
+          </a>
+        </span>
+      </footer>
+    </div>
   )
 }
 
