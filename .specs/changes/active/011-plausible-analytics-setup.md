@@ -384,29 +384,29 @@ export function trackEvent(name: AnalyticsEventName, props?: Record<string, unkn
 
 ## 9. Plan d'exécution séquentiel
 
-- [ ] **Phase 1 : Infrastructure & Stack Plausible Mutualisée (`infra/plausible/`)**
-  - [ ] 1. Initialiser la base de données PostgreSQL `plausible` sur l'instance `postgres:16-alpine` existante.
-  - [ ] 2. Initialiser la base ClickHouse `plausible_events_db` sur l'instance `signoz-clickhouse` existante.
-  - [ ] 3. Créer `infra/plausible/compose.yaml` avec le conteneur unique stateless `plausible` (`plausible/analytics`) relié au réseau `edge`.
-  - [ ] 4. Configurer les labels Caddy pour le sous-domaine `plausible.nanko.dev` avec gestion automatique TLS et protection des routes d'administration.
-  - [ ] 5. Ajouter la cible Makefile `deploy-plausible` permettant le déploiement sur le VPS OVH sans secret CI (ADR-0010).
-  - [ ] **Validation Infra :** Vérifier la conformité de la syntaxe Docker Compose (`docker compose -f infra/plausible/compose.yaml config`).
+- [x] **Phase 1 : Infrastructure & Stack Plausible Mutualisée (`infra/plausible/`)**
+  - [x] 1. Initialiser la base de données PostgreSQL `plausible` sur l'instance `postgres:16-alpine` existante.
+  - [x] 2. Initialiser la base ClickHouse `plausible_events_db` sur l'instance `signoz-clickhouse` existante.
+  - [x] 3. Créer `infra/plausible/compose.yaml` avec le conteneur unique stateless `plausible` (`plausible/analytics`) relié au réseau `edge`.
+  - [x] 4. Configurer les labels Caddy pour le sous-domaine `plausible.nanko.dev` avec gestion automatique TLS et protection des routes d'administration.
+  - [x] 5. Ajouter la cible Makefile `deploy-plausible` permettant le déploiement sur le VPS OVH sans secret CI (ADR-0010).
+  - [x] **Validation Infra :** Vérifier la conformité de la syntaxe Docker Compose (`docker compose -f infra/plausible/compose.yaml config`).
 
-- [ ] **Phase 2 : Configuration & Frontend Client (`frontend/`)**
-  - [ ] 1. Enrichir `frontend/src/config/env.ts` avec les variables `VITE_PLAUSIBLE_DOMAIN` et `VITE_PLAUSIBLE_API_HOST`.
-  - [ ] 2. Créer le module `frontend/src/lib/analytics.ts` avec `initAnalytics`, `trackEvent`, le catalogue d'événements et le filtre anti-PII.
-  - [ ] 3. Initialiser analytics dans `frontend/src/main.tsx` et instrumenter les transitions de routes dans `AppLayout.tsx`.
-  - [ ] 4. Rédiger les tests unitaires frontend dans `frontend/src/lib/analytics.test.ts` (validation anti-PII, fail-open, no-op en mode test).
-  - [ ] **Tests & Types Frontend :** Valider avec `pnpm --filter frontend typecheck`, `pnpm --filter frontend test` et `pnpm --filter frontend lint`.
+- [x] **Phase 2 : Configuration & Frontend Client (`frontend/`)**
+  - [x] 1. Enrichir `frontend/src/config/env.ts` avec les variables `VITE_PLAUSIBLE_DOMAIN` et `VITE_PLAUSIBLE_API_HOST`.
+  - [x] 2. Créer le module `frontend/src/lib/analytics.ts` avec `initAnalytics`, `trackEvent`, le catalogue d'événements et le filtre anti-PII.
+  - [x] 3. Initialiser analytics dans `frontend/src/main.tsx` et instrumenter les transitions de routes dans `AppLayout.tsx`.
+  - [x] 4. Rédiger les tests unitaires frontend dans `frontend/src/lib/analytics.test.ts` (validation anti-PII, fail-open, no-op en mode test).
+  - [x] **Tests & Types Frontend :** Valider avec `pnpm --filter frontend typecheck`, `pnpm --filter frontend test` et `pnpm --filter frontend lint`.
 
-- [ ] **Phase 3 : Landing Page (`landing/`)**
-  - [ ] 1. Injecter le script Plausible dans `landing/index.html` avec les attributs `data-domain` et `data-api`.
-  - [ ] 2. Baliser les boutons d'action clés avec les classes `plausible-event-name=...` (`landing_cta_app_click`, `landing_docs_click`).
-  - [ ] 3. Insérer la mention d'information réglementaire (mesure d'audience anonyme sans cookie) dans le pied de page / mentions légales.
+- [x] **Phase 3 : Landing Page (`landing/`)**
+  - [x] 1. Injecter le script Plausible dans `landing/index.html` avec les attributs `data-domain` et `data-api`.
+  - [x] 2. Baliser les boutons d'action clés avec les classes `plausible-event-name=...` (`landing_cta_app_click`, `landing_docs_click`).
+  - [x] 3. Insérer la mention d'information réglementaire (mesure d'audience anonyme sans cookie) dans le pied de page / mentions légales.
 
-- [ ] **Phase 4 : End-to-End (`tests-e2e/`)**
-  - [ ] 1. Créer le test Playwright `tests-e2e/tests/app/analytics.spec.ts` simulant la navigation et vérifiant la non-régression de l'application avec et sans mock Plausible.
-  - [ ] **Tests E2E :** Exécuter la suite Playwright (`pnpm --filter tests-e2e exec playwright test`).
+- [x] **Phase 4 : End-to-End (`tests-e2e/`)**
+  - [x] 1. Créer le test Playwright `tests-e2e/tests/app/analytics.spec.ts` simulant la navigation et vérifiant la non-régression de l'application avec et sans mock Plausible.
+  - [x] **Tests E2E :** Exécuter la suite Playwright (`pnpm --filter tests-e2e exec playwright test`).
 
 - [ ] **Phase 5 : Synchronisation documentaire (Automatisable via `/sync-current`)**
   - [ ] 1. Répercuter le composant Plausible dans `.specs/current/domains/platform/tech.md`.

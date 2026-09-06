@@ -1,5 +1,6 @@
 import React from 'react'
 import { useAuth } from '@/features/auth'
+import { trackEvent } from '@/lib/analytics'
 
 export const NANKO_CODE_PREVIEW = `@id platform-overview
 @version app:1.2.0
@@ -50,7 +51,10 @@ export const UnauthenticatedView: React.FC = () => {
               type="button"
               className="btn btn-primary btn-cta"
               data-qa="portal-login-button"
-              onClick={() => void login()}
+              onClick={() => {
+                trackEvent('login_initiated')
+                void login()
+              }}
             >
               Se connecter / Créer un compte &rarr;
             </button>

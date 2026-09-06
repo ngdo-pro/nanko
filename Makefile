@@ -1,7 +1,7 @@
 VPS ?= nanko-vps
 REMOTE_DIR ?= nanko
 
-.PHONY: help dev stop logs signoz-up signoz-down test-backend test-e2e test-e2e-ui composer deptrac static-analysis lint lint-fix deploy-preprod deploy-prod deploy-signoz
+.PHONY: help dev stop logs signoz-up signoz-down test-backend test-e2e test-e2e-ui composer deptrac static-analysis lint lint-fix deploy-preprod deploy-prod deploy-signoz deploy-plausible
 
 .DEFAULT_GOAL := help
 
@@ -117,4 +117,9 @@ deploy-signoz: ## Deploy SigNoz observability stack to VPS
 	ssh $(VPS) "cd $(REMOTE_DIR) && git pull --ff-only && \
 		docker compose -p signoz -f infra/signoz/compose.yaml \
 		--env-file ~/.config/nanko/signoz.env up -d"
+
+deploy-plausible: ## Deploy Plausible analytics stack to VPS
+	ssh $(VPS) "cd $(REMOTE_DIR) && git pull --ff-only && \
+		docker compose -p plausible -f infra/plausible/compose.yaml \
+		--env-file ~/.config/nanko/plausible.env up -d"
 

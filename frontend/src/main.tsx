@@ -3,10 +3,12 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import { App } from './app/App'
 import { initTelemetry } from './config/telemetry'
+import { initAnalytics } from './lib/analytics'
 import { logger } from './config/logger'
 import { AppErrorBoundary } from './components/AppErrorBoundary'
 
 initTelemetry()
+initAnalytics()
 
 logger.info('Frontend application initialized', {
   service: 'nanko-frontend',

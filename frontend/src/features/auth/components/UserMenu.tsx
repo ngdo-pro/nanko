@@ -1,5 +1,6 @@
 import React from 'react'
 import { useAuth } from '../hooks/useAuth'
+import { trackEvent } from '@/lib/analytics'
 
 export const UserMenu: React.FC = () => {
   const { isAuthenticated, isLoading, user, login, logout } = useAuth()
@@ -21,7 +22,10 @@ export const UserMenu: React.FC = () => {
         type="button"
         className="btn btn-secondary btn-login"
         data-qa="login-button"
-        onClick={() => void login()}
+        onClick={() => {
+          trackEvent('login_initiated')
+          void login()
+        }}
       >
         Se connecter
       </button>
@@ -54,7 +58,10 @@ export const UserMenu: React.FC = () => {
         type="button"
         className="btn btn-ghost btn-logout"
         data-qa="logout-button"
-        onClick={() => void logout()}
+        onClick={() => {
+          trackEvent('logout_initiated')
+          void logout()
+        }}
       >
         Déconnexion
       </button>

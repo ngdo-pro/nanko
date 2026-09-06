@@ -32,6 +32,13 @@ export const frontendEnvSchema = z.object({
   VITE_LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('warn'),
   VITE_OTEL_SERVICE_NAME: z.string().min(1).default('nanko-frontend'),
   VITE_APP_ENV: z.string().min(1).default('local'),
+  VITE_PLAUSIBLE_DOMAIN: z.string().default(''),
+  VITE_PLAUSIBLE_API_HOST: z
+    .string()
+    .url('VITE_PLAUSIBLE_API_HOST doit être une URL valide')
+    .optional()
+    .or(z.literal(''))
+    .default(''),
 })
 
 // Extraction explicite pour permettre la substitution statique par Vite
@@ -45,6 +52,8 @@ const rawEnv = {
   VITE_LOG_LEVEL: import.meta.env?.VITE_LOG_LEVEL,
   VITE_OTEL_SERVICE_NAME: import.meta.env?.VITE_OTEL_SERVICE_NAME,
   VITE_APP_ENV: import.meta.env?.VITE_APP_ENV,
+  VITE_PLAUSIBLE_DOMAIN: import.meta.env?.VITE_PLAUSIBLE_DOMAIN,
+  VITE_PLAUSIBLE_API_HOST: import.meta.env?.VITE_PLAUSIBLE_API_HOST,
 }
 
 // Validation sécurisée et export typé
@@ -102,6 +111,10 @@ export const env = Object.freeze({
     logLevel: parsed.data.VITE_LOG_LEVEL,
     serviceName: parsed.data.VITE_OTEL_SERVICE_NAME,
     environment: parsed.data.VITE_APP_ENV,
+  },
+  plausible: {
+    domain: parsed.data.VITE_PLAUSIBLE_DOMAIN,
+    apiHost: parsed.data.VITE_PLAUSIBLE_API_HOST,
   },
 })
 
