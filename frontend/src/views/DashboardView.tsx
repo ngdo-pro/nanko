@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useAuth } from '@/features/auth'
+import { useWorkspace, CreateProjectModal } from '@/features/workspaces'
 
 export interface DashboardViewProps {
   userEmail?: string
@@ -7,6 +8,9 @@ export interface DashboardViewProps {
 
 export const DashboardView: React.FC<DashboardViewProps> = ({ userEmail }) => {
   const { user } = useAuth()
+  const { activeProject, projects, setActiveProject, isLoading } = useWorkspace()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
   const displayEmail = userEmail || user?.email || 'architecte'
 
   return (
@@ -24,7 +28,51 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ userEmail }) => {
         </p>
       </header>
 
-      {/* État vide incitatif (Empty State) */}
+      {/* Section Gestion des Projets */}
+      <section className="dashboard-projects-section" data-qa="projects-section">
+        <div className="projects-header">
+          <h2 className="projects-title">Mes Projets</h2>
+          <button
+            type="button"
+            className="btn btn-primary"
+            data-qa="new-project-button"
+            onClick={() => setIsModalOpen(true)}
+          >
+            + Nouveau Projet
+          </button>
+        </div>
+
+        {isLoading ? (
+          <p className="form-hint">Chargement de vos projets...</p>
+        ) : (
+          <div className="projects-grid" data-qa="projects-grid">
+            {projects.map((project) => {
+              const isActive = activeProject?.id === project.id
+              return (
+                <button
+                  key={project.id}
+                  type="button"
+                  className={`project-card ${isActive ? 'active' : ''}`}
+                  onClick={() => setActiveProject(project)}
+                  data-qa={`project-card-${project.slug}`}
+                >
+                  <div className="project-card-header">
+                    <span className="project-card-name">{project.name}</span>
+                    {isActive && (
+                      <span className="project-badge-active" data-qa="active-project-badge">
+                        Actif
+                      </span>
+                    )}
+                  </div>
+                  <span className="project-card-slug">{project.slug}</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* État vide incitatif du projet actif */}
       <div className="card dashboard-empty-state" data-qa="empty-documents-card">
         <div className="empty-state-icon" aria-hidden="true">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -36,9 +84,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ userEmail }) => {
           </svg>
         </div>
 
-        <h2 className="empty-state-title">Aucun document d'architecture pour le moment</h2>
+        <h2 className="empty-state-title">
+          {activeProject
+            ? `Projet : ${activeProject.name}`
+            : "Aucun document d'architecture pour le moment"}
+        </h2>
         <p className="empty-state-description">
-          Commencez par initialiser un nouveau document d'architecture ou importez un fichier <code>.nanko</code> existant.
+          Commencez par initialiser un nouveau document d'architecture dans ce projet ou importez un fichier <code>.nanko</code> existant.
         </p>
 
         <div className="empty-state-actions">
@@ -76,6 +128,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ userEmail }) => {
           </code>
         </div>
       </section>
+
+      {/* Modale de création de projet */}
+      <CreateProjectModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   )
 }
