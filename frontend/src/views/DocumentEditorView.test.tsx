@@ -150,24 +150,28 @@ describe('DocumentEditorView', () => {
 
     // Mode initial : Split
     expect(screen.getByTestId('layout-mode-split')).toHaveClass('is-active')
+    expect(screen.getByTestId('editor-topbar')).toHaveClass('is-static')
     expect(screen.getByTestId('source-code-textarea')).toBeInTheDocument()
     expect(screen.getByTestId('nanko-canvas')).toBeInTheDocument()
 
     // Basculement vers Canvas
     await user.click(screen.getByTestId('layout-mode-canvas'))
     expect(screen.getByTestId('layout-mode-canvas')).toHaveClass('is-active')
+    expect(screen.getByTestId('editor-topbar')).toHaveClass('is-floating')
     expect(screen.getByTestId('nanko-canvas')).toBeInTheDocument()
     expect(screen.queryByTestId('source-code-textarea')).not.toBeInTheDocument()
 
     // Basculement vers Code
     await user.click(screen.getByTestId('layout-mode-code'))
     expect(screen.getByTestId('layout-mode-code')).toHaveClass('is-active')
+    expect(screen.getByTestId('editor-topbar')).toHaveClass('is-static')
     expect(screen.getByTestId('source-code-textarea')).toBeInTheDocument()
     expect(screen.queryByTestId('nanko-canvas')).not.toBeInTheDocument()
 
     // Retour vers Split
     await user.click(screen.getByTestId('layout-mode-split'))
     expect(screen.getByTestId('layout-mode-split')).toHaveClass('is-active')
+    expect(screen.getByTestId('editor-topbar')).toHaveClass('is-static')
     expect(screen.getByTestId('source-code-textarea')).toBeInTheDocument()
     expect(screen.getByTestId('nanko-canvas')).toBeInTheDocument()
   })

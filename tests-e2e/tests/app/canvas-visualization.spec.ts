@@ -58,6 +58,12 @@ test.describe('Visualisation Graphique en Canvas Interactif avec React Flow (015
     const editorView = page.getByTestId('document-editor-view')
     await expect(editorView).toBeVisible()
 
+    // Vérification de la disposition pleine largeur (Spec 016)
+    const mainContainer = page.locator('main.app-main')
+    await expect(mainContainer).toHaveClass(/app-main-fullscreen/)
+    const topbar = page.getByTestId('editor-topbar')
+    await expect(topbar).toHaveClass(/is-static/)
+
     // 4. Édition du code source avec 2 shapes et 1 connecteur
     const textarea = page.getByTestId('source-code-textarea')
     await expect(textarea).toBeVisible()
@@ -91,21 +97,24 @@ test.describe('Visualisation Graphique en Canvas Interactif avec React Flow (015
     const modeCodeBtn = page.getByTestId('layout-mode-code')
     const modeSplitBtn = page.getByTestId('layout-mode-split')
 
-    // Mode Canvas plein écran
+    // Mode Canvas plein écran avec barre de commandes flottante
     await modeCanvasBtn.click()
     await expect(modeCanvasBtn).toHaveClass(/is-active/)
+    await expect(topbar).toHaveClass(/is-floating/)
     await expect(canvas).toBeVisible()
     await expect(textarea).not.toBeVisible()
 
-    // Mode Code plein écran
+    // Mode Code plein écran avec barre ancrée
     await modeCodeBtn.click()
     await expect(modeCodeBtn).toHaveClass(/is-active/)
+    await expect(topbar).toHaveClass(/is-static/)
     await expect(textarea).toBeVisible()
     await expect(canvas).not.toBeVisible()
 
-    // Retour en Mode Split
+    // Retour en Mode Split avec barre ancrée
     await modeSplitBtn.click()
     await expect(modeSplitBtn).toHaveClass(/is-active/)
+    await expect(topbar).toHaveClass(/is-static/)
     await expect(textarea).toBeVisible()
     await expect(canvas).toBeVisible()
 
