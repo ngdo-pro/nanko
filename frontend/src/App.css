@@ -1645,10 +1645,18 @@
 }
 
 .nanko-node-circle {
-  min-width: 160px;
+  width: 130px;
+  height: 130px;
+  min-width: 130px;
+  min-height: 130px;
+  max-width: 130px;
+  max-height: 130px;
   background-color: var(--surface);
   border: 1.5px solid var(--border-strong);
-  border-radius: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .nanko-node-circle:hover {
@@ -1658,6 +1666,43 @@
 .nanko-node-circle.is-selected {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.nanko-circle-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0.75rem;
+  box-sizing: border-box;
+  text-align: center;
+  border-radius: 50%;
+}
+
+.nanko-node-circle .nanko-node-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0 0 0.2rem 0;
+  border-bottom: none;
+  background-color: transparent;
+}
+
+.nanko-node-circle .nanko-node-body {
+  padding: 0.15rem 0.25rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.nanko-node-circle .nanko-node-label {
+  font-size: 0.78rem;
+  line-height: 1.25;
+  text-align: center;
 }
 
 .nanko-node-text {
