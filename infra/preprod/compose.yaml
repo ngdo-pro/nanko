@@ -1,8 +1,22 @@
+x-hardening: &hardening
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+
 services:
   postgres:
     image: postgres:16-alpine
     container_name: nanko-preprod-postgres
     restart: unless-stopped
+    <<: *hardening
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          pids: 256
     environment:
       POSTGRES_USER: nanko
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -19,13 +33,19 @@ services:
     image: ghcr.io/ngdo-pro/nanko-backend:preprod
     container_name: nanko-preprod-backend
     restart: unless-stopped
+    <<: *hardening
+    cap_add: [NET_BIND_SERVICE]
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          pids: 256
     environment:
       APP_ENV: prod
       APP_SECRET: ${APP_SECRET}
-      DATABASE_URL: postgresql://nanko:${POSTGRES_PASSWORD}@nanko-preprod-postgres:5432/nanko?serverVersion=16&charset=utf8
+      DATABASE_URL: postgresql://nanko_app:${APP_DB_PASSWORD}@nanko-preprod-postgres:5432/nanko?serverVersion=16&charset=utf8
       KEYCLOAK_JWKS_URL: https://auth.preprod.nanko.dev/realms/nanko/protocol/openid-connect/certs
       KEYCLOAK_ISSUER: https://auth.preprod.nanko.dev/realms/nanko
-      SERVER_NAME: ":80"
       CORS_ALLOW_ORIGIN: '^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$|^https://[a-z0-9-]+\.preprod\.nanko\.dev$'
       OTEL_EXPORTER_OTLP_ENDPOINT: http://signoz-otel-collector:4318/v1/traces
       OTEL_SERVICE_NAME: nanko-backend
@@ -39,22 +59,19 @@ services:
       caddy.encode: gzip
       caddy.@robots.path: /robots.txt
       caddy.respond: '@robots "User-agent: *\nDisallow: /\n" 200'
-      caddy.header.@robots.Content-Type: "text/plain; charset=utf-8"
+      caddy.header.@robots.Content-Type: '"text/plain; charset=utf-8"'
       caddy.@protected.not_0.path: /robots.txt
       caddy.@protected.not_1.method: OPTIONS
       caddy.@protected.not_2.header_regexp: Authorization ^Bearer\s+
       caddy.basicauth: "@protected"
       caddy.basicauth.nanko: "${PREPROD_HTTP_HASH}"
-      caddy.reverse_proxy: "{{upstreams 80}}"
-      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+      caddy.reverse_proxy: "{{upstreams 8080}}"
+      caddy.header.Strict-Transport-Security: '"max-age=31536000; includeSubDomains"'
+      caddy.header.Referrer-Policy: strict-origin-when-cross-origin
+      caddy.header.Permissions-Policy: '"camera=(), microphone=(), geolocation=(), payment=(), usb=()"'
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Frame-Options: DENY
       caddy.header.X-Robots-Tag: '"noindex, nofollow, noarchive, nosnippet, notranslate, noimageindex"'
-    # Under caddy-docker-proxy, the `caddy.reverse_proxy` label above resolves
-    # the upstream automatically by container IP -- there's no separate
-    # Caddyfile to keep in sync anymore. `container_name` is kept only for
-    # human-readable `docker ps`/`docker logs` disambiguation between preprod
-    # and prod.
     networks:
       default: {}
       edge: {}
@@ -64,11 +81,17 @@ services:
     container_name: nanko-preprod-keycloak
     restart: unless-stopped
     command: start --import-realm
+    <<: *hardening
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          pids: 256
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://nanko-preprod-postgres:5432/nanko
-      KC_DB_USERNAME: nanko
-      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
       KC_DB_SCHEMA: keycloak
       KC_HOSTNAME: https://auth.preprod.nanko.dev
       KC_PROXY_HEADERS: xforwarded
@@ -78,7 +101,7 @@ services:
       KC_TRACING_RESOURCE_ATTRIBUTES: service.name=nanko-keycloak,deployment.environment=preprod
       KC_METRICS_ENABLED: "true"
     volumes:
-      - ../keycloak:/opt/keycloak/data/import:ro
+      - ../keycloak/preprod:/opt/keycloak/data/import:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -87,10 +110,13 @@ services:
       caddy: auth.preprod.nanko.dev
       caddy.encode: gzip
       caddy.@robots.path: /robots.txt
-      caddy.respond: '@robots "User-agent: *\nDisallow: /\n" 200'
-      caddy.header.@robots.Content-Type: "text/plain; charset=utf-8"
+      caddy.respond_0: '@robots "User-agent: *\nDisallow: /\n" 200'
+      caddy.header.@robots.Content-Type: '"text/plain; charset=utf-8"'
+      caddy.@admin.path: /admin* /realms/master*
+      caddy.@admin.not.remote_ip: "${KC_ADMIN_ALLOWED_IPS:-127.0.0.1/32}"
+      caddy.respond_1: "@admin 403"
       caddy.reverse_proxy: "{{upstreams 8080}}"
-      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+      caddy.header.Strict-Transport-Security: '"max-age=31536000; includeSubDomains"'
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Robots-Tag: '"noindex, nofollow, noarchive, nosnippet, notranslate, noimageindex"'
     networks:
@@ -101,6 +127,15 @@ services:
     image: ghcr.io/ngdo-pro/nanko-frontend:preprod
     container_name: nanko-preprod-frontend
     restart: unless-stopped
+    read_only: true
+    tmpfs: [/data, /config, /tmp]
+    <<: *hardening
+    cap_add: [NET_BIND_SERVICE]
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          pids: 256
     networks:
       edge: {}
     labels:
@@ -109,20 +144,32 @@ services:
       caddy.encode: gzip
       caddy.@robots.path: /robots.txt
       caddy.respond: '@robots "User-agent: *\nDisallow: /\n" 200'
-      caddy.header.@robots.Content-Type: "text/plain; charset=utf-8"
+      caddy.header.@robots.Content-Type: '"text/plain; charset=utf-8"'
       caddy.@protected.not.path: /robots.txt
       caddy.basicauth: "@protected"
       caddy.basicauth.nanko: "${PREPROD_HTTP_HASH}"
       caddy.reverse_proxy: "{{upstreams 8080}}"
-      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+      caddy.header.Strict-Transport-Security: '"max-age=31536000; includeSubDomains"'
+      caddy.header.Referrer-Policy: strict-origin-when-cross-origin
+      caddy.header.Permissions-Policy: '"camera=(), microphone=(), geolocation=(), payment=(), usb=()"'
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Frame-Options: DENY
       caddy.header.X-Robots-Tag: '"noindex, nofollow, noarchive, nosnippet, notranslate, noimageindex"'
+      caddy.header.Content-Security-Policy-Report-Only: "\"default-src 'self'; script-src 'self' https://plausible.nanko.dev; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.preprod.nanko.dev https://auth.preprod.nanko.dev https://otlp.nanko.dev https://plausible.nanko.dev; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://auth.preprod.nanko.dev; object-src 'none'\""
 
   landing:
     image: ghcr.io/ngdo-pro/nanko-landing:preprod
     container_name: nanko-preprod-landing
     restart: unless-stopped
+    read_only: true
+    tmpfs: [/data, /config, /tmp]
+    <<: *hardening
+    cap_add: [NET_BIND_SERVICE]
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          pids: 256
     networks:
       edge: {}
     labels:
@@ -131,14 +178,18 @@ services:
       caddy.encode: gzip
       caddy.@robots.path: /robots.txt
       caddy.respond: '@robots "User-agent: *\nDisallow: /\n" 200'
-      caddy.header.@robots.Content-Type: "text/plain; charset=utf-8"
+      caddy.header.@robots.Content-Type: '"text/plain; charset=utf-8"'
       caddy.reverse_proxy: "{{upstreams 8080}}"
-      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+      caddy.header.Strict-Transport-Security: '"max-age=31536000; includeSubDomains"'
+      caddy.header.Referrer-Policy: strict-origin-when-cross-origin
+      caddy.header.Permissions-Policy: '"camera=(), microphone=(), geolocation=(), payment=(), usb=()"'
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Frame-Options: DENY
       caddy.header.X-Robots-Tag: '"noindex, nofollow, noarchive, nosnippet, notranslate, noimageindex"'
+      caddy.header.Content-Security-Policy-Report-Only: "\"default-src 'self'; script-src 'self' https://plausible.nanko.dev; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://plausible.nanko.dev; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'\""
 
 networks:
+  default: {}
   edge:
     external: true
 

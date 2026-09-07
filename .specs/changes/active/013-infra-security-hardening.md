@@ -551,57 +551,57 @@ docker exec postgres-backup ls -la /backups/daily/
 Ordre pensé pour que chaque phase soit déployable et réversible indépendamment. Preprod d'abord, prod ensuite, à chaque phase.
 
 ### Phase 0 : Hygiène repo (aucun impact runtime)
-- [ ] Ajouter `/infra/plausible/.env` au `.gitignore`.
-- [ ] Retirer `KEYCLOAK_ADMIN_PASSWORD` de `infra/preprod/.env.example`.
-- [ ] Mettre à jour tous les `.env.example` avec les nouvelles variables (section 5.4).
-- [ ] Épingler les `uses:` des 4 workflows par SHA (relevés via `gh api`), ajouter `.github/dependabot.yml`.
-- [ ] Vérifier que CI (`ci.yml`) reste verte.
+- [x] Ajouter `/infra/plausible/.env` au `.gitignore`.
+- [x] Retirer `KEYCLOAK_ADMIN_PASSWORD` de `infra/preprod/.env.example`.
+- [x] Mettre à jour tous les `.env.example` avec les nouvelles variables (section 5.4).
+- [x] Épingler les `uses:` des 4 workflows par SHA (relevés via `gh api`), ajouter `.github/dependabot.yml`.
+- [x] Vérifier que CI (`ci.yml`) reste verte.
 
 ### Phase 1 : Postgres — rôles dédiés et retrait de `edge`
-- [ ] Écrire `infra/postgres/harden-roles.sql` (section 3.1) et mettre à jour `infra/local/init-postgres.sql` (rôles + schémas locaux).
+- [x] Écrire `infra/postgres/harden-roles.sql` (section 3.1) et mettre à jour `infra/local/init-postgres.sql` (rôles + schémas locaux).
 - [ ] Local : `make stop`, suppression du volume `nanko-postgres-data`, `make dev`, `make test-backend`, `make test-e2e` verts avec `nanko_app`/`keycloak`.
 - [ ] Preprod : exécuter `harden-roles.sql` en `nanko` ; renseigner `APP_DB_PASSWORD`, `KEYCLOAK_DB_PASSWORD` dans `preprod.env` ; modifier `infra/preprod/compose.yaml` (DSN backend, `KC_DB_USERNAME`/`KC_DB_PASSWORD`) ; `make deploy-preprod` ; vérifier `/api/v1/version`, login E2E, `docker logs` Keycloak sans erreur Liquibase.
-- [ ] Prod : idem + rôle `plausible` + `backup` ; retirer `postgres` du réseau `edge` dans `infra/prod/compose.yaml` ; ajouter le sidecar `postgres-backup` ; `make deploy-prod`.
-- [ ] Plausible : `infra/plausible/compose.yaml` rejoint `nanko-prod_default`, `DATABASE_URL` sur le rôle `plausible` ; `make deploy-plausible` ; vérifier le dashboard Plausible.
+- [x] Prod : idem + rôle `plausible` + `backup` ; retirer `postgres` du réseau `edge` dans `infra/prod/compose.yaml` ; ajouter le sidecar `postgres-backup` ; `make deploy-prod`.
+- [x] Plausible : `infra/plausible/compose.yaml` rejoint `nanko-prod_default`, `DATABASE_URL` sur le rôle `plausible` ; `make deploy-plausible` ; vérifier le dashboard Plausible.
 - [ ] Exécuter les vérifications Postgres de la section 7.3.
 
 ### Phase 2 : ClickHouse — authentification et retrait de `edge`
-- [ ] Réécrire `infra/signoz/clickhouse-users.xml` (3 utilisateurs, `from_env`, `allow_databases`).
-- [ ] Ajouter les DSN authentifiés dans `infra/signoz/compose.yaml` (query-service, otel-collector, schema-migrator) et les variables `CLICKHOUSE_*` ; retirer `clickhouse` de `edge`.
-- [ ] Épingler les images SigNoz sur les versions en cours (relevées par `docker inspect` sur le VPS), `alpine:3.22`.
-- [ ] Ajouter Basic Auth Caddy sur `signoz-frontend` (`SIGNOZ_BASICAUTH_HASH`).
+- [x] Réécrire `infra/signoz/clickhouse-users.xml` (3 utilisateurs, `from_env`, `allow_databases`).
+- [x] Ajouter les DSN authentifiés dans `infra/signoz/compose.yaml` (query-service, otel-collector, schema-migrator) et les variables `CLICKHOUSE_*` ; retirer `clickhouse` de `edge`.
+- [x] Épingler les images SigNoz sur les versions en cours (relevées par `docker inspect` sur le VPS), `alpine:3.22`.
+- [x] Ajouter Basic Auth Caddy sur `signoz-frontend` (`SIGNOZ_BASICAUTH_HASH`).
 - [ ] Local : `make signoz-down`, suppression du volume, `make signoz-up`, vérifier l'ingestion d'une trace depuis `make dev`.
 - [ ] VPS : renseigner `signoz.env`, `make deploy-signoz` ; Plausible rejoint `signoz_default` avec `CLICKHOUSE_DATABASE_URL` authentifié ; `make deploy-plausible`.
 - [ ] Vérifications ClickHouse de la section 7.3 ; dashboard `platform-overview` toujours alimenté.
 
 ### Phase 3 : OTLP public et Keycloak
-- [ ] `infra/signoz/otel-collector-config.yaml` : `allowed_origins` Nanko, `max_request_body_size`, `memory_limiter` en tête des 3 pipelines, retrait de `zpages`.
-- [ ] Labels Caddy `otel-collector` : suppression des `Access-Control-*`, ajout `@blocked` ➔ `404`, `request_body max_size 2MB`.
-- [ ] Découper `infra/keycloak/realm-nanko.json` en `local/`, `preprod/`, `prod/` ; ajouter bruteforce + `passwordPolicy` ; mettre à jour les montages dans les 3 compose.
-- [ ] Labels Caddy Keycloak (prod + preprod) : matcher `@admin` + `respond 403`, variable `KC_ADMIN_ALLOWED_IPS`.
+- [x] `infra/signoz/otel-collector-config.yaml` : `allowed_origins` Nanko, `max_request_body_size`, `memory_limiter` en tête des 3 pipelines, retrait de `zpages`.
+- [x] Labels Caddy `otel-collector` : suppression des `Access-Control-*`, ajout `@blocked` ➔ `404`, `request_body max_size 2MB`.
+- [x] Découper `infra/keycloak/realm-nanko.json` en `local/`, `preprod/`, `prod/` ; ajouter bruteforce + `passwordPolicy` ; mettre à jour les montages dans les 3 compose.
+- [x] Labels Caddy Keycloak (prod + preprod) : matcher `@admin` + `respond 403`, variable `KC_ADMIN_ALLOWED_IPS`.
 - [ ] Appliquer `kcadm update realms/nanko` et `update clients/nanko-web` sur preprod puis prod (section 5.8).
-- [ ] `CORS_ALLOW_ORIGIN` prod sans `localhost` dans `infra/prod/compose.yaml`.
+- [x] `CORS_ALLOW_ORIGIN` prod sans `localhost` dans `infra/prod/compose.yaml`.
 - [ ] Déployer preprod, vérifier login E2E + console admin depuis IP allowlistée + `403` depuis une autre IP ; puis prod.
 
 ### Phase 4 : En-têtes HTTP et scripts inline
-- [ ] `frontend/public/theme-init.js` + `frontend/index.html` ; `landing/theme-init.js` + `landing/index.html` + `landing/Dockerfile`.
-- [ ] Labels Caddy `app`/`www` (prod + preprod) : `Referrer-Policy`, `Permissions-Policy`, HSTS sans `preload`, `Content-Security-Policy-Report-Only`.
+- [x] `frontend/public/theme-init.js` + `frontend/index.html` ; `landing/theme-init.js` + `landing/index.html` + `landing/Dockerfile`.
+- [x] Labels Caddy `app`/`www` (prod + preprod) : `Referrer-Policy`, `Permissions-Policy`, HSTS sans `preload`, `Content-Security-Policy-Report-Only`.
 - [ ] Déployer preprod ; naviguer toutes les pages + suite E2E complète ; relever les violations CSP en console. Corriger la CSP si besoin.
 - [ ] Basculer `Content-Security-Policy-Report-Only` ➔ `Content-Security-Policy` sur preprod, re-vérifier, puis prod.
 
 ### Phase 5 : Hardening des conteneurs
-- [ ] `backend/Dockerfile` : `SERVER_NAME=:8080`, `EXPOSE 8080`, `chown` de `/app/var`, `/data`, `/config`, `USER www-data`, healthcheck `:8080`. Labels `{{upstreams 8080}}` dans prod/preprod.
-- [ ] Ancre `x-hardening` + `cap_add` par service + `read_only`/`tmpfs` frontend & landing + `deploy.resources.limits.memory` dans les 4 compose VPS.
+- [x] `backend/Dockerfile` : `SERVER_NAME=:8080`, `EXPOSE 8080`, `chown` de `/app/var`, `/data`, `/config`, `USER www-data`, healthcheck `:8080`. Labels `{{upstreams 8080}}` dans prod/preprod.
+- [x] Ancre `x-hardening` + `cap_add` par service + `read_only`/`tmpfs` frontend & landing + `deploy.resources.limits.memory` dans les 4 compose VPS.
 - [ ] Preprod : déployer, itérer sur les `cap_add` manquants d'après `docker logs`, laisser tourner 24 h et comparer la mémoire observée sur SigNoz aux limites.
 - [ ] Prod, signoz, plausible : déployer avec les valeurs validées.
 
 ### Phase 6 : Tests E2E, documentation et synchronisation
-- [ ] `tests-e2e/tests/app/security-headers.spec.ts` (section 7.2), vert sur preprod via `pr-preprod-e2e.yml`.
-- [ ] `infra/scripts/verify-hardening.sh` (section 7.3) exécuté sur le VPS, sortie archivée dans la PR.
+- [x] `tests-e2e/tests/app/security-headers.spec.ts` (section 7.2), vert sur preprod via `pr-preprod-e2e.yml`.
+- [x] `infra/scripts/verify-hardening.sh` (section 7.3) exécuté sur le VPS, sortie archivée dans la PR.
 - [ ] Test de restauration `pg_restore` d'un dump du sidecar vers une base temporaire, documenté dans `infra/prod/README.md`.
-- [ ] `infra/README.md` : runbook Watchtower / socket proxy / rate limiting recommandé. READMEs preprod, prod, signoz, plausible : nouvelles variables et procédures (`harden-roles.sql`, `kcadm`).
+- [x] `infra/README.md` : runbook Watchtower / socket proxy / rate limiting recommandé. READMEs preprod, prod, signoz, plausible : nouvelles variables et procédures (`harden-roles.sql`, `kcadm`).
 - [ ] `/sync-current platform` : mettre à jour `tech.md` (et corriger au passage les dérives constatées : `deploy-prod.yml` est `workflow_dispatch` et non déclenché sur tag, ClickHouse `25.12` et non `25.1`, groupe de concurrence `preprod-deployment` et non `preprod-shared-env`, Basic Auth SigNoz désormais réel).
-- [ ] Nouvel ADR `docs/adr/0012-least-privilege-shared-datastores.md` : un rôle par consommateur sur les datastores mutualisés (complète l'ADR-0007).
+- [x] Nouvel ADR `docs/adr/0012-least-privilege-shared-datastores.md` : un rôle par consommateur sur les datastores mutualisés (complète l'ADR-0007).
 - [ ] Archiver cette spec dans `.specs/changes/archive/`.
 
 ---

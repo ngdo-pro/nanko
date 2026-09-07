@@ -31,3 +31,4 @@ build/
 /infra/preprod/.env
 /infra/prod/.env
 /infra/signoz/.env
+/infra/plausible/.env

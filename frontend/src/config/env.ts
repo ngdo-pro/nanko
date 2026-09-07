@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+z.config({ jitless: true })
+
 export const frontendEnvSchema = z.object({
   VITE_API_BASE_URL: z
     .string()

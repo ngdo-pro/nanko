@@ -9,6 +9,15 @@
   "resetPasswordAllowed": false,
   "rememberMe": true,
   "verifyEmail": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "failureFactor": 5,
+  "waitIncrementSeconds": 60,
+  "maxFailureWaitSeconds": 900,
+  "maxDeltaTimeSeconds": 43200,
+  "quickLoginCheckMilliSeconds": 1000,
+  "minimumQuickLoginWaitSeconds": 60,
+  "passwordPolicy": "length(12) and notUsername and notEmail and passwordHistory(3)",
   "requiredActions": [
     {
       "alias": "VERIFY_PROFILE",
@@ -35,9 +44,7 @@
         "post.logout.redirect.uris": "+"
       },
       "redirectUris": [
-        "http://localhost:45173/*",
-        "https://app.preprod.nanko.dev/*",
-        "https://app.nanko.dev/*"
+        "http://localhost:45173/*"
       ],
       "webOrigins": [
         "+"

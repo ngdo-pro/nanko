@@ -2,6 +2,10 @@ services:
   clickhouse:
     image: clickhouse/clickhouse-server:25.12-alpine
     restart: unless-stopped
+    environment:
+      CLICKHOUSE_DEFAULT_PASSWORD_SHA256: 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+      CLICKHOUSE_SIGNOZ_PASSWORD_SHA256: 2363a050d8baa4c7f94e6c4bd58edc112e336f58815f1417a73967c9535e40dc
+      CLICKHOUSE_PLAUSIBLE_PASSWORD_SHA256: 2363a050d8baa4c7f94e6c4bd58edc112e336f58815f1417a73967c9535e40dc
     volumes:
       - nanko-local-signoz-clickhouse:/var/lib/clickhouse
       - ../signoz/clickhouse-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -25,20 +29,20 @@ services:
       - nanko-local-signoz-alertmanager:/data
 
   signoz-schema-migrator:
-    image: signoz/signoz-otel-collector:latest
+    image: signoz/signoz-otel-collector:v0.144.9
     restart: "no"
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
-        /signoz-otel-collector migrate bootstrap --clickhouse-dsn=tcp://clickhouse:9000 &&
-        /signoz-otel-collector migrate sync up --clickhouse-dsn=tcp://clickhouse:9000 &&
-        /signoz-otel-collector migrate async up --clickhouse-dsn=tcp://clickhouse:9000
+        /signoz-otel-collector migrate bootstrap --clickhouse-dsn=tcp://signoz:signoz@clickhouse:9000 &&
+        /signoz-otel-collector migrate sync up --clickhouse-dsn=tcp://signoz:signoz@clickhouse:9000 &&
+        /signoz-otel-collector migrate async up --clickhouse-dsn=tcp://signoz:signoz@clickhouse:9000
     depends_on:
       clickhouse:
         condition: service_healthy
 
   signoz-query-service:
-    image: signoz/query-service:latest
+    image: signoz/query-service:0.76.2
     restart: unless-stopped
     command:
       - -config=/root/config/prometheus.yml
@@ -49,7 +53,7 @@ services:
       - ../signoz/alerts:/root/config/alerts:ro
       - ../signoz/dashboards:/root/config/dashboards:ro
     environment:
-      - ClickHouseUrl=tcp://clickhouse:9000
+      - ClickHouseUrl=tcp://signoz:signoz@clickhouse:9000
       - STORAGE=clickhouse
       - GODEBUG=netdns=go
       - TELEMETRY_ENABLED=false
@@ -61,7 +65,7 @@ services:
         condition: service_completed_successfully
 
   signoz-frontend:
-    image: signoz/frontend:latest
+    image: signoz/frontend@sha256:1c1bbb669cec1db31398aafdb8263c848107f78ef838d09659f01aa815362279
     restart: unless-stopped
     ports:
       - "43301:3301"
@@ -71,7 +75,7 @@ services:
       - signoz-query-service
 
   signoz-provisioner:
-    image: alpine:latest
+    image: alpine:3.22
     environment:
       - SIGNOZ_ADMIN_EMAIL=admin@nanko.dev
       - SIGNOZ_ADMIN_PASSWORD=admin1234
@@ -85,9 +89,11 @@ services:
     restart: "no"
 
   otel-collector:
-    image: signoz/signoz-otel-collector:latest
+    image: signoz/signoz-otel-collector:v0.144.9
     restart: unless-stopped
     command: ["--config=/etc/otel-collector-config.yaml"]
+    environment:
+      CLICKHOUSE_SIGNOZ_PASSWORD: signoz
     volumes:
       - ../signoz/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
     ports:

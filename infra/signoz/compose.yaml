@@ -1,8 +1,26 @@
+x-hardening: &hardening
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+
 services:
   clickhouse:
     image: clickhouse/clickhouse-server:25.12-alpine
     container_name: signoz-clickhouse
     restart: unless-stopped
+    <<: *hardening
+    cap_add: [SYS_NICE, NET_ADMIN, IPC_LOCK, CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          pids: 4096
+    environment:
+      CLICKHOUSE_DEFAULT_PASSWORD_SHA256: ${CLICKHOUSE_DEFAULT_PASSWORD_SHA256}
+      CLICKHOUSE_SIGNOZ_PASSWORD_SHA256: ${CLICKHOUSE_SIGNOZ_PASSWORD_SHA256}
+      CLICKHOUSE_PLAUSIBLE_PASSWORD_SHA256: ${CLICKHOUSE_PLAUSIBLE_PASSWORD_SHA256}
     volumes:
       - signoz-clickhouse-data:/var/lib/clickhouse
       - ./clickhouse-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -15,12 +33,17 @@ services:
       retries: 5
     networks:
       default: {}
-      edge: {}
 
   signoz-alertmanager:
     image: signoz/alertmanager:0.23.6
     container_name: signoz-alertmanager
     restart: unless-stopped
+    <<: *hardening
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          pids: 256
     command:
       - --queryService.url=http://signoz-query-service:8080
       - --storage.path=/data
@@ -32,15 +55,16 @@ services:
       default: {}
 
   signoz-schema-migrator:
-    image: signoz/signoz-otel-collector:latest
+    image: signoz/signoz-otel-collector:v0.144.9
     container_name: signoz-schema-migrator
     restart: "no"
+    <<: *hardening
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
-        /signoz-otel-collector migrate bootstrap --clickhouse-dsn=tcp://clickhouse:9000 &&
-        /signoz-otel-collector migrate sync up --clickhouse-dsn=tcp://clickhouse:9000 &&
-        /signoz-otel-collector migrate async up --clickhouse-dsn=tcp://clickhouse:9000
+        /signoz-otel-collector migrate bootstrap --clickhouse-dsn=tcp://signoz:${CLICKHOUSE_SIGNOZ_PASSWORD}@clickhouse:9000 &&
+        /signoz-otel-collector migrate sync up --clickhouse-dsn=tcp://signoz:${CLICKHOUSE_SIGNOZ_PASSWORD}@clickhouse:9000 &&
+        /signoz-otel-collector migrate async up --clickhouse-dsn=tcp://signoz:${CLICKHOUSE_SIGNOZ_PASSWORD}@clickhouse:9000
     depends_on:
       clickhouse:
         condition: service_healthy
@@ -48,9 +72,15 @@ services:
       default: {}
 
   signoz-query-service:
-    image: signoz/query-service:latest
+    image: signoz/query-service:0.76.2
     container_name: signoz-query-service
     restart: unless-stopped
+    <<: *hardening
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          pids: 256
     command:
       - -config=/root/config/prometheus.yml
       - -use-trace-new-schema=true
@@ -60,7 +90,7 @@ services:
       - ./alerts:/root/config/alerts:ro
       - ./dashboards:/root/config/dashboards:ro
     environment:
-      - ClickHouseUrl=tcp://clickhouse:9000
+      - ClickHouseUrl=tcp://signoz:${CLICKHOUSE_SIGNOZ_PASSWORD}@clickhouse:9000
       - STORAGE=clickhouse
       - GODEBUG=netdns=go
       - TELEMETRY_ENABLED=false
@@ -74,9 +104,16 @@ services:
       default: {}
 
   signoz-frontend:
-    image: signoz/frontend:latest
+    image: signoz/frontend@sha256:1c1bbb669cec1db31398aafdb8263c848107f78ef838d09659f01aa815362279
     container_name: signoz-frontend
     restart: unless-stopped
+    <<: *hardening
+    cap_add: [CHOWN, SETGID, SETUID]
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          pids: 256
     depends_on:
       - signoz-query-service
     volumes:
@@ -85,8 +122,10 @@ services:
       com.centurylinklabs.watchtower.enable: "true"
       caddy: signoz.nanko.dev
       caddy.encode: gzip
+      caddy.basicauth: "*"
+      caddy.basicauth.nanko: "${SIGNOZ_BASICAUTH_HASH}"
       caddy.reverse_proxy: "{{upstreams 3301}}"
-      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+      caddy.header.Strict-Transport-Security: '"max-age=31536000; includeSubDomains"'
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Frame-Options: DENY
       caddy.header.X-Robots-Tag: '"noindex, nofollow, noarchive, nosnippet, notranslate, noimageindex"'
@@ -95,10 +134,18 @@ services:
       edge: {}
 
   otel-collector:
-    image: signoz/signoz-otel-collector:latest
+    image: signoz/signoz-otel-collector:v0.144.9
     container_name: signoz-otel-collector
     restart: unless-stopped
+    <<: *hardening
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          pids: 256
     command: ["--config=/etc/otel-collector-config.yaml"]
+    environment:
+      CLICKHOUSE_SIGNOZ_PASSWORD: ${CLICKHOUSE_SIGNOZ_PASSWORD}
     volumes:
       - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
     depends_on:
@@ -110,17 +157,18 @@ services:
       com.centurylinklabs.watchtower.enable: "true"
       caddy: otlp.nanko.dev
       caddy.encode: gzip
+      caddy.request_body.max_size: 2MB
+      caddy.@blocked.not.path: /v1/traces* /v1/logs* /v1/metrics*
+      caddy.respond: "@blocked 404"
       caddy.reverse_proxy: "{{upstreams 4318}}"
-      caddy.header.Access-Control-Allow-Origin: "*"
-      caddy.header.Access-Control-Allow-Methods: "POST, OPTIONS"
-      caddy.header.Access-Control-Allow-Headers: "*"
     networks:
       default: {}
       edge: {}
 
   signoz-provisioner:
-    image: alpine:latest
+    image: alpine:3.22
     container_name: signoz-provisioner
+    <<: *hardening
     environment:
       - SIGNOZ_ADMIN_EMAIL=${SIGNOZ_ADMIN_EMAIL:-}
       - SIGNOZ_ADMIN_PASSWORD=${SIGNOZ_ADMIN_PASSWORD:-}

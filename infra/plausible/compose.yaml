@@ -1,28 +1,49 @@
+x-hardening: &hardening
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+
 services:
   plausible:
     image: ghcr.io/plausible/community-edition:v2.1.4
     container_name: plausible
     restart: unless-stopped
+    <<: *hardening
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          pids: 256
     command: sh -c "sleep 10 && /entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"
     environment:
       - BASE_URL=${PLAUSIBLE_BASE_URL:-https://plausible.nanko.dev}
       - SECRET_KEY_BASE=${PLAUSIBLE_SECRET_KEY_BASE}
-      - DATABASE_URL=${PLAUSIBLE_DATABASE_URL:-postgresql://nanko:${POSTGRES_PASSWORD}@nanko-prod-postgres:5432/plausible}
-      - CLICKHOUSE_DATABASE_URL=${PLAUSIBLE_CLICKHOUSE_URL:-http://signoz-clickhouse:8123/plausible_events_db}
+      - DATABASE_URL=${PLAUSIBLE_DATABASE_URL:-postgresql://plausible:${PLAUSIBLE_DB_PASSWORD}@nanko-prod-postgres:5432/plausible}
+      - CLICKHOUSE_DATABASE_URL=${PLAUSIBLE_CLICKHOUSE_URL:-http://plausible:${PLAUSIBLE_CH_PASSWORD}@signoz-clickhouse:8123/plausible_events_db}
       - DISABLE_REGISTRATION=${PLAUSIBLE_DISABLE_REGISTRATION:-invite_only}
       - ADMIN_USER_NAME=${PLAUSIBLE_ADMIN_NAME:-Nanko Admin}
       - ADMIN_USER_EMAIL=${PLAUSIBLE_ADMIN_EMAIL:-admin@nanko.dev}
       - ADMIN_USER_PWD=${PLAUSIBLE_ADMIN_PWD:-}
     networks:
       edge: {}
+      nanko-prod_default: {}
+      signoz_default: {}
     labels:
       caddy: ${PLAUSIBLE_HOST:-plausible.nanko.dev}
       caddy.encode: gzip
       caddy.reverse_proxy: "{{upstreams 8000}}"
-      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+      caddy.header.Strict-Transport-Security: '"max-age=31536000; includeSubDomains"'
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Frame-Options: DENY
 
 networks:
   edge:
     external: true
+  nanko-prod_default:
+    external: true
+    name: nanko-prod_default
+  signoz_default:
+    external: true
+    name: signoz_default

@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test'
+import { env } from '../../config/env'
 import { getOrSetupTestUser, createOrResetKeycloakUser } from '../helpers/keycloak'
 
 test.describe('Gestion des Organisations et des Projets (WorkspaceManagement)', () => {
   test('Auto-provisioning solo transparent et création de projet', async ({ page }) => {
     const uniqueSuffix = Date.now().toString().slice(-6)
     const baseUser = await getOrSetupTestUser()
-    const isLocal = !process.env.E2E_USERNAME
+    const isLocal = !env.testUser.username
 
     // En local, on crée un nouvel utilisateur dédié pour tester le premier accès transparent
     const email = isLocal ? `workspace-${uniqueSuffix}@nanko.dev` : baseUser.email
