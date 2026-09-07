@@ -155,7 +155,7 @@ services:
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Frame-Options: DENY
       caddy.header.X-Robots-Tag: '"noindex, nofollow, noarchive, nosnippet, notranslate, noimageindex"'
-      caddy.header.Content-Security-Policy-Report-Only: '"default-src '\''self'\''; script-src '\''self'\'' https://plausible.nanko.dev; style-src '\''self'\'' '\''unsafe-inline'\'' https://fonts.googleapis.com; font-src '\''self'\'' https://fonts.gstatic.com; img-src '\''self'\'' data:; connect-src '\''self'\'' https://api.preprod.nanko.dev https://auth.preprod.nanko.dev https://otlp.nanko.dev https://plausible.nanko.dev; frame-ancestors '\''none'\''; base-uri '\''self'\''; form-action '\''self'\'' https://auth.preprod.nanko.dev; object-src '\''none'\''; upgrade-insecure-requests"'
+      caddy.header.Content-Security-Policy-Report-Only: "\"default-src 'self'; script-src 'self' https://plausible.nanko.dev; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.preprod.nanko.dev https://auth.preprod.nanko.dev https://otlp.nanko.dev https://plausible.nanko.dev; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://auth.preprod.nanko.dev; object-src 'none'; upgrade-insecure-requests\""
 
   landing:
     image: ghcr.io/ngdo-pro/nanko-landing:preprod
@@ -186,7 +186,7 @@ services:
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Frame-Options: DENY
       caddy.header.X-Robots-Tag: '"noindex, nofollow, noarchive, nosnippet, notranslate, noimageindex"'
-      caddy.header.Content-Security-Policy-Report-Only: '"default-src '\''self'\''; script-src '\''self'\'' https://plausible.nanko.dev; style-src '\''self'\'' '\''unsafe-inline'\'' https://fonts.googleapis.com; font-src '\''self'\'' https://fonts.gstatic.com; img-src '\''self'\'' data:; connect-src '\''self'\'' https://plausible.nanko.dev; frame-ancestors '\''none'\''; base-uri '\''self'\''; form-action '\''self'\''; object-src '\''none'\''; upgrade-insecure-requests"'
+      caddy.header.Content-Security-Policy-Report-Only: "\"default-src 'self'; script-src 'self' https://plausible.nanko.dev; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://plausible.nanko.dev; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests\""
 
 networks:
   default: {}
