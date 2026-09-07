@@ -7,6 +7,7 @@
     </profiles>
     <users>
         <default>
+            <password remove="1"/>
             <password_sha256_hex from_env="CLICKHOUSE_DEFAULT_PASSWORD_SHA256"/>
             <networks>
                 <ip>::1</ip>
