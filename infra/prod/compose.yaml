@@ -128,7 +128,7 @@ services:
       caddy: auth.nanko.dev
       caddy.encode: gzip
       caddy.@admin.path: /admin* /realms/master*
-      caddy.@admin.not_remote_ip: "${KC_ADMIN_ALLOWED_IPS}"
+      caddy.@admin.not_remote_ip: "${KC_ADMIN_ALLOWED_IPS:-127.0.0.1/32}"
       caddy.respond: "@admin 403"
       caddy.reverse_proxy: "{{upstreams 8080}}"
       caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains"
