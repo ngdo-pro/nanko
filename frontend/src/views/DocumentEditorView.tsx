@@ -102,9 +102,15 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
   }
 
   return (
-    <div className="editor-studio" data-qa="document-editor-view">
+    <div
+      className={`editor-studio ${layoutMode === 'canvas' ? 'is-canvas-mode' : 'is-split-or-code-mode'}`}
+      data-qa="document-editor-view"
+    >
       {/* Barre d'outils supérieure */}
-      <header className="editor-topbar">
+      <header
+        className={`editor-topbar ${layoutMode === 'canvas' ? 'is-floating' : 'is-static'}`}
+        data-qa="editor-topbar"
+      >
         <div className="editor-topbar-left">
           <button
             type="button"
@@ -164,13 +170,13 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
         </div>
       </header>
 
-      {/* Alerte erreur de syntaxe */}
+      {/* Alerte d'erreur de syntaxe globale */}
       {effectiveSyntaxError && (
         <div
-          className="syntax-error-card editor-syntax-error-banner"
+          className={`syntax-error-card editor-syntax-error-banner ${layoutMode === 'canvas' ? 'is-floating-error' : ''}`}
           role="alert"
           data-qa="syntax-error-alert"
-          style={{ marginBottom: '1rem' }}
+          style={{ marginBottom: layoutMode === 'canvas' ? 0 : '1rem' }}
         >
           <div className="syntax-error-header">
             <span>⚠️</span>

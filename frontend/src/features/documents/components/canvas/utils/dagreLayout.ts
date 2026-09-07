@@ -31,8 +31,11 @@ export function calculateDagreLayout<T extends Record<string, unknown> = Record<
   })
 
   for (const node of nodes) {
-    const width = node.measured?.width ?? nodeWidth
-    const height = node.measured?.height ?? nodeHeight
+    const isCircle = node.type === 'circle'
+    const defaultW = isCircle ? 130 : nodeWidth
+    const defaultH = isCircle ? 130 : nodeHeight
+    const width = node.measured?.width ?? defaultW
+    const height = node.measured?.height ?? defaultH
     dagreGraph.setNode(node.id, { width, height })
   }
 
@@ -44,8 +47,11 @@ export function calculateDagreLayout<T extends Record<string, unknown> = Record<
 
   return nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id)
-    const width = node.measured?.width ?? nodeWidth
-    const height = node.measured?.height ?? nodeHeight
+    const isCircle = node.type === 'circle'
+    const defaultW = isCircle ? 130 : nodeWidth
+    const defaultH = isCircle ? 130 : nodeHeight
+    const width = node.measured?.width ?? defaultW
+    const height = node.measured?.height ?? defaultH
 
     // Dagre positionne par rapport au centre, React Flow par rapport au coin supérieur gauche
     return {
