@@ -59,16 +59,16 @@ services:
       caddy.encode: gzip
       caddy.@robots.path: /robots.txt
       caddy.respond: '@robots "User-agent: *\nDisallow: /\n" 200'
-      caddy.header.@robots.Content-Type: "text/plain; charset=utf-8"
+      caddy.header.@robots.Content-Type: '"text/plain; charset=utf-8"'
       caddy.@protected.not_0.path: /robots.txt
       caddy.@protected.not_1.method: OPTIONS
       caddy.@protected.not_2.header_regexp: Authorization ^Bearer\s+
       caddy.basicauth: "@protected"
       caddy.basicauth.nanko: "${PREPROD_HTTP_HASH}"
       caddy.reverse_proxy: "{{upstreams 8080}}"
-      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains"
+      caddy.header.Strict-Transport-Security: '"max-age=31536000; includeSubDomains"'
       caddy.header.Referrer-Policy: strict-origin-when-cross-origin
-      caddy.header.Permissions-Policy: "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+      caddy.header.Permissions-Policy: '"camera=(), microphone=(), geolocation=(), payment=(), usb=()"'
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Frame-Options: DENY
       caddy.header.X-Robots-Tag: '"noindex, nofollow, noarchive, nosnippet, notranslate, noimageindex"'
@@ -111,12 +111,12 @@ services:
       caddy.encode: gzip
       caddy.@robots.path: /robots.txt
       caddy.respond_0: '@robots "User-agent: *\nDisallow: /\n" 200'
-      caddy.header.@robots.Content-Type: "text/plain; charset=utf-8"
+      caddy.header.@robots.Content-Type: '"text/plain; charset=utf-8"'
       caddy.@admin.path: /admin* /realms/master*
       caddy.@admin.not.remote_ip: "${KC_ADMIN_ALLOWED_IPS:-127.0.0.1/32}"
       caddy.respond_1: "@admin 403"
       caddy.reverse_proxy: "{{upstreams 8080}}"
-      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains"
+      caddy.header.Strict-Transport-Security: '"max-age=31536000; includeSubDomains"'
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Robots-Tag: '"noindex, nofollow, noarchive, nosnippet, notranslate, noimageindex"'
     networks:
@@ -144,18 +144,18 @@ services:
       caddy.encode: gzip
       caddy.@robots.path: /robots.txt
       caddy.respond: '@robots "User-agent: *\nDisallow: /\n" 200'
-      caddy.header.@robots.Content-Type: "text/plain; charset=utf-8"
+      caddy.header.@robots.Content-Type: '"text/plain; charset=utf-8"'
       caddy.@protected.not.path: /robots.txt
       caddy.basicauth: "@protected"
       caddy.basicauth.nanko: "${PREPROD_HTTP_HASH}"
       caddy.reverse_proxy: "{{upstreams 8080}}"
-      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains"
+      caddy.header.Strict-Transport-Security: '"max-age=31536000; includeSubDomains"'
       caddy.header.Referrer-Policy: strict-origin-when-cross-origin
-      caddy.header.Permissions-Policy: "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+      caddy.header.Permissions-Policy: '"camera=(), microphone=(), geolocation=(), payment=(), usb=()"'
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Frame-Options: DENY
       caddy.header.X-Robots-Tag: '"noindex, nofollow, noarchive, nosnippet, notranslate, noimageindex"'
-      caddy.header.Content-Security-Policy-Report-Only: "default-src 'self'; script-src 'self' https://plausible.nanko.dev; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.preprod.nanko.dev https://auth.preprod.nanko.dev https://otlp.nanko.dev https://plausible.nanko.dev; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://auth.preprod.nanko.dev; object-src 'none'; upgrade-insecure-requests"
+      caddy.header.Content-Security-Policy-Report-Only: '"default-src '\''self'\''; script-src '\''self'\'' https://plausible.nanko.dev; style-src '\''self'\'' '\''unsafe-inline'\'' https://fonts.googleapis.com; font-src '\''self'\'' https://fonts.gstatic.com; img-src '\''self'\'' data:; connect-src '\''self'\'' https://api.preprod.nanko.dev https://auth.preprod.nanko.dev https://otlp.nanko.dev https://plausible.nanko.dev; frame-ancestors '\''none'\''; base-uri '\''self'\''; form-action '\''self'\'' https://auth.preprod.nanko.dev; object-src '\''none'\''; upgrade-insecure-requests"'
 
   landing:
     image: ghcr.io/ngdo-pro/nanko-landing:preprod
@@ -178,15 +178,15 @@ services:
       caddy.encode: gzip
       caddy.@robots.path: /robots.txt
       caddy.respond: '@robots "User-agent: *\nDisallow: /\n" 200'
-      caddy.header.@robots.Content-Type: "text/plain; charset=utf-8"
+      caddy.header.@robots.Content-Type: '"text/plain; charset=utf-8"'
       caddy.reverse_proxy: "{{upstreams 8080}}"
-      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains"
+      caddy.header.Strict-Transport-Security: '"max-age=31536000; includeSubDomains"'
       caddy.header.Referrer-Policy: strict-origin-when-cross-origin
-      caddy.header.Permissions-Policy: "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+      caddy.header.Permissions-Policy: '"camera=(), microphone=(), geolocation=(), payment=(), usb=()"'
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Frame-Options: DENY
       caddy.header.X-Robots-Tag: '"noindex, nofollow, noarchive, nosnippet, notranslate, noimageindex"'
-      caddy.header.Content-Security-Policy-Report-Only: "default-src 'self'; script-src 'self' https://plausible.nanko.dev; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://plausible.nanko.dev; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+      caddy.header.Content-Security-Policy-Report-Only: '"default-src '\''self'\''; script-src '\''self'\'' https://plausible.nanko.dev; style-src '\''self'\'' '\''unsafe-inline'\'' https://fonts.googleapis.com; font-src '\''self'\'' https://fonts.gstatic.com; img-src '\''self'\'' data:; connect-src '\''self'\'' https://plausible.nanko.dev; frame-ancestors '\''none'\''; base-uri '\''self'\''; form-action '\''self'\''; object-src '\''none'\''; upgrade-insecure-requests"'
 
 networks:
   default: {}

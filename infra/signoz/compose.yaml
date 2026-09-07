@@ -124,7 +124,7 @@ services:
       caddy.basicauth: "/*"
       caddy.basicauth.nanko: "${SIGNOZ_BASICAUTH_HASH}"
       caddy.reverse_proxy: "{{upstreams 3301}}"
-      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains"
+      caddy.header.Strict-Transport-Security: '"max-age=31536000; includeSubDomains"'
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Frame-Options: DENY
       caddy.header.X-Robots-Tag: '"noindex, nofollow, noarchive, nosnippet, notranslate, noimageindex"'

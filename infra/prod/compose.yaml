@@ -89,9 +89,9 @@ services:
       caddy: api.nanko.dev
       caddy.encode: gzip
       caddy.reverse_proxy: "{{upstreams 8080}}"
-      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains"
+      caddy.header.Strict-Transport-Security: '"max-age=31536000; includeSubDomains"'
       caddy.header.Referrer-Policy: strict-origin-when-cross-origin
-      caddy.header.Permissions-Policy: "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+      caddy.header.Permissions-Policy: '"camera=(), microphone=(), geolocation=(), payment=(), usb=()"'
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Frame-Options: DENY
     networks:
@@ -135,7 +135,7 @@ services:
       caddy.@admin.not.remote_ip: "${KC_ADMIN_ALLOWED_IPS:-127.0.0.1/32}"
       caddy.respond: "@admin 403"
       caddy.reverse_proxy: "{{upstreams 8080}}"
-      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains"
+      caddy.header.Strict-Transport-Security: '"max-age=31536000; includeSubDomains"'
       caddy.header.X-Content-Type-Options: nosniff
     networks:
       default: {}
@@ -161,12 +161,12 @@ services:
       caddy: app.nanko.dev
       caddy.encode: gzip
       caddy.reverse_proxy: "{{upstreams 8080}}"
-      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains"
+      caddy.header.Strict-Transport-Security: '"max-age=31536000; includeSubDomains"'
       caddy.header.Referrer-Policy: strict-origin-when-cross-origin
-      caddy.header.Permissions-Policy: "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+      caddy.header.Permissions-Policy: '"camera=(), microphone=(), geolocation=(), payment=(), usb=()"'
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Frame-Options: DENY
-      caddy.header.Content-Security-Policy-Report-Only: "default-src 'self'; script-src 'self' https://plausible.nanko.dev; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.nanko.dev https://auth.nanko.dev https://otlp.nanko.dev https://plausible.nanko.dev; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://auth.nanko.dev; object-src 'none'; upgrade-insecure-requests"
+      caddy.header.Content-Security-Policy-Report-Only: '"default-src '\''self'\''; script-src '\''self'\'' https://plausible.nanko.dev; style-src '\''self'\'' '\''unsafe-inline'\'' https://fonts.googleapis.com; font-src '\''self'\'' https://fonts.gstatic.com; img-src '\''self'\'' data:; connect-src '\''self'\'' https://api.nanko.dev https://auth.nanko.dev https://otlp.nanko.dev https://plausible.nanko.dev; frame-ancestors '\''none'\''; base-uri '\''self'\''; form-action '\''self'\'' https://auth.nanko.dev; object-src '\''none'\''; upgrade-insecure-requests"'
 
   landing:
     image: ghcr.io/ngdo-pro/nanko-landing:prod
@@ -188,12 +188,12 @@ services:
       caddy: www.nanko.dev
       caddy.encode: gzip
       caddy.reverse_proxy: "{{upstreams 8080}}"
-      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains"
+      caddy.header.Strict-Transport-Security: '"max-age=31536000; includeSubDomains"'
       caddy.header.Referrer-Policy: strict-origin-when-cross-origin
-      caddy.header.Permissions-Policy: "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+      caddy.header.Permissions-Policy: '"camera=(), microphone=(), geolocation=(), payment=(), usb=()"'
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Frame-Options: DENY
-      caddy.header.Content-Security-Policy-Report-Only: "default-src 'self'; script-src 'self' https://plausible.nanko.dev; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://plausible.nanko.dev; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
+      caddy.header.Content-Security-Policy-Report-Only: '"default-src '\''self'\''; script-src '\''self'\'' https://plausible.nanko.dev; style-src '\''self'\'' '\''unsafe-inline'\'' https://fonts.googleapis.com; font-src '\''self'\'' https://fonts.gstatic.com; img-src '\''self'\'' data:; connect-src '\''self'\'' https://plausible.nanko.dev; frame-ancestors '\''none'\''; base-uri '\''self'\''; form-action '\''self'\''; object-src '\''none'\''; upgrade-insecure-requests"'
 
 networks:
   default: {}
