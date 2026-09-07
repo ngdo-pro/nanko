@@ -108,6 +108,7 @@ services:
     container_name: signoz-frontend
     restart: unless-stopped
     <<: *hardening
+    cap_add: [CHOWN, SETGID, SETUID]
     deploy:
       resources:
         limits:

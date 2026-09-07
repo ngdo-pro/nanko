@@ -32,11 +32,11 @@ extensions:
 
 exporters:
   clickhousetraces:
-    datasource: tcp://signoz:${CLICKHOUSE_SIGNOZ_PASSWORD}@clickhouse:9000/signoz_traces
+    datasource: tcp://signoz:${env:CLICKHOUSE_SIGNOZ_PASSWORD}@clickhouse:9000/signoz_traces
   signozclickhousemetrics:
-    dsn: tcp://signoz:${CLICKHOUSE_SIGNOZ_PASSWORD}@clickhouse:9000/signoz_metrics
+    dsn: tcp://signoz:${env:CLICKHOUSE_SIGNOZ_PASSWORD}@clickhouse:9000/signoz_metrics
   clickhouselogsexporter:
-    dsn: tcp://signoz:${CLICKHOUSE_SIGNOZ_PASSWORD}@clickhouse:9000/signoz_logs
+    dsn: tcp://signoz:${env:CLICKHOUSE_SIGNOZ_PASSWORD}@clickhouse:9000/signoz_logs
 
 service:
   extensions: [health_check]
