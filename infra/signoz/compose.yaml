@@ -16,7 +16,7 @@ services:
       resources:
         limits:
           memory: 2G
-          pids: 256
+          pids: 4096
     environment:
       CLICKHOUSE_DEFAULT_PASSWORD_SHA256: ${CLICKHOUSE_DEFAULT_PASSWORD_SHA256}
       CLICKHOUSE_SIGNOZ_PASSWORD_SHA256: ${CLICKHOUSE_SIGNOZ_PASSWORD_SHA256}
