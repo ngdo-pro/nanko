@@ -121,7 +121,7 @@ services:
       com.centurylinklabs.watchtower.enable: "true"
       caddy: signoz.nanko.dev
       caddy.encode: gzip
-      caddy.basicauth: "/*"
+      caddy.basicauth: "*"
       caddy.basicauth.nanko: "${SIGNOZ_BASICAUTH_HASH}"
       caddy.reverse_proxy: "{{upstreams 3301}}"
       caddy.header.Strict-Transport-Security: '"max-age=31536000; includeSubDomains"'
@@ -156,8 +156,8 @@ services:
       com.centurylinklabs.watchtower.enable: "true"
       caddy: otlp.nanko.dev
       caddy.encode: gzip
-      caddy.request_body: "max_size 2MB"
-      caddy.@blocked.not_path: /v1/traces /v1/logs /v1/metrics
+      caddy.request_body.max_size: 2MB
+      caddy.@blocked.not.path: /v1/traces* /v1/logs* /v1/metrics*
       caddy.respond: "@blocked 404"
       caddy.reverse_proxy: "{{upstreams 4318}}"
     networks:

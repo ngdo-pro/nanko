@@ -41,6 +41,8 @@ export const env = Object.freeze({
   appBaseUrl: parsed.data.APP_BASE_URL,
   apiBaseUrl: parsed.data.API_BASE_URL,
   libraryBaseUrl: parsed.data.LIBRARY_BASE_URL,
+  e2eUsername: parsed.data.E2E_USERNAME,
+  e2ePassword: parsed.data.E2E_PASSWORD,
   keycloak: {
     url: parsed.data.KEYCLOAK_URL,
     adminUser: parsed.data.KEYCLOAK_ADMIN_USER,

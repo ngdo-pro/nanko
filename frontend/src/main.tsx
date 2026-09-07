@@ -1,5 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { z } from 'zod'
+
+z.config({ jitless: true })
 import './index.css'
 import '@xyflow/react/dist/style.css'
 import { App } from './app/App'

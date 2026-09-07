@@ -6,7 +6,7 @@ test.describe('Gestion des Organisations et des Projets (WorkspaceManagement)', 
   test('Auto-provisioning solo transparent et création de projet', async ({ page }) => {
     const uniqueSuffix = Date.now().toString().slice(-6)
     const baseUser = await getOrSetupTestUser()
-    const isLocal = !env.e2eUsername
+    const isLocal = !env.testUser.username
 
     // En local, on crée un nouvel utilisateur dédié pour tester le premier accès transparent
     const email = isLocal ? `workspace-${uniqueSuffix}@nanko.dev` : baseUser.email

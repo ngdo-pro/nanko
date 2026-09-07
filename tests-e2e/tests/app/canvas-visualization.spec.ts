@@ -6,7 +6,7 @@ test.describe('Visualisation Graphique en Canvas Interactif avec React Flow (015
   test('Rendu Split, basculement de modes, drag & drop, auto-layout et persistance', async ({ page }) => {
     const uniqueSuffix = Date.now().toString().slice(-6)
     const baseUser = await getOrSetupTestUser()
-    const isLocal = !env.e2eUsername
+    const isLocal = !env.testUser.username
 
     const email = isLocal ? `canvas-test-${uniqueSuffix}@nanko.dev` : baseUser.email
     const password = baseUser.password
