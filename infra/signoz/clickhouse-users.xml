@@ -24,7 +24,6 @@
             </networks>
             <profile>default</profile>
             <quota>default</quota>
-            <access_management>1</access_management>
             <grants>
                 <query>GRANT ALL ON *.*</query>
             </grants>
