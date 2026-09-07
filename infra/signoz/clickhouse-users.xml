@@ -24,15 +24,10 @@
             </networks>
             <profile>default</profile>
             <quota>default</quota>
-            <access_management>0</access_management>
-            <allow_databases>
-                <database>signoz_traces</database>
-                <database>signoz_metrics</database>
-                <database>signoz_logs</database>
-                <database>signoz_metadata</database>
-                <database>signoz_analytics</database>
-                <database>signoz_meter</database>
-            </allow_databases>
+            <access_management>1</access_management>
+            <grants>
+                <query>GRANT ALL ON *.*</query>
+            </grants>
         </signoz>
         <plausible>
             <password_sha256_hex from_env="CLICKHOUSE_PLAUSIBLE_PASSWORD_SHA256"/>
