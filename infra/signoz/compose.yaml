@@ -11,7 +11,7 @@ services:
     container_name: signoz-clickhouse
     restart: unless-stopped
     <<: *hardening
-    cap_add: [SYS_NICE, NET_ADMIN, IPC_LOCK]
+    cap_add: [SYS_NICE, NET_ADMIN, IPC_LOCK, CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
     deploy:
       resources:
         limits:
