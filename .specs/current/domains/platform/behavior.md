@@ -82,7 +82,20 @@ Garantir l'intégrité, la traçabilité et la stabilité de la plateforme Nanko
 * **Règle 18 (Exemption de consentement cookies - CNIL / RGPD) :** Plausible Analytics fonctionne sans aucun cookie, sans stockage persistant (`localStorage`), et avec un hachage d'IP journalier éphémère (sel rotatif détruit chaque jour à minuit). Aucun bandeau de consentement ni barrière d'acceptation cookies ne doit être présenté à l'utilisateur. Une mention d'information claire dans la politique de confidentialité / pied de page est obligatoire et suffisante.
 * **Règle 19 (Interdiction stricte de données personnelles identifiantes - Anti-PII) :** Il est strictement interdit d'émettre des données personnelles (PII : nom, prénom, email, UUID utilisateur Keycloak `sub`, IP brute, token de session) dans les événements analytiques. Le helper client `sanitizeAnalyticsProps` supprime automatiquement toute clé interdite (`forbiddenPiiKeys`) avant émission vers `/api/event`.
 * **Règle 20 (Résilience Fail-Open Analytics) :** Le blocage réseau ou l'échec de chargement de Plausible (bloqueurs de pub, indisponibilité serveur, timeout) ne doit jamais lever d'erreur ni altérer le fonctionnement normal du frontend React ou de la landing page.
+### Parcours 7 : Durcissement sécurité de l'infrastructure et moindre privilège (Spec 013 / ADR-0012)
+* **Cloisonnement PostgreSQL :** Le superutilisateur `nanko` n'est plus utilisé par les conteneurs applicatifs. Le backend Symfony utilise le rôle dédié `nanko_app`, Keycloak utilise `keycloak`, Plausible utilise `plausible`, et les sauvegardes quotidiennes utilisent le rôle dédié en lecture seule `backup` (`pg_read_all_data`). La directive `CONNECT` sur les bases est révoquée pour `PUBLIC`. L'instance `postgres` est strictement confinée au réseau Docker interne et retirée du réseau public `edge`.
+* **Cloisonnement ClickHouse :** L'utilisateur `default` est restreint aux connexions locales (`127.0.0.1`, `::1`), tandis que `signoz` et `plausible` disposent d'identifiants dédiés avec mots de passe injectés via variables d'environnement.
+* **Verrouillage de la console Admin Keycloak :** Tout accès extérieur non autorisé aux chemins d'administration (`/admin*`, `/realms/master*`) est intercepté par Caddy et rejeté avec un code HTTP `403 Forbidden` hors allowlist IP (`KC_ADMIN_ALLOWED_IPS`).
+* **Réduction de surface d'attaque OTLP :** Le proxy Caddy bloque tout chemin non allowlisté vers l'OTEL Collector en `404 Not Found`. Le collecteur applique une politique CORS stricte limitée aux origines Nanko (`app`, `www`, dev) et refuse les requêtes d'origines non reconnues.
+* **Hygiène Supply Chain CI & Images :** Toutes les GitHub Actions sont épinglées par SHA commit immuable avec commentaires de version, Dependabot assure la maintenance automatisée, et les conteneurs s'exécutent avec des privilèges restreints (`no-new-privileges`, `cap_drop: [ALL]`, backend non-root en utilisateur `www-data` sur port `:8080`).
+
+---
+
+## 3. Règles Métier & Invariants
 * **Règle 21 (Propagation obligatoire des variables d'environnement VITE_* dans la CI/CD) :** Toute variable d'environnement frontend préfixée `VITE_*` introduite dans `frontend/src/config/env.ts` et `frontend/Dockerfile` doit obligatoirement être déclarée et injectée en tant que `build-args` Docker dans l'ensemble des workflows GitHub Actions de build et déploiement (`deploy-prod.yml`, `deploy-preprod.yml`, `pr-preprod-e2e.yml`).
+* **Règle 22 (Moindre privilège datastores — ADR-0012) :** Aucun conteneur applicatif ne doit se connecter à PostgreSQL ou ClickHouse en superutilisateur (`postgres`, `nanko` superuser ou `default` sans mot de passe). Tout composant dispose de son propre rôle LOGIN et de permissions strictement limitées à son périmètre de schéma/tables.
+* **Règle 23 (Épinglage immuable des actions CI) :** Dans tous les workflows GitHub Actions, la directive `uses:` doit cibler un commit SHA complet (40 caractères hexadécimaux) et spécifier le tag versionné en commentaire `# vX.Y.Z`.
+* **Règle 24 (Isolement réseau des datastores) :** Les conteneurs de bases de données (`postgres`, `clickhouse`) ne doivent jamais être rattachés au réseau externe `edge` du reverse proxy. Seuls les conteneurs exposant un service HTTP/HTTPS destiné au trafic web public ont accès au réseau `edge`.
 
 ## 4. Matrice des Échecs & Cas Limites
 | Situation | Comportement & Conséquence |
@@ -102,3 +115,6 @@ Garantir l'intégrité, la traçabilité et la stabilité de la plateforme Nanko
 | Échec d'envoi du log vers `/v1/logs` (ex: réseau coupé) | Abandon silencieux fail-open, aucun blocage du flux utilisateur, aucune boucle récursive |
 | Bloqueur de publicité bloquant `plausible.nanko.dev` ou `/api/event` | Abandon silencieux fail-open, aucune erreur bloquante dans la console, expérience utilisateur 100 % préservée |
 | Propriété PII passée à `trackEvent` (ex: `email: "user@test.com"`) | `sanitizeAnalyticsProps` supprime la propriété interdite, l'événement est émis sans la donnée personnelle |
+| Tentative d'accès extérieur à la console d'administration Keycloak (`/admin*`) | Réponse immédiate `403 Forbidden` par le reverse-proxy Caddy si l'IP cliente n'est pas allowlistée |
+| Origine inconnue ou non autorisée tentant d'envoyer des traces vers `otlp.nanko.dev` | Rejet CORS (pas d'en-tête `Access-Control-Allow-Origin` retourné), requête bloquée par le navigateur |
+| Requête vers un chemin arbitraire non OTLP sur `otlp.nanko.dev` (ex: `/debug/*`) | Réponse immédiate `404 Not Found` par Caddy sans routage vers le collecteur interne |

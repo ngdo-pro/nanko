@@ -33,28 +33,25 @@
 ### Infrastructure & Déploiement VPS (`infra/`)
 * **Watchtower :** Scrutation automatique des digests d'images GHCR (polling 5 minutes) assurant un déploiement continu sans exposition de clés SSH privées (respect de l'ADR-0010).
 * **Reverse Proxy Caddy :** Gestion automatique des certificats Let's Encrypt TLS et routage dynamique des sous-domaines (`api.preprod.nanko.dev`, `app.preprod.nanko.dev`, `auth.preprod.nanko.dev`, `signoz.nanko.dev`, `otlp.nanko.dev`).
-* **Sécurisation Préproduction (Sas HTTP Basic Auth & Protection Anti-Indexation RFC 9309) :**
-  * `infra/preprod/compose.yaml` :
-    - Configuration du matcher `caddy.@robots: "path /robots.txt"` avec réponse immédiate `caddy.respond.@robots: "User-agent: *\nDisallow: /\n" 200` et `caddy.header.@robots.Content-Type: "text/plain; charset=utf-8"` sur `frontend`, `landing`, `backend` et `keycloak`.
-    - Configuration du sas Basic Auth sur `frontend`, `landing` et `backend` via le matcher d'exclusion `caddy.@protected: "not path /robots.txt"`, `caddy.basic_auth.@protected: "/*"` et `caddy.basic_auth.@protected.${PREPROD_HTTP_USER:-nanko}: "${PREPROD_HTTP_HASH}"`.
-    - Les mots de passe sont hachés en Bcrypt sur le serveur VPS via `caddy hash-password` et stockés dans `~/.config/nanko/preprod.env`.
-    - Directive anti-indexation systématique et durcie appliquée sur TOUS les services exposés de préproduction (`frontend`, `landing`, `backend`, `keycloak`) ainsi que dans `infra/signoz/compose.yaml` (`signoz-frontend`) via le label :
-      `caddy.header.X-Robots-Tag: "noindex, nofollow, noarchive, nosnippet, notranslate, noimageindex"`.
-  * L'environnement de production et l'environnement local demeurent exempts de Basic Auth et de `noindex` (préservation du SEO de production).
+  * **Sécurisation & En-têtes HTTP Caddy (Durcissement Spec 013) :**
+    - **En-têtes de Sécurité Systématiques :** `Strict-Transport-Security: "max-age=31536000; includeSubDomains"` (sans preload), `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: "camera=(), microphone=(), geolocation=(), payment=(), usb=()"`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`.
+    - **Content Security Policy :** Déploiement de `Content-Security-Policy-Report-Only` sur frontend et landing (`default-src 'self'`, scripts Google Fonts et Plausible autorisés, absence de scripts inline).
+    - **Verrouillage Admin Keycloak :** Blocage HTTP `403 Forbidden` par Caddy sur `/admin*` et `/realms/master*` restreint aux adresses IP de `KC_ADMIN_ALLOWED_IPS`.
+    - **Sas HTTP Basic Auth :** Appliqué sur `signoz.nanko.dev` (`SIGNOZ_BASICAUTH_HASH`) et sur tous les sous-domaines applicatifs de préproduction (`PREPROD_HTTP_HASH`).
+    - **Protection Anti-Indexation (RFC 9309) :** `/robots.txt` intercepté par Caddy et en-tête `X-Robots-Tag: "noindex, nofollow, noarchive, nosnippet, notranslate, noimageindex"` appliqué en préproduction et sur SigNoz.
 
 ### Observabilité & Monitoring Distribué (SigNoz & OpenTelemetry)
 * **Stack SigNoz Auto-Hébergée (`infra/signoz/compose.yaml`) :**
-  - **Moteur ClickHouse 25.1 :** Image `clickhouse/clickhouse-server:25.1-alpine` avec Keeper embarqué (port 9181), macros de cluster (`cluster`, `shard=1`, `replica=1`), support des types JSON dynamiques (`enable_json_type=1` via `clickhouse-users.xml`), et création automatique des bases au démarrage (`clickhouse-init.sql`).
-  - **Auto-Migration de Schéma (`signoz-schema-migrator`) :** Conteneur d'initialisation one-shot exécutant séquentiellement `/signoz-otel-collector migrate bootstrap`, `sync up` et `async up` avant le démarrage des services dépendants.
-  - **SigNoz Query Service :** Image `signoz/query-service:latest` configurée avec les drapeaux `-use-trace-new-schema=true` et `-use-logs-new-schema=true` pour exploiter nativement le schéma v3 de ClickHouse.
-  - **SigNoz OTel Collector :** Image `signoz/signoz-otel-collector:latest` exposant les ports OTLP `4317` (gRPC interne pour Keycloak) et `4318` (HTTP pour le backend Symfony et le frontend web).
-  - **Routage & Sécurisation Caddy (Réseau `edge`) :**
-    - `signoz.nanko.dev` ➔ Frontend UI SigNoz (`:3301`) sécurisé par HTTP Basic Auth (`SIGNOZ_BASICAUTH_HASH`), HTTPS forcé (HSTS) et proxy Nginx redirigeant `/signup` vers `/login`.
-    - `otlp.nanko.dev` ➔ Endpoint d'ingestion public OTLP HTTP (`:4318`), avec CORS permissif (`*`) pour la télémétrie navigateur.
-  - **Observability as Code & Provisioning :**
-    - Alertes déclaratives : `infra/signoz/alerts/platform-alerts.yaml` montées dans AlertManager.
-    - Dashboards déclaratifs : `infra/signoz/dashboards/platform-overview.json` et création idempotente du compte superadmin via le conteneur `signoz-provisioner`.
-    - Cible de déploiement VPS : `make deploy-signoz` (charge `~/.config/nanko/signoz.env` et déploie `infra/signoz/compose.yaml`).
+  - **Moteur ClickHouse 25.12 :** Image `clickhouse/clickhouse-server:25.12-alpine` avec Keeper embarqué (port 9181), macros de cluster, support JSON dynamique. Cloisonnement strict des utilisateurs via `clickhouse-users.xml` : `default` restreint à localhost, `signoz` et `plausible` isolés avec mots de passe forts. Retiré du réseau public `edge`.
+  - **Auto-Migration de Schéma (`signoz-schema-migrator`) :** Image épinglée `signoz/signoz-otel-collector:v0.144.9` exécutant séquentiellement `migrate bootstrap`, `sync up` et `async up`.
+  - **SigNoz Query Service :** Image stable `signoz/query-service:0.76.2` (zéro tag `:latest`).
+  - **SigNoz OTel Collector :** Image stable `signoz/signoz-otel-collector:v0.144.9` exposant `4317` (gRPC) et `4318` (HTTP) :
+    - CORS strictement restreint aux origines Nanko (`app.nanko.dev`, `www.nanko.dev`, `app.preprod.nanko.dev`, `www.preprod.nanko.dev`, `http://localhost:*`).
+    - Limitation de charge utile `max_request_body_size: 2097152` (2 Mo) et processeur `memory_limiter`.
+    - Retrait des endpoints de debug non essentiels (`zpages`).
+  - **Routage Caddy (Réseau `edge`) :**
+    - `signoz.nanko.dev` ➔ Frontend UI SigNoz (`:3301`) protégé par HTTP Basic Auth Caddy (`SIGNOZ_BASICAUTH_HASH`).
+    - `otlp.nanko.dev` ➔ Endpoint OTLP HTTP (`:4318`) avec blocage Caddy en `404 Not Found` de tout chemin hors allowlist (`/v1/traces*`, `/v1/logs*`, `/v1/metrics*`).
 * **Environnement Local Dédié (`infra/local/compose.observability.yaml`) :**
   - Stack SigNoz locale optionnelle pilotée par les cibles Makefile `make signoz-up` et `make signoz-down` pour tester la télémétrie sans alourdir le démarrage de base `make dev`.
 * **Serveur d'Identité Keycloak 26 :**
@@ -138,10 +135,14 @@
 * **Invariant `data-qa` exclusif :** Aucun test E2E Playwright ciblant du code Nanko ne doit utiliser de sélecteur basé sur une classe CSS (`.classe`) ou un ID HTML (`#id`). L'API `page.getByTestId(...)` résout obligatoirement `[data-qa="..."]`. Seule la mire externe Keycloak fait exception.
 * **Invariant Analytics sans cookie & Anti-PII :** La mesure d'audience Plausible fonctionne sans aucun cookie ni fingerprint persistant (hachage éphémère d'IP rotatif 24h) et sans bannière de consentement. Aucun événement ne doit comporter de données personnelles identifiantes (`sanitizeAnalyticsProps`).
 * **Invariant Propagation Build-Args CI/CD :** Toute variable d'environnement `VITE_*` déclarée dans `frontend/src/config/env.ts` et `frontend/Dockerfile` doit obligatoirement être transmise en `build-args` dans tous les workflows de déploiement GitHub Actions (`deploy-prod.yml`, `deploy-preprod.yml`, `pr-preprod-e2e.yml`).
+* **Invariant Moindre Privilège Datastores (ADR-0012) :** Aucun service applicatif ne se connecte avec le superutilisateur PostgreSQL ou un compte ClickHouse sans mot de passe. Chaque service utilise un rôle dédié (`nanko_app`, `keycloak`, `plausible`, `backup`). Les bases sont retirées du réseau public `edge`.
+* **Invariant Hardening Conteneurs :** Les conteneurs tournent avec `security_opt: ["no-new-privileges:true"]`, `cap_drop: [ALL]` (avec ajouts minimaux stricts si nécessaire), des limites mémoires et PIDs, et des logs rotatifs `json-file`. Le backend Symfony s'exécute en utilisateur non-root `www-data` sur le port `:8080`.
+* **Invariant Épinglage Immuable CI :** Toute action GitHub dans `.github/workflows/` est épinglée sur un commit SHA complet (40 hex) avec commentaire de version.
 
 ---
 
 ## 3. ADRs de Référence
 * `ADR-0007` : Postgres seul pour le MVP applicatif & mutualisation des datastores pour l'observabilité (SigNoz ClickHouse) et l'analytics (Plausible réutilisant les conteneurs PostgreSQL et ClickHouse existants sans nouveau conteneur SGBD).
 * `ADR-0010` : Déploiement préproduction sans secret SSH via GHCR et Watchtower.
+* `ADR-0012` : Moindre privilège et cloisonnement des datastores partagés (PostgreSQL & ClickHouse).
 
