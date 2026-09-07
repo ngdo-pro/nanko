@@ -5,14 +5,22 @@ receivers:
         endpoint: 0.0.0.0:4317
       http:
         endpoint: 0.0.0.0:4318
+        max_request_body_size: 2097152
         cors:
           allowed_origins:
-            - "http://*"
-            - "https://*"
+            - "https://app.nanko.dev"
+            - "https://www.nanko.dev"
+            - "https://app.preprod.nanko.dev"
+            - "https://www.preprod.nanko.dev"
+            - "http://localhost:*"
           allowed_headers:
             - "*"
 
 processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
   batch:
     send_batch_max_size: 10000
     send_batch_size: 10000
@@ -21,29 +29,27 @@ processors:
 extensions:
   health_check:
     endpoint: 0.0.0.0:13133
-  zpages:
-    endpoint: 0.0.0.0:55679
 
 exporters:
   clickhousetraces:
-    datasource: tcp://clickhouse:9000/signoz_traces
+    datasource: tcp://signoz:${CLICKHOUSE_SIGNOZ_PASSWORD}@clickhouse:9000/signoz_traces
   signozclickhousemetrics:
-    dsn: tcp://clickhouse:9000/signoz_metrics
+    dsn: tcp://signoz:${CLICKHOUSE_SIGNOZ_PASSWORD}@clickhouse:9000/signoz_metrics
   clickhouselogsexporter:
-    dsn: tcp://clickhouse:9000/signoz_logs
+    dsn: tcp://signoz:${CLICKHOUSE_SIGNOZ_PASSWORD}@clickhouse:9000/signoz_logs
 
 service:
-  extensions: [health_check, zpages]
+  extensions: [health_check]
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [batch]
+      processors: [memory_limiter, batch]
       exporters: [clickhousetraces]
     metrics:
       receivers: [otlp]
-      processors: [batch]
+      processors: [memory_limiter, batch]
       exporters: [signozclickhousemetrics]
     logs:
       receivers: [otlp]
-      processors: [batch]
+      processors: [memory_limiter, batch]
       exporters: [clickhouselogsexporter]

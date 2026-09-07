@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test'
+import { env } from '../../config/env'
 import { getOrSetupTestUser, createOrResetKeycloakUser } from '../helpers/keycloak'
 
 test.describe('Visualisation Graphique en Canvas Interactif avec React Flow (015)', () => {
   test('Rendu Split, basculement de modes, drag & drop, auto-layout et persistance', async ({ page }) => {
     const uniqueSuffix = Date.now().toString().slice(-6)
     const baseUser = await getOrSetupTestUser()
-    const isLocal = !process.env.E2E_USERNAME
+    const isLocal = !env.e2eUsername
 
     const email = isLocal ? `canvas-test-${uniqueSuffix}@nanko.dev` : baseUser.email
     const password = baseUser.password

@@ -80,12 +80,14 @@ WORKDIR /app
 # Prevents FrankenPHP's built-in auto-HTTPS from conflicting with the
 # external Caddy reverse proxy -- this container only ever speaks plain
 # HTTP on the Docker network.
-ENV SERVER_NAME=:80
+ENV SERVER_NAME=:8080
 ENV APP_ENV=prod
 ARG APP_VERSION=v0.0.0-dev
 ARG APP_COMMIT=dev
 ENV APP_VERSION=${APP_VERSION}
 ENV APP_COMMIT=${APP_COMMIT}
+
+RUN mkdir -p /app/var /data /config && chown -R www-data:www-data /app/var /data /config
 
 # Copied directly from the build context (not from the builder stage, and
 # not under /app) so it survives independently of the app-code copy above.
@@ -93,6 +95,9 @@ ENV APP_COMMIT=${APP_COMMIT}
 # own entrypoint -- see docker-entrypoint.sh and docs/adr/0010-*.md.
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+USER www-data
+
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 # Re-declared explicitly: setting ENTRYPOINT above resets any CMD inherited
 # from the base image to empty. This must match the base image's own CMD
@@ -101,6 +106,6 @@ ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 # `docker-php-entrypoint "$@"` in docker-entrypoint.sh still receives it.
 CMD ["--config", "/etc/frankenphp/Caddyfile", "--adapter", "caddyfile"]
 
-EXPOSE 80
+EXPOSE 8080
 
-HEALTHCHECK CMD curl -f http://localhost/health || exit 1
+HEALTHCHECK CMD curl -f http://localhost:8080/health || exit 1

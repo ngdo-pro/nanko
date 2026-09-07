@@ -12,14 +12,7 @@
 <link rel="stylesheet" href="styles.css">
 <!-- Plausible Analytics (Anonyme, sans cookie, exempté de consentement CNIL/RGPD) -->
 <script defer data-domain="nanko.dev" data-api="https://plausible.nanko.dev/api/event" src="https://plausible.nanko.dev/js/script.tagged-events.js"></script>
-<script>
-  (function () {
-    var stored = localStorage.getItem('nanko-theme');
-    if (stored === 'light' || stored === 'dark') {
-      document.documentElement.setAttribute('data-theme', stored);
-    }
-  })();
-</script>
+<script src="theme-init.js"></script>
 </head>
 <body>
 <div class="page">

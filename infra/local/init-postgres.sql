@@ -1,1 +1,28 @@
+-- Initialisation PostgreSQL locale avec moindres privilèges (Spec 013)
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'nanko_app') THEN
+    CREATE ROLE nanko_app LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE PASSWORD 'nanko_app';
+  END IF;
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'keycloak') THEN
+    CREATE ROLE keycloak LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE PASSWORD 'keycloak';
+  END IF;
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'plausible') THEN
+    CREATE ROLE plausible LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE PASSWORD 'plausible';
+  END IF;
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'backup') THEN
+    CREATE ROLE backup LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE PASSWORD 'backup';
+    GRANT pg_read_all_data TO backup;
+  END IF;
+END $$;
+
+REVOKE CONNECT ON DATABASE nanko FROM PUBLIC;
+GRANT CONNECT ON DATABASE nanko TO nanko_app, keycloak, backup;
+
 CREATE SCHEMA IF NOT EXISTS keycloak;
+ALTER SCHEMA keycloak OWNER TO keycloak;
+GRANT USAGE ON SCHEMA keycloak TO backup;
+ALTER ROLE keycloak SET search_path = keycloak;
+
+ALTER SCHEMA public OWNER TO nanko_app;
+GRANT ALL ON SCHEMA public TO nanko_app;
+GRANT USAGE ON SCHEMA public TO backup;

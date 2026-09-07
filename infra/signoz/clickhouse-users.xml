@@ -7,13 +7,42 @@
     </profiles>
     <users>
         <default>
-            <password></password>
+            <password_sha256_hex from_env="CLICKHOUSE_DEFAULT_PASSWORD_SHA256"/>
             <networks>
-                <ip>::/0</ip>
+                <ip>::1</ip>
+                <ip>127.0.0.1</ip>
             </networks>
             <profile>default</profile>
             <quota>default</quota>
             <access_management>1</access_management>
         </default>
+        <signoz>
+            <password_sha256_hex from_env="CLICKHOUSE_SIGNOZ_PASSWORD_SHA256"/>
+            <networks>
+                <ip>::/0</ip>
+            </networks>
+            <profile>default</profile>
+            <quota>default</quota>
+            <access_management>0</access_management>
+            <allow_databases>
+                <database>signoz_traces</database>
+                <database>signoz_metrics</database>
+                <database>signoz_logs</database>
+                <database>signoz_metadata</database>
+                <database>signoz_analytics</database>
+            </allow_databases>
+        </signoz>
+        <plausible>
+            <password_sha256_hex from_env="CLICKHOUSE_PLAUSIBLE_PASSWORD_SHA256"/>
+            <networks>
+                <ip>::/0</ip>
+            </networks>
+            <profile>default</profile>
+            <quota>default</quota>
+            <access_management>0</access_management>
+            <allow_databases>
+                <database>plausible_events_db</database>
+            </allow_databases>
+        </plausible>
     </users>
 </clickhouse>

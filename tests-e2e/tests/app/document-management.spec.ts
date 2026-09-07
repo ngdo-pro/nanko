@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test'
+import { env } from '../../config/env'
 import { getOrSetupTestUser, createOrResetKeycloakUser } from '../helpers/keycloak'
 
 test.describe('Gestion des Documents et Édition .nanko (014)', () => {
   test('Création nominale, édition .nanko, persistance AST et rechargement', async ({ page }) => {
     const uniqueSuffix = Date.now().toString().slice(-6)
     const baseUser = await getOrSetupTestUser()
-    const isLocal = !process.env.E2E_USERNAME
+    const isLocal = !env.e2eUsername
 
     const email = isLocal ? `doc-test-${uniqueSuffix}@nanko.dev` : baseUser.email
     const password = baseUser.password
@@ -122,7 +123,7 @@ test.describe('Gestion des Documents et Édition .nanko (014)', () => {
   test('Détection d une erreur de syntaxe .nanko et préservation de la saisie', async ({ page }) => {
     const uniqueSuffix = Date.now().toString().slice(-6)
     const baseUser = await getOrSetupTestUser()
-    const isLocal = !process.env.E2E_USERNAME
+    const isLocal = !env.e2eUsername
 
     const email = isLocal ? `doc-err-${uniqueSuffix}@nanko.dev` : baseUser.email
     const password = baseUser.password
@@ -179,7 +180,7 @@ test.describe('Gestion des Documents et Édition .nanko (014)', () => {
   test('Rejet d un slug de document en doublon dans le même projet', async ({ page }) => {
     const uniqueSuffix = Date.now().toString().slice(-6)
     const baseUser = await getOrSetupTestUser()
-    const isLocal = !process.env.E2E_USERNAME
+    const isLocal = !env.e2eUsername
 
     const email = isLocal ? `doc-dup-${uniqueSuffix}@nanko.dev` : baseUser.email
     const password = baseUser.password

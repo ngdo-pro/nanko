@@ -1,8 +1,22 @@
+x-hardening: &hardening
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+  pids_limit: 256
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+
 services:
   postgres:
     image: postgres:16-alpine
     container_name: nanko-prod-postgres
     restart: unless-stopped
+    <<: *hardening
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    deploy:
+      resources:
+        limits:
+          memory: 512M
     environment:
       POSTGRES_USER: nanko
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -15,25 +29,52 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      default:
-        aliases:
-          - postgres
-      edge:
-        aliases:
-          - nanko-prod-postgres
+      default: {}
+
+  postgres-backup:
+    image: prodrigestivill/postgres-backup-local:16-alpine
+    container_name: nanko-prod-postgres-backup
+    <<: *hardening
+    cap_add: [CHOWN, SETGID, SETUID]
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: nanko-prod-postgres
+      POSTGRES_DB: nanko,plausible
+      POSTGRES_USER: backup
+      POSTGRES_PASSWORD: ${BACKUP_DB_PASSWORD}
+      SCHEDULE: "@daily"
+      BACKUP_KEEP_DAYS: 7
+      BACKUP_KEEP_WEEKS: 4
+      BACKUP_KEEP_MONTHS: 3
+      HEALTHCHECK_PORT: 8080
+    volumes:
+      - nanko-prod-postgres-backups:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      default: {}
 
   backend:
     image: ghcr.io/ngdo-pro/nanko-backend:prod
     container_name: nanko-prod-backend
     restart: unless-stopped
+    <<: *hardening
+    deploy:
+      resources:
+        limits:
+          memory: 512M
     environment:
       APP_ENV: prod
       APP_SECRET: ${APP_SECRET}
-      DATABASE_URL: postgresql://nanko:${POSTGRES_PASSWORD}@nanko-prod-postgres:5432/nanko?serverVersion=16&charset=utf8
+      DATABASE_URL: postgresql://nanko_app:${APP_DB_PASSWORD}@nanko-prod-postgres:5432/nanko?serverVersion=16&charset=utf8
       KEYCLOAK_JWKS_URL: https://auth.nanko.dev/realms/nanko/protocol/openid-connect/certs
       KEYCLOAK_ISSUER: https://auth.nanko.dev/realms/nanko
-      SERVER_NAME: ":80"
-      CORS_ALLOW_ORIGIN: '^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$|^https://[a-z0-9-]+\.nanko\.dev$'
+      CORS_ALLOW_ORIGIN: '^https://[a-z0-9-]+\.nanko\.dev$'
       OTEL_EXPORTER_OTLP_ENDPOINT: http://signoz-otel-collector:4318/v1/traces
       OTEL_SERVICE_NAME: nanko-backend
       OTEL_RESOURCE_ATTRIBUTES: service.name=nanko-backend,deployment.environment=prod
@@ -44,15 +85,12 @@ services:
       com.centurylinklabs.watchtower.enable: "true"
       caddy: api.nanko.dev
       caddy.encode: gzip
-      caddy.reverse_proxy: "{{upstreams 80}}"
-      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+      caddy.reverse_proxy: "{{upstreams 8080}}"
+      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains"
+      caddy.header.Referrer-Policy: strict-origin-when-cross-origin
+      caddy.header.Permissions-Policy: "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Frame-Options: DENY
-    # Under caddy-docker-proxy, the `caddy.reverse_proxy` label above resolves
-    # the upstream automatically by container IP -- there's no separate
-    # Caddyfile to keep in sync anymore. `container_name` is kept only for
-    # human-readable `docker ps`/`docker logs` disambiguation between preprod
-    # and prod.
     networks:
       default: {}
       edge: {}
@@ -62,11 +100,16 @@ services:
     container_name: nanko-prod-keycloak
     restart: unless-stopped
     command: start --import-realm
+    <<: *hardening
+    deploy:
+      resources:
+        limits:
+          memory: 1G
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://nanko-prod-postgres:5432/nanko
-      KC_DB_USERNAME: nanko
-      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
       KC_DB_SCHEMA: keycloak
       KC_HOSTNAME: https://auth.nanko.dev
       KC_PROXY_HEADERS: xforwarded
@@ -76,7 +119,7 @@ services:
       KC_TRACING_RESOURCE_ATTRIBUTES: service.name=nanko-keycloak,deployment.environment=prod
       KC_METRICS_ENABLED: "true"
     volumes:
-      - ../keycloak:/opt/keycloak/data/import:ro
+      - ../keycloak/prod:/opt/keycloak/data/import:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -84,8 +127,11 @@ services:
       com.centurylinklabs.watchtower.enable: "true"
       caddy: auth.nanko.dev
       caddy.encode: gzip
+      caddy.@admin.path: /admin* /realms/master*
+      caddy.@admin.not_remote_ip: "${KC_ADMIN_ALLOWED_IPS}"
+      caddy.respond: "@admin 403"
       caddy.reverse_proxy: "{{upstreams 8080}}"
-      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains"
       caddy.header.X-Content-Type-Options: nosniff
     networks:
       default: {}
@@ -95,6 +141,13 @@ services:
     image: ghcr.io/ngdo-pro/nanko-frontend:prod
     container_name: nanko-prod-frontend
     restart: unless-stopped
+    read_only: true
+    tmpfs: [/data, /config, /tmp]
+    <<: *hardening
+    deploy:
+      resources:
+        limits:
+          memory: 64M
     networks:
       edge: {}
     labels:
@@ -102,14 +155,24 @@ services:
       caddy: app.nanko.dev
       caddy.encode: gzip
       caddy.reverse_proxy: "{{upstreams 8080}}"
-      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains"
+      caddy.header.Referrer-Policy: strict-origin-when-cross-origin
+      caddy.header.Permissions-Policy: "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Frame-Options: DENY
+      caddy.header.Content-Security-Policy-Report-Only: "default-src 'self'; script-src 'self' https://plausible.nanko.dev; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://api.nanko.dev https://auth.nanko.dev https://otlp.nanko.dev https://plausible.nanko.dev; frame-ancestors 'none'; base-uri 'self'; form-action 'self' https://auth.nanko.dev; object-src 'none'; upgrade-insecure-requests"
 
   landing:
     image: ghcr.io/ngdo-pro/nanko-landing:prod
     container_name: nanko-prod-landing
     restart: unless-stopped
+    read_only: true
+    tmpfs: [/data, /config, /tmp]
+    <<: *hardening
+    deploy:
+      resources:
+        limits:
+          memory: 64M
     networks:
       edge: {}
     labels:
@@ -117,13 +180,18 @@ services:
       caddy: www.nanko.dev
       caddy.encode: gzip
       caddy.reverse_proxy: "{{upstreams 8080}}"
-      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+      caddy.header.Strict-Transport-Security: "max-age=31536000; includeSubDomains"
+      caddy.header.Referrer-Policy: strict-origin-when-cross-origin
+      caddy.header.Permissions-Policy: "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
       caddy.header.X-Content-Type-Options: nosniff
       caddy.header.X-Frame-Options: DENY
+      caddy.header.Content-Security-Policy-Report-Only: "default-src 'self'; script-src 'self' https://plausible.nanko.dev; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://plausible.nanko.dev; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests"
 
 networks:
+  default: {}
   edge:
     external: true
 
 volumes:
   nanko-prod-postgres-data:
+  nanko-prod-postgres-backups:
