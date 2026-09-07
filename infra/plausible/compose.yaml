@@ -1,7 +1,6 @@
 x-hardening: &hardening
   security_opt: ["no-new-privileges:true"]
   cap_drop: [ALL]
-  pids_limit: 256
   logging:
     driver: json-file
     options: { max-size: "10m", max-file: "3" }
@@ -16,6 +15,7 @@ services:
       resources:
         limits:
           memory: 512M
+          pids: 256
     command: sh -c "sleep 10 && /entrypoint.sh db createdb && /entrypoint.sh db migrate && /entrypoint.sh run"
     environment:
       - BASE_URL=${PLAUSIBLE_BASE_URL:-https://plausible.nanko.dev}
