@@ -288,13 +288,23 @@ export const nankoAstShapeSchema = z.object({
 export const nankoAstConnectorSchema = z.object({
   source: z.string(),
   target: z.string(),
-  label: z.string().optional(),
+  label: z.string().optional().nullable(),
 });
 
+export const nodeCoordinatesSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+});
+
+export const nankoAstLayoutSchema = z.record(z.string(), nodeCoordinatesSchema);
+
 export const nankoAstSchema = z.object({
-  shapes: z.array(nankoAstShapeSchema),
-  connectors: z.array(nankoAstConnectorSchema),
-  layout: z.record(z.any()).optional(),
+  shapes: z.array(nankoAstShapeSchema).default([]),
+  connectors: z.array(nankoAstConnectorSchema).default([]),
+  layout: z
+    .union([nankoAstLayoutSchema, z.array(z.any()).transform(() => ({}))])
+    .optional()
+    .default({}),
 });
 
 export const documentListItemSchema = z.object({
@@ -303,8 +313,8 @@ export const documentListItemSchema = z.object({
   name: z.string().min(2),
   slug: z.string().regex(/^[a-z0-9-]+$/),
   layer: z.number().int(),
-  shapesCount: z.number().int().nonnegative().optional(),
-  connectorsCount: z.number().int().nonnegative().optional(),
+  shapesCount: z.number().int().optional().default(0),
+  connectorsCount: z.number().int().optional().default(0),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -312,7 +322,6 @@ export const documentListItemSchema = z.object({
 export const documentDetailSchema = z.object({
   id: z.string().uuid(),
   projectId: z.string().uuid(),
-  organisationId: z.string().uuid().optional(),
   name: z.string().min(2),
   slug: z.string().regex(/^[a-z0-9-]+$/),
   layer: z.number().int(),
@@ -325,13 +334,18 @@ export const documentDetailSchema = z.object({
 export const createDocumentSchema = z.object({
   name: z.string().trim().min(2, 'Le nom doit comporter au moins 2 caractères').max(255),
   slug: z.string().trim().min(2, 'Le slug doit comporter au moins 2 caractères').max(100).regex(/^[a-z0-9-]+$/, 'Minuscules, chiffres et tirets uniquement'),
-  layer: z.coerce.number().int('Le layer doit être un entier'),
+  layer: z.coerce.number().int('Le layer doit être un entier').default(0),
 });
 
 export const updateDocumentSchema = z.object({
   sourceCode: z.string(),
 });
 
+export type NankoAstShape = z.infer<typeof nankoAstShapeSchema>;
+export type NankoAstConnector = z.infer<typeof nankoAstConnectorSchema>;
+export type NodeCoordinates = z.infer<typeof nodeCoordinatesSchema>;
+export type NankoAstLayout = z.infer<typeof nankoAstLayoutSchema>;
+export type NankoAst = z.infer<typeof nankoAstSchema>;
 export type DocumentListItem = z.infer<typeof documentListItemSchema>;
 export type DocumentDetail = z.infer<typeof documentDetailSchema>;
 export type CreateDocumentInput = z.infer<typeof createDocumentSchema>;

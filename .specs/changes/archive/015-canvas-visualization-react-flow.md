@@ -394,9 +394,9 @@ export function updateNankoSourceLayout(
     - Sauvegarde via `Cmd+S` et persistance confirmée après rechargement de la page.
   - [x] **Quality Gates E2E :** Exécution réussie des tests Playwright.
 
-- [ ] **Phase 5 : Synchronisation documentaire & Archivage**
-  - [ ] 1. Répercuter le delta dans `.specs/current/domains/workspace-management/`.
-  - [ ] 2. Archiver ce fichier vers `.specs/changes/archive/015-canvas-visualization-react-flow.md`.
+- [x] **Phase 5 : Synchronisation documentaire & Archivage**
+  - [x] 1. Répercuter le delta dans `.specs/current/domains/workspace-management/`.
+  - [x] 2. Archiver ce fichier vers `.specs/changes/archive/015-canvas-visualization-react-flow.md`.
 
 ---
 

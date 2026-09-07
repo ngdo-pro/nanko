@@ -36,6 +36,15 @@ Permettre aux utilisateurs et aux équipes de structurer leurs architectures dan
 * **Parcours 6 : Consultation des Documents sur le Dashboard**
   * L'état vide du Dashboard est remplacé par la grille des documents du projet actif (`DocumentList`), affichant pour chaque document son nom, layer, nombre de shapes/connectors et date de modification.
   * Un clic sur une carte de document ouvre directement la vue d'édition.
+* **Parcours 7 : Visualisation Graphique en Canvas Interactif (React Flow)**
+  * Dans la vue d'édition (`DocumentEditorView`), l'utilisateur dispose d'un sélecteur d'affichage dans la barre d'outils supérieure :
+    * **Mode Split (par défaut)** : Éditeur de code à gauche et canvas graphique interactif à droite (50/50).
+    * **Mode Canvas** : Canvas graphique en plein écran pour la manipulation spatiale et l'exploration d'architecture.
+    * **Mode Code** : Éditeur de code et inspecteur AST textuel en plein écran.
+  * Le canvas matérialise automatiquement les entités `.nanko` sous forme de nœuds typés (`RectangleNode`, `CircleNode`, `TextNode`) et d'arêtes directionnelles (`NankoEdge`) conformes au design system Blueprint.
+  * **Manipulation spatiale (Drag & Drop)** : L'utilisateur peut déplacer librement les nœuds sur le canvas. Au relâchement (`onNodeDragStop`), les nouvelles coordonnées `(x, y)` sont automatiquement injectées ou mises à jour dans le bloc `!LAYOUT ... !END` du code `.nanko`, déclenchant l'état « Non enregistré » prêt à être sauvegardé via `Cmd+S` / `Ctrl+S`.
+  * **Réorganisation automatique (Auto-Layout)** : Un clic sur « Réorganiser » calcule instantanément un placement hiérarchique sans chevauchement via l'algorithme Dagre et synchronise l'ensemble des coordonnées dans le code source.
+  * **Résilience aux erreurs de syntaxe** : En cas de code syntaxiquement invalide pendant la frappe, le canvas se met en pause avec un badge discret `Syntaxe en cours d'édition - Canvas en pause` tout en conservant le dernier graphe valide affiché.
 
 ## 4. Règles de Gestion Métier (Lexique Invariant cf. CONTEXT.md)
 * **Organisation :** Regroupement racine possédant des Projets et des membres. Ne jamais employer les termes « Tenant » ou « Workspace ».
@@ -43,7 +52,7 @@ Permettre aux utilisateurs et aux équipes de structurer leurs architectures dan
 * **OrganisationMember :** Relation d'appartenance entre un utilisateur (`app_user`) et une organisation, qualifiée par un rôle (`owner`, `member`).
 * **Project :** Conteneur plat de documents au sein d'une organisation. Unicité stricte du slug de projet par organisation (`uniq_project_org_slug`).
 * **Document :** Schéma d'architecture positionné sur un `Layer` (profondeur / z-index entier >= 0), rattaché à un `Project`. Porte directement son identité (`name`, `slug`, `layer`) et son contenu (`source_code` textuel au format `.nanko`, `ast` JSONB dénormalisé). Unicité stricte du slug par projet (`uniq_document_project_slug`).
-* **Format .nanko & Parseur :** Format textuel déclaratif versionnable modélisant des entités graphiques (`Shape` : `rectangle`, `circle`, `text`) et logiques (`Connector` : `source -> target "label"`). Intégrité référentielle stricte : les connecteurs ne peuvent référencer que des shapes déclarées dans le document.
+* **Format .nanko & Parseur :** Format textuel déclaratif versionnable modélisant des entités graphiques (`Shape` : `rectangle`, `circle`, `text`), logiques (`Connector` : `source -> target "label"`) et spatiales (bloc `!LAYOUT\nnodeId: x=..., y=...\n!END`). Intégrité référentielle stricte : les connecteurs et coordonnées ne peuvent référencer que des shapes déclarées dans le document.
 * **Persistance du contexte :** Le projet actif est conservé côté client (`localStorage`) et réinitialisé intelligemment si l'organisation active change.
 
 ## 5. Matrice des Échecs & Cas Limites
@@ -56,4 +65,5 @@ Permettre aux utilisateurs et aux équipes de structurer leurs architectures dan
 | Tentative de création d'un document avec un slug déjà utilisé dans le projet | Code 409 `DOCUMENT_SLUG_EXISTS` affiché dans la modale sans rechargement. |
 | Nom de projet ou document invalide | Code 422 `UNPROCESSABLE_ENTITY` avec message de validation sous le champ concerné. |
 | Erreur de syntaxe dans le code source `.nanko` à l'enregistrement | Code 422 `INVALID_NANKO_SYNTAX` affichant un panneau d'erreur rouge avec le numéro de ligne et le motif, préservant le code dans l'éditeur. |
+| Erreur de syntaxe locale en cours de frappe dans l'éditeur | Le canvas affiche le badge « Canvas en pause » et maintient le dernier AST valide sans crasher ni effacer le graphe. |
 
