@@ -74,3 +74,26 @@ Les logs applicatifs émis par le Backend Symfony et le Frontend React sont norm
 | `browser` | `LowCardinality(String)` | Navigateur extrait du User-Agent (ex. `Chrome`, `Firefox`) |
 | `country_code` | `LowCardinality(FixedString(2))` | Code pays ISO-3166-1 extrait de l'IP sans stockage de l'IP |
 
+---
+
+## 6. Cloisonnement & Moindre Privilège des Datastores (ADR-0012)
+
+### 6.1. Rôles Applicatifs PostgreSQL (`nanko-prod-postgres`, `nanko-preprod-postgres`)
+Conformément à l'ADR-0012, le superutilisateur `nanko` n'est utilisé pour aucune connexion applicative en production ni en préproduction. Les rôles dédiés suivants sont configurés :
+
+| Rôle PostgreSQL | Type | Périmètre & Droits | Usage Applicatif |
+|---|---|---|---|
+| `nanko_app` | `NOSUPERUSER` | Propriétaire du schéma `public` et de ses tables/séquences dans la base `nanko` | Backend Symfony (`DATABASE_URL`) |
+| `keycloak` | `NOSUPERUSER` | Propriétaire du schéma `keycloak` (`search_path = keycloak`) dans la base `nanko` | IAM Keycloak (`KC_DB_USERNAME`) |
+| `plausible` | `NOSUPERUSER` | Propriétaire de la base `plausible` et de son schéma `public` | Plausible Analytics (`DATABASE_URL`) |
+| `backup` | `NOSUPERUSER` | `CONNECT` sur `nanko` et `plausible`, rôle système `pg_read_all_data` | Sidecar `postgres-backup` quotidien |
+
+La directive `CONNECT` sur les bases `nanko` et `plausible` est expressément révoquée pour `PUBLIC`.
+
+### 6.2. Comptes Utilisateurs ClickHouse (`signoz-clickhouse`)
+| Utilisateur ClickHouse | Périmètre Réseau | Droits & Bases Autorisées | Usage |
+|---|---|---|---|
+| `default` | `127.0.0.1`, `::1` | Administration locale, mot de passe requis | Maintenance hôte locale |
+| `signoz` | `::/0` (interne Docker) | `GRANT ALL ON *.*` avec mot de passe fort via variable d'environnement | Ingestion & requêtes distribuées SigNoz |
+| `plausible` | `::/0` (interne Docker) | Limité à la base `plausible_events_db` (`allow_databases`) | Ingestion et rapports Plausible Analytics |
+
