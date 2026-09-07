@@ -41,10 +41,18 @@ Permettre aux utilisateurs et aux équipes de structurer leurs architectures dan
     * **Mode Split (par défaut)** : Éditeur de code à gauche et canvas graphique interactif à droite (50/50).
     * **Mode Canvas** : Canvas graphique en plein écran pour la manipulation spatiale et l'exploration d'architecture.
     * **Mode Code** : Éditeur de code et inspecteur AST textuel en plein écran.
-  * Le canvas matérialise automatiquement les entités `.nanko` sous forme de nœuds typés (`RectangleNode`, `CircleNode`, `TextNode`) et d'arêtes directionnelles (`NankoEdge`) conformes au design system Blueprint.
+  * Le canvas matérialise automatiquement les entités `.nanko` sous forme de nœuds typés conformes au design system Blueprint :
+    * `RectangleNode` : Panneau rectangulaire structuré pour services et composants.
+    * `CircleNode` : Véritable géométrie circulaire (`border-radius: 50%`) avec badge et identifiant centrés au-dessus du libellé, et 4 ports de connexion tangents aux points cardinaux.
+    * `TextNode` : Boîte de texte annotée avec bordure pointillée discrète.
+    * `NankoEdge` : Arêtes directionnelles avec flèches SVG et étiquettes intégrées.
   * **Manipulation spatiale (Drag & Drop)** : L'utilisateur peut déplacer librement les nœuds sur le canvas. Au relâchement (`onNodeDragStop`), les nouvelles coordonnées `(x, y)` sont automatiquement injectées ou mises à jour dans le bloc `!LAYOUT ... !END` du code `.nanko`, déclenchant l'état « Non enregistré » prêt à être sauvegardé via `Cmd+S` / `Ctrl+S`.
-  * **Réorganisation automatique (Auto-Layout)** : Un clic sur « Réorganiser » calcule instantanément un placement hiérarchique sans chevauchement via l'algorithme Dagre et synchronise l'ensemble des coordonnées dans le code source.
+  * **Réorganisation automatique (Auto-Layout)** : Un clic sur « Réorganiser » calcule instantanément un placement hiérarchique sans chevauchement via l'algorithme Dagre (prenant en compte les dimensions circulaires réelles) et synchronise l'ensemble des coordonnées dans le code source.
   * **Résilience aux erreurs de syntaxe** : En cas de code syntaxiquement invalide pendant la frappe, le canvas se met en pause avec un badge discret `Syntaxe en cours d'édition - Canvas en pause` tout en conservant le dernier graphe valide affiché.
+* **Parcours 8 : Espace de Travail Pleine Largeur (*Edge-to-Edge*) & Barre de Commandes Flottante**
+  * **Disposition studio pleine largeur** : L'éditeur de document (`/projects/:projectId/documents/:documentId`) s'affranchit de la contrainte standard `max-width: 1200px` pour s'étendre sur 100% de la largeur du viewport (`.app-main-fullscreen`), éliminant tout défilement externe sur la page hôte tout en préservant la visibilité de la Navbar et du Footer. Le Dashboard conserve sa largeur centrée de 1200px.
+  * **Barre d'outils flottante en mode Canvas** : Lorsque l'utilisateur bascule en mode `Canvas`, la barre de commandes supérieure devient un îlot flottant au centre supérieur (`.editor-topbar.is-floating`) avec effet de flou technique (`backdrop-filter: blur(12px)`), fond translucide et bordure technique Blueprint. Le graphe React Flow s'étend en continu en arrière-plan sous la barre.
+  * **Barre ancrée en modes Split et Code** : Dans les modes `Split` et `Code`, la barre d'outils reste ancrée de façon statique (`.editor-topbar.is-static`) au sommet des panneaux de code et de canvas.
 
 ## 4. Règles de Gestion Métier (Lexique Invariant cf. CONTEXT.md)
 * **Organisation :** Regroupement racine possédant des Projets et des membres. Ne jamais employer les termes « Tenant » ou « Workspace ».

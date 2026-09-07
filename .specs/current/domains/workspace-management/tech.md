@@ -26,16 +26,17 @@
   * `api/` : `getDocuments`, `getDocument`, `createDocument`, `updateDocument`.
   * `schemas.ts` : Schémas Zod pour l'AST (`nankoAstSchema`, `nodeCoordinatesSchema`, `nankoAstLayoutSchema`), items de liste (`documentListItemSchema`), détails (`documentDetailSchema`) et mutations.
   * `components/` : `CreateDocumentModal`, `DocumentCard`, `DocumentList`, `SourceCodeEditor`, `AstInspector`.
-  * `components/canvas/` : `NankoCanvas` (composant React Flow principal avec gestion dark/light et minimap), `LayoutSelector` (sélecteur Split / Canvas / Code), `CanvasControls` (barre flottante dans `<Panel position="bottom-left">`), `nodes/` (`RectangleNode`, `CircleNode`, `TextNode`), `edges/` (`NankoEdge`).
-  * `components/canvas/utils/` : `dagreLayout.ts` (agencement hiérarchique spatial via `@dagrejs/dagre`), `nankoParser.ts` (parseur client réactif avec détection d'erreurs en temps réel), `syncLayoutToSource.ts` (injection et synchronisation du bloc `!LAYOUT ... !END`).
+    * `components/canvas/` : `NankoCanvas` (composant React Flow principal avec gestion dark/light et minimap), `LayoutSelector` (sélecteur Split / Canvas / Code), `CanvasControls` (barre flottante dans `<Panel position="bottom-left">`), `nodes/` (`RectangleNode`, `CircleNode` avec vraie géométrie circulaire 130px × 130px, `TextNode`), `edges/` (`NankoEdge`).
+    * `components/canvas/utils/` : `dagreLayout.ts` (agencement hiérarchique spatial via `@dagrejs/dagre` intégrant les dimensions circulaires), `nankoParser.ts` (parseur client réactif avec détection d'erreurs en temps réel), `syncLayoutToSource.ts` (injection et synchronisation du bloc `!LAYOUT ... !END`).
   * `hooks/` : `useDocuments`, `useDocument`.
   * **Dépendances graphiques :** `@xyflow/react` (moteur de graphe interactif) et `@dagrejs/dagre` (calcul d'auto-layout).
-* **Vue Éditeur (`views/DocumentEditorView.tsx`) :**
-  * Route `/projects/:projectId/documents/:documentId` supportant trois modes d'agencement via `LayoutSelector` :
-    * `Split` : Code à gauche, canvas graphique à droite (50/50).
-    * `Canvas` : Canvas graphique plein écran pour la modélisation spatiale.
-    * `Code` : Éditeur de code et inspecteur AST textuel en plein écran.
-  * Robustesse d'affichage : Hauteurs explicites garanties (`calc(100vh - 220px)`, `min-height: 650px`) pour prévenir l'effondrement de hauteur (erreur React Flow #004).
+* **Mise en Page & Vue Éditeur (`components/layout/AppLayout.tsx` & `views/DocumentEditorView.tsx`) :**
+  * Route `/projects/:projectId/documents/:documentId` en mode **Pleine Largeur (*Edge-to-Edge*)** :
+    * `AppLayout.tsx` applique dynamiquement `.app-container-fullscreen` et `.app-main-fullscreen` lors de l'accès à un document pour exploiter 100% de la largeur disponible et calibrer la hauteur utile entre la Navbar et le Footer, éliminant tout défilement global externe.
+  * Trois modes d'agencement via `LayoutSelector` :
+    * `Split` : Barre d'outils ancrée (`.editor-topbar.is-static`), code source à gauche et canvas à droite (50/50).
+    * `Canvas` : Barre d'outils flottante (`.editor-topbar.is-floating`) centrée au sommet (`top: 14px; left: 50%; transform: translateX(-50%)`) avec `backdrop-filter: blur(12px)`, fond translucide et bordure Blueprint. Le canvas React Flow s'étend en continu sur 100% de la surface sous la barre flottante.
+    * `Code` : Barre d'outils ancrée (`.editor-topbar.is-static`), éditeur de code et inspecteur AST textuel en plein écran.
   * Design System Blueprint : Token `--canvas-bg` dédié (`#011C25` en Dark Mode conforme au mockup vert nuit pétrole, `#FFFFFF` en Light Mode) avec trame orthogonale de 26px (`BackgroundVariant.Lines`).
   * Raccourci clavier de sauvegarde (`Cmd+S` / `Ctrl+S`), indicateurs d'état (sauvegardé, modifications en cours, sauvegarde en cours), affichage des erreurs de syntaxe 422 avec numéro de ligne.
   * Interception de l'événement `beforeunload` pour prévenir la perte accidentelle de données non sauvegardées.
@@ -44,9 +45,10 @@
 * **Gestion des documents (`tests/app/document-management.spec.ts`) :**
   * Validation du flux nominal complet : création d'un document dans le projet actif, redirection vers l'éditeur, saisie de code source `.nanko`, sauvegarde via raccourci, persistance après rechargement.
   * Validation des cas d'erreur : affichage des erreurs de syntaxe à la ligne et rejet des doublons de slug (409).
-* **Visualisation Canvas React Flow (`tests/app/canvas-visualization.spec.ts`) :**
+* **Visualisation Canvas React Flow & Disposition Studio (`tests/app/canvas-visualization.spec.ts`) :**
+  * Validation de la disposition pleine largeur (`.app-main-fullscreen`).
   * Validation du rendu visuel des nœuds typés selon la shape (`rectangle`, `circle`, `text`).
-  * Basculement fluide entre les modes Split, Canvas plein écran et Code plein écran.
+  * Basculement fluide entre les modes Split (barre ancrée `.is-static`), Canvas plein écran (barre flottante `.is-floating`) et Code plein écran (`.is-static`).
   * Déplacement de nœud via drag & drop sur le canvas et mise à jour immédiate du bloc `!LAYOUT`.
   * Réorganisation automatique du graphe (Auto-Layout Dagre) et sauvegarde par raccourci clavier.
 

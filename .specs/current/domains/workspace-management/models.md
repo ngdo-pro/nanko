@@ -26,7 +26,7 @@
 * **Identifiant :** `backend/src/WorkspaceManagement/Core/Domain/Document/Id.php` (UUIDv7)
 * **Value Object :** `backend/src/WorkspaceManagement/Core/Domain/Document/Layer.php`
 * **Service Parseur & AST :** `backend/src/WorkspaceManagement/Core/Domain/Document/Parser/NankoParser.php`, `Ast.php`, `Shape.php`, `Connector.php`.
-* **Parseur Client & Synchronisation Spatiale :** `frontend/src/features/documents/components/canvas/utils/nankoParser.ts`, `syncLayoutToSource.ts`, `dagreLayout.ts` assurant l'extraction syntaxique temps réel, l'agencement spatial hiérarchique et la synchronisation bidirectionnelle du bloc `!LAYOUT` vers le code source.
+* **Parseur Client & Synchronisation Spatiale :** `frontend/src/features/documents/components/canvas/utils/nankoParser.ts`, `syncLayoutToSource.ts`, `dagreLayout.ts` assurant l'extraction syntaxique temps réel, l'agencement spatial hiérarchique (avec prise en compte des géométries rectangulaires et circulaires) et la synchronisation bidirectionnelle du bloc `!LAYOUT` vers le code source.
 * **Port Repository :** `backend/src/WorkspaceManagement/Core/Port/Document/Repository.php`
 * **Adapter Persistence :** `backend/src/WorkspaceManagement/Adapter/Driven/Persistence/Document/DoctrineRepository.php`
 
