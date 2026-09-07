@@ -30,6 +30,7 @@
                 <database>signoz_logs</database>
                 <database>signoz_metadata</database>
                 <database>signoz_analytics</database>
+                <database>signoz_meter</database>
             </allow_databases>
         </signoz>
         <plausible>
