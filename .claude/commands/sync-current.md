@@ -35,17 +35,27 @@ Garantit que la documentation vivante du système dans `.specs/current/` reste l
 #### 4. Architecture Technique (`tech.md`)
 * Si de nouveaux packages, services ou patterns ont été introduits, mettre à jour la description de la stack et des composants du domaine.
 
-### Étape 3 : Archivage de la spécification
+### Étape 3 : Détection et formalisation des décisions (PDR / ADR)
+Avant d'archiver la spec, analyser son contenu pour vérifier si elle a introduit des choix structurants :
+1. **PDR (Product Decision Record) :**
+   * Choix d'accès, arbitrages ergonomiques, simplifications de parcours ou renoncements fonctionnels délibérés.
+   * Si un PDR est pertinent : créer `.specs/decisions/product/PDR-XXX-[slug].md` d'après `.specs/templates/PDR_TEMPLATE.md`.
+2. **ADR (Architecture Decision Record) :**
+   * Choix de protocoles, moteurs de rendu, bundles externes, stratégie DBAL/stockage ou infrastructure.
+   * Si un ADR est pertinent : créer `.specs/decisions/architecture/ADR-XXX-[slug].md` d'après `.specs/templates/ADR_TEMPLATE.md`.
+
+### Étape 4 : Archivage de la spécification
 1. S'assurer que le dossier `.specs/changes/archive/` existe.
 2. Déplacer le fichier de spec :
    * De : `.specs/changes/active/[nom_fichier].md`
    * Vers : `.specs/changes/archive/[nom_fichier].md`
 3. Vérifier que `.specs/changes/active/` ne contient plus ce fichier.
 
-### Étape 4 : Confirmation
+### Étape 5 : Confirmation
 Afficher un récapitulatif clair des fichiers synchronisés :
 * `behavior.md` mis à jour
 * `contracts.md` mis à jour
 * `models.md` mis à jour
 * `tech.md` (si applicable)
+* PDRs et ADRs créés (si applicable)
 * Spec archivée sous `.specs/changes/archive/[nom_fichier].md`.

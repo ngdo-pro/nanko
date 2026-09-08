@@ -4,6 +4,7 @@
 monorepo/
 ├── .claude/
 │   └── commands/                      # Les skills exécutables par Claude Code
+│       ├── target.md                  # /target : Cadre une cible fonctionnelle en profondeur
 │       ├── spec.md                    # /spec : Rédige une demande d'évolution (Delta)
 │       ├── build-spec.md              # /build-spec : Exécute le code et les tests
 │       ├── sync-current.md            # /sync-current : Met à jour l'état courant et archive
@@ -11,9 +12,16 @@ monorepo/
 │       └── new-adr.md                 # /new-adr : Documente un arbitrage technique
 │
 ├── .specs/
+│   ├── TARGET_TEMPLATE.md             # Template Markdown pour les cibles fonctionnelles
 │   ├── CHANGE_TEMPLATE.md             # Template Markdown structuré en diff/delta
 │   ├── vision.md                      # Invariants produit & UX globaux
 │   ├── architecture.md                # Invariants techniques globaux (monorepo, CI/CD)
+│   │
+│   ├── targets/                       # CIBLES FONCTIONNELLES (« WHAT WE BUILD »)
+│   │   ├── active/                    # Cibles en cours de cadrage ou de réalisation
+│   │   │   └── studio-board.md
+│   │   └── achieved/                  # Cibles atteintes et livrées (historique des visions)
+│   │       └── 000-core-domain.md
 │   │
 │   ├── current/                       # ÉTAT COURANT DU SYSTÈME (Source de vérité vivante)
 │   │   └── domains/
@@ -47,29 +55,23 @@ monorepo/
 
 - Vision
 - Architecture
+- TARGET_TEMPLATE.md
 - CHANGE_TEMPLATE.md
 - Product Decision Record (PRD)
 - Architecture Decision Record (ADR)
 - Comportement (Domain Behavior)
 - Technique (Domain Tech)
 
-# Rôle des skills Claude Code
+# Rôle des skills Claude Code & Antigravity
 
 | **Commande** | **Rôle** | **Entrées lues** | **Sorties produites** |
 | --- | --- | --- | --- |
-| `/spec [domaine] [besoin]` | Interviewe le dev, compare avec l'état courant et génère la spec de delta. | `.specs/current/domains/[domaine]/*`
-
-`CHANGE_TEMPLATE.md` | `.specs/changes/active/XXX-[nom].md` |
+| `/target [domaine] [sujet]` | Mène un interrogatoire poussé pour cadrer une cible fonctionnelle majeure. | `.specs/vision.md`, `.specs/targets/achieved/*`, `.specs/current/*` | `.specs/targets/active/[sujet].md` |
+| `/spec [domaine] [besoin]` | Compare le besoin avec l'état courant et la cible, et génère la spec delta. | `.specs/targets/active/*`, `.specs/current/domains/[domaine]/*` | `.specs/changes/active/XXX-[nom].md` |
 | `/new-pdr [sujet]` | Formalise un arbitrage fonctionnel ou d'ergonomie structurant. | Contexte de discussion | `.specs/decisions/product/PDR-XXX.md` |
 | `/new-adr [sujet]` | Formalise un choix technique (bundle, protocole, stockage). | Contexte de discussion | `.specs/decisions/architecture/ADR-XXX.md` |
-| `/build-spec [id]` | Implémente le code (Symfony/React), joue les migrations et valide la DoD. | `.specs/changes/active/XXX.md`
-
-`.specs/current/domains/[domaine]/*` | Code source
-
-Suites de tests au vert |
-| `/sync-current [id]` | Répercute le delta livré dans les fichiers de l'état courant et archive la spec. | `.specs/changes/active/XXX.md` | `.specs/current/domains/[domaine]/*` mis à jour
-
-Déplacement vers `changes/archive/` |
+| `/build-spec [id]` | Implémente le code (Symfony/React), joue les migrations et valide la DoD. | `.specs/changes/active/XXX.md`, `.specs/current/domains/[domaine]/*` | Code source, suites de tests au vert |
+| `/sync-current [id]` | Répercute le delta livré dans les fichiers de l'état courant et archive la spec. | `.specs/changes/active/XXX.md` | `.specs/current/domains/[domaine]/*` mis à jour, déplacement vers `changes/archive/` |
 
 # Le workflow pas à pas
 
