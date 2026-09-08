@@ -1,4 +1,7 @@
-# Nanko
+# Nanko : Modèle Métier Fondamental (Core Domain)
+
+> **Statut :** Achieved (Socle initial implémenté en v1)  
+> **Source historique :** Initialement `CONTEXT.md`
 
 Nanko aide à concevoir des schémas d'architecture selon une approche "diagrams-as-code" : le contenu est piloté par un format texte versionné (`.nanko`), la base de données étant la source de vérité runtime.
 

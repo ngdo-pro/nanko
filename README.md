@@ -2,7 +2,7 @@
 
 Nanko helps design architecture diagrams as "diagrams-as-code": a versioned text format (`.nanko`) is the exchange/versioning artifact; Postgres is the runtime source of truth.
 
-See `CONTEXT.md` for the domain glossary and `docs/adr/` for the architecture decisions this repo follows.
+See `.specs/targets/achieved/000-core-domain.md` for the core domain model and glossary, and `.specs/decisions/` for the architecture/product decisions this repo follows.
 
 ## Packages
 
