@@ -216,5 +216,45 @@ describe('DocumentEditorView', () => {
     expect(screen.getByTestId('canvas-node-db')).toBeInTheDocument()
     expect(screen.getByText('Database')).toBeInTheDocument()
   })
+
+  it('met à jour le code source et le canvas lors de la création d\'une shape via le canvas', async () => {
+    vi.mocked(documentHooks.useDocument).mockReturnValue({
+      data: {
+        id: 'doc-456',
+        projectId: 'proj-123',
+        name: 'Architecture Test',
+        slug: 'architecture-test',
+        layer: 0,
+        sourceCode: 'rectangle front "Front"',
+        ast: {
+          shapes: [{ id: 'front', type: 'rectangle', label: 'Front' }],
+          connectors: [],
+          layout: { front: { x: 10, y: 20 } },
+        },
+        createdAt: '2026-09-06T12:00:00Z',
+        updatedAt: '2026-09-06T12:00:00Z',
+      },
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof documentHooks.useDocument>)
+
+    renderWithProviders(<DocumentEditorView />)
+
+    const canvas = screen.getByTestId('nanko-canvas')
+    const { fireEvent } = await import('@testing-library/react')
+    fireEvent.pointerEnter(canvas, { clientX: 200, clientY: 200 })
+
+    // Déclencher le raccourci direct 'c' pour créer un cercle
+    fireEvent.keyDown(window, { key: 'c' })
+
+    // Le code source dans le textarea doit maintenant contenir circle_1
+    const textarea = screen.getByTestId('source-code-textarea') as HTMLTextAreaElement
+    expect(textarea.value).toContain('circle circle_1 "Circle 1"')
+    expect(textarea.value).toContain('circle_1: x=')
+
+    // Le nouveau nœud doit être présent dans le rendu
+    expect(screen.getByTestId('canvas-node-circle_1')).toBeInTheDocument()
+  })
 })
+
 

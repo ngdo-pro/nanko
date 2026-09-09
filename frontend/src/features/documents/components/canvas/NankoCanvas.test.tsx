@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeAll } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, beforeAll, vi } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { NankoCanvas } from './NankoCanvas'
 import type { NankoAst } from '@/features/documents'
 
@@ -46,5 +46,85 @@ describe('NankoCanvas', () => {
 
     expect(screen.getByTestId('canvas-syntax-pause-badge')).toBeInTheDocument()
     expect(screen.getByText(/Syntaxe en cours d'édition/i)).toBeInTheDocument()
+  })
+
+  it('affiche les instructions de création par raccourcis dans l\'état vide', () => {
+    const emptyAst: NankoAst = { shapes: [], connectors: [], layout: {} }
+    render(<NankoCanvas ast={emptyAst} />)
+
+    expect(screen.getByTestId('canvas-empty-state')).toBeInTheDocument()
+    expect(screen.getByText(/Maintenez la touche/i)).toBeInTheDocument()
+  })
+
+  it('ouvre la roue radiale au maintien de la touche A et la referme au relâchement', () => {
+    const handleCreateShape = vi.fn()
+    render(<NankoCanvas ast={sampleAst} onCreateShape={handleCreateShape} />)
+
+    const canvas = screen.getByTestId('nanko-canvas')
+    fireEvent.pointerEnter(canvas, { clientX: 200, clientY: 200 })
+
+    // Touche 'a' enfoncée -> la roue radiale s'affiche
+    fireEvent.keyDown(window, { key: 'a' })
+    expect(screen.getByTestId('radial-menu')).toBeInTheDocument()
+
+    // Touche 'a' relâchée -> la roue radiale disparaît
+    fireEvent.keyUp(window, { key: 'a' })
+    expect(screen.queryByTestId('radial-menu')).not.toBeInTheDocument()
+  })
+
+  it('appelle onCreateShape lors du clic sur un secteur de la roue radiale', () => {
+    const handleCreateShape = vi.fn()
+    render(<NankoCanvas ast={sampleAst} onCreateShape={handleCreateShape} />)
+
+    const canvas = screen.getByTestId('nanko-canvas')
+    fireEvent.pointerEnter(canvas, { clientX: 300, clientY: 250 })
+
+    fireEvent.keyDown(window, { key: 'a' })
+    const rectSector = screen.getByTestId('radial-item-rectangle')
+    fireEvent.click(rectSector)
+
+    expect(handleCreateShape).toHaveBeenCalledWith('rectangle', expect.any(Object))
+    expect(screen.queryByTestId('radial-menu')).not.toBeInTheDocument()
+  })
+
+  it('appelle onCreateShape via les raccourcis directs R et C (et ignore T)', () => {
+    const handleCreateShape = vi.fn()
+    render(<NankoCanvas ast={sampleAst} onCreateShape={handleCreateShape} />)
+
+    const canvas = screen.getByTestId('nanko-canvas')
+    fireEvent.pointerEnter(canvas, { clientX: 150, clientY: 150 })
+
+    fireEvent.keyDown(window, { key: 'r' })
+    expect(handleCreateShape).toHaveBeenCalledWith('rectangle', expect.any(Object))
+
+    fireEvent.keyDown(window, { key: 'c' })
+    expect(handleCreateShape).toHaveBeenCalledWith('circle', expect.any(Object))
+
+    handleCreateShape.mockClear()
+    fireEvent.keyDown(window, { key: 't' })
+    expect(handleCreateShape).not.toHaveBeenCalled()
+  })
+
+  it('crée la forme immédiatement au relâchement de la touche A si un secteur est survolé (geste marking menu)', () => {
+    const handleCreateShape = vi.fn()
+    render(<NankoCanvas ast={sampleAst} onCreateShape={handleCreateShape} />)
+
+    const canvas = screen.getByTestId('nanko-canvas')
+    fireEvent.pointerEnter(canvas, { clientX: 300, clientY: 250 })
+
+    // 1. Maintien de 'a'
+    fireEvent.keyDown(window, { key: 'a' })
+    expect(screen.getByTestId('radial-menu')).toBeInTheDocument()
+
+    // 2. Survol du secteur rectangle
+    const rectSector = screen.getByTestId('radial-item-rectangle')
+    fireEvent.mouseEnter(rectSector)
+
+    // 3. Relâchement de la touche 'a'
+    fireEvent.keyUp(window, { key: 'a' })
+
+    // 4. La forme est créée sans clic supplémentaire, et le menu est fermé
+    expect(handleCreateShape).toHaveBeenCalledWith('rectangle', expect.any(Object))
+    expect(screen.queryByTestId('radial-menu')).not.toBeInTheDocument()
   })
 })

@@ -8,6 +8,8 @@ import {
   type LayoutMode,
   updateNankoSourceLayout,
   updateNankoSourceBulkLayout,
+  insertShapeToSource,
+  type ShapePrimitiveType,
   parseNankoSource,
   type NankoAst,
 } from '@/features/documents'
@@ -99,6 +101,13 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
 
   const handleAutoLayoutApplied = (layout: Record<string, { x: number; y: number }>) => {
     setCode((prevCode) => updateNankoSourceBulkLayout(prevCode, layout))
+  }
+
+  const handleCreateShape = (shapeType: ShapePrimitiveType, position: { x: number; y: number }) => {
+    setCode((prevCode) => {
+      const { newSourceCode } = insertShapeToSource(prevCode, { type: shapeType, position })
+      return newSourceCode
+    })
   }
 
   return (
@@ -202,6 +211,7 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
               syntaxError={effectiveSyntaxError}
               onNodePositionChange={handleNodePositionChange}
               onAutoLayoutApplied={handleAutoLayoutApplied}
+              onCreateShape={handleCreateShape}
             />
           </div>
         )}
@@ -213,6 +223,7 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
               syntaxError={effectiveSyntaxError}
               onNodePositionChange={handleNodePositionChange}
               onAutoLayoutApplied={handleAutoLayoutApplied}
+              onCreateShape={handleCreateShape}
             />
           </div>
         )}
