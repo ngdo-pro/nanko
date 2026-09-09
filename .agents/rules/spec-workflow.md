@@ -13,6 +13,12 @@ Ce dépôt applique une méthodologie de développement piloté par les spécifi
    * E2E : `pnpm --filter tests-e2e exec playwright test`.
 4. **Synchronisation et archivage post-livraison :**
    * Une fois le code et les tests validés, les modifications sont répercutées dans `.specs/current/domains/[domaine]/` et la spec est archivée dans `.specs/changes/archive/`.
+5. **Invariance Spec-Code (Zéro dérive en cours de vol) :**
+   * Toute demande d'ajustement, de retrait ou de pivot sur une spec active formulée en cours de route (pendant ou après `/build-spec`) DOIT obligatoirement être répercutée dans le fichier `.specs/changes/active/XXX-*.md` immédiatement (via `/update-spec` ou de manière proactive par l'agent avant de coder).
+   * Le code et la spec active doivent TOUJOURS être parfaitement alignés : il est strictement interdit de modifier le comportement sans mettre à jour le contrat documentaire correspondant.
+6. **Réflexe de Test Systématique & Synchronisation Gherkin (Skill `test-spec`) :**
+   * Toute modification de comportement, logique, géométrie, règle métier ou cas limite DOIT s'accompagner de ses tests unitaires ou d'intégration.
+   * Tout test ajouté ou modifié DOIT obligatoirement être répercuté sous forme de scénario Gherkin dans la Section 10 de la spec active (`.specs/changes/active/XXX-*.md`). L'agent ne doit jamais omettre d'écrire les tests correspondants ni d'aligner les scénarios de la spec.
 
 ## 2. Invariants d'Architecture (cf. .specs/architecture.md & ADR 0011)
 * **Backend (`backend/`) :** Architecture hexagonale stricte avec Doctrine DBAL (pas d'ORM).
