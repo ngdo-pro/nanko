@@ -11,6 +11,7 @@ Utilisez ce skill lorsque l'utilisateur demande d'implémenter une spécificatio
 
 1. **Chargement de la spec :**
    * Lire `.specs/changes/active/[id]*.md`, `.specs/architecture.md` et l'état courant du domaine.
+   * *Règle d'invariance :* Si l'utilisateur demande un ajustement, un retrait ou une modification de scope en cours de dev, mettre à jour immédiatement la spec active (via `/update-spec`) avant d'altérer le code.
 2. **Implémentation Backend (`backend/`) :**
    * Migrations Doctrine (`backend/migrations/`). Clés UUIDv7.
    * `Core/Domain`, `Core/Port`, `Core/UseCase`.
