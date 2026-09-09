@@ -1862,5 +1862,117 @@
   border: 1px solid var(--border) !important;
 }
 
+/* ==============================================================================
+   Roue d'Outils Radiale (RadialMenu - Spec 017)
+   ============================================================================== */
+.radial-menu-overlay {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  pointer-events: auto;
+  user-select: none;
+  animation: radial-menu-appear 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
 
+@keyframes radial-menu-appear {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
 
+.radial-menu-svg {
+  overflow: visible;
+  filter: drop-shadow(0 14px 34px rgba(0, 0, 0, 0.5));
+}
+
+.radial-sector {
+  cursor: pointer;
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.radial-sector-path {
+  fill: color-mix(in srgb, var(--surface) 90%, transparent);
+  stroke: color-mix(in srgb, var(--brand) 30%, var(--border));
+  stroke-width: 1px;
+  backdrop-filter: blur(12px);
+  transition: fill 0.15s ease, stroke 0.15s ease, stroke-width 0.15s ease;
+}
+
+.radial-sector.is-hovered {
+  transform: scale(1.04);
+  transform-origin: 100px 100px;
+}
+
+.radial-sector.is-hovered .radial-sector-path {
+  fill: color-mix(in srgb, var(--brand) 20%, var(--surface));
+  stroke: var(--brand);
+  stroke-width: 1.5px;
+}
+
+.radial-sector-content {
+  color: var(--heading);
+  pointer-events: none;
+}
+
+.radial-icon {
+  stroke: var(--brand);
+  fill: color-mix(in srgb, var(--brand) 15%, transparent);
+  stroke-width: 1.5px;
+}
+
+.radial-icon-text {
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--brand);
+}
+
+.radial-label {
+  font-family: var(--font-sans, inherit);
+  font-size: 10px;
+  font-weight: 600;
+  fill: var(--heading);
+}
+
+.radial-shortcut {
+  font-family: var(--font-mono, monospace);
+  font-size: 8px;
+  font-weight: 500;
+  fill: var(--text-muted);
+}
+
+.radial-center-button {
+  cursor: pointer;
+  outline: none;
+}
+
+.radial-center-circle {
+  fill: var(--surface);
+  stroke: var(--border);
+  stroke-width: 1px;
+  transition: all 0.15s ease;
+}
+
+.radial-center-button:hover .radial-center-circle {
+  fill: color-mix(in srgb, #EF4444 20%, var(--surface));
+  stroke: #EF4444;
+}
+
+.radial-center-text {
+  font-family: var(--font-sans, inherit);
+  font-size: 14px;
+  fill: var(--text-muted);
+  font-weight: 400;
+  pointer-events: none;
+  transition: fill 0.15s ease;
+}
+
+.radial-center-button:hover .radial-center-text {
+  fill: #EF4444;
+}
