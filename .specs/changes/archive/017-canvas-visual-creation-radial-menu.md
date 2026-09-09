@@ -283,9 +283,9 @@ export function insertShapeToSource(
     * Test de frappe directe `C` pour insérer un cercle regroupé avec le rectangle.
   - [x] **Validation E2E :** Exécuter `pnpm --filter tests-e2e exec playwright test`.
 
-- [ ] **Phase 5 : Synchronisation documentaire (via `/sync-current`)**
-  - [ ] 1. Répercuter les modifications dans `.specs/current/domains/workspace-management/behavior.md` et `tech.md`.
-  - [ ] 2. Archiver la spec dans `.specs/changes/archive/017-canvas-visual-creation-radial-menu.md`.
+- [x] **Phase 5 : Synchronisation documentaire (via `/sync-current`)**
+  - [x] 1. Répercuter les modifications dans `.specs/current/domains/workspace-management/behavior.md` et `tech.md`.
+  - [x] 2. Archiver la spec dans `.specs/changes/archive/017-canvas-visual-creation-radial-menu.md`.
 
 ---
 

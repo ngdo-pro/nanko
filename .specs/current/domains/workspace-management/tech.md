@@ -26,8 +26,9 @@
   * `api/` : `getDocuments`, `getDocument`, `createDocument`, `updateDocument`.
   * `schemas.ts` : Schémas Zod pour l'AST (`nankoAstSchema`, `nodeCoordinatesSchema`, `nankoAstLayoutSchema`), items de liste (`documentListItemSchema`), détails (`documentDetailSchema`) et mutations.
   * `components/` : `CreateDocumentModal`, `DocumentCard`, `DocumentList`, `SourceCodeEditor`, `AstInspector`.
-    * `components/canvas/` : `NankoCanvas` (composant React Flow principal avec gestion dark/light et minimap), `LayoutSelector` (sélecteur Split / Canvas / Code), `CanvasControls` (barre flottante dans `<Panel position="bottom-left">`), `nodes/` (`RectangleNode`, `CircleNode` avec vraie géométrie circulaire 130px × 130px, `TextNode`), `edges/` (`NankoEdge`).
-    * `components/canvas/utils/` : `dagreLayout.ts` (agencement hiérarchique spatial via `@dagrejs/dagre` intégrant les dimensions circulaires), `nankoParser.ts` (parseur client réactif avec détection d'erreurs en temps réel), `syncLayoutToSource.ts` (injection et synchronisation du bloc `!LAYOUT ... !END`).
+    * `components/canvas/` : `NankoCanvas` (composant React Flow principal avec gestion dark/light et minimap, capture des raccourcis clavier `A`, `Tab`, `R`, `C` avec protection contre le focus d'inputs, projection spatiale `screenToFlowPosition`), `LayoutSelector` (sélecteur Split / Canvas / Code), `CanvasControls` (barre flottante dans `<Panel position="bottom-left">`), `nodes/` (`RectangleNode`, `CircleNode` avec vraie géométrie circulaire 130px × 130px, `TextNode`), `edges/` (`NankoEdge`).
+    * `components/canvas/radial/` : `RadialMenu` (composant roue radiale avec 2 secteurs vectoriels continus 180° fermant 360°, pastille centrale d'échappement, surbrillance au survol et geste de marquage *release-to-create*), `radialMenuConfig.ts`.
+    * `components/canvas/utils/` : `dagreLayout.ts` (agencement hiérarchique spatial via `@dagrejs/dagre` intégrant les dimensions circulaires), `nankoParser.ts` (parseur client réactif avec détection d'erreurs en temps réel), `syncLayoutToSource.ts` (injection et synchronisation du bloc `!LAYOUT ... !END`), `insertShapeToSource.ts` (insertion sémantique avec calcul d'identifiant unique, regroupement des formes au-dessus des connecteurs et mise à jour des coordonnées).
   * `hooks/` : `useDocuments`, `useDocument`.
   * **Dépendances graphiques :** `@xyflow/react` (moteur de graphe interactif) et `@dagrejs/dagre` (calcul d'auto-layout).
 * **Mise en Page & Vue Éditeur (`components/layout/AppLayout.tsx` & `views/DocumentEditorView.tsx`) :**
@@ -51,6 +52,11 @@
   * Basculement fluide entre les modes Split (barre ancrée `.is-static`), Canvas plein écran (barre flottante `.is-floating`) et Code plein écran (`.is-static`).
   * Déplacement de nœud via drag & drop sur le canvas et mise à jour immédiate du bloc `!LAYOUT`.
   * Réorganisation automatique du graphe (Auto-Layout Dagre) et sauvegarde par raccourci clavier.
+* **Création Visuelle par Roue Radiale et Raccourcis (`tests/app/canvas-visual-creation.spec.ts`) :**
+  * Apparition instantanée de la roue radiale au maintien de la touche `A` au-dessus du canvas.
+  * Sélection du secteur Rectangle, fermeture de la roue et création de la shape aux coordonnées de la souris.
+  * Création directe au raccourci clavier `C` pour insérer un cercle.
+  * Vérification de l'intégrité du code source `.nanko` (regroupement des shapes avant connecteurs, bloc `!LAYOUT`) et persistance.
 
 ## 3. Infrastructure & Sécurité Réseau
 * **Contrôle d'accès :** Chaque UseCase valide explicitement l'appartenance de l'utilisateur à l'organisation ciblée via `OrganisationMemberRepository`.
@@ -58,8 +64,11 @@
 * **Compatibilité Caddy Preprod :**
   * Règle de filtrage `caddy.@protected.not_2.header_regexp: Authorization ^Bearer\s+` dans `infra/preprod/compose.yaml` : permet aux requêtes API du frontend portant un Bearer token d'accéder au backend sans être interceptées par le Basic Auth HTTP de préprod.
 
-## 4. ADRs de Référence
+## 4. ADRs & PDRs de Référence
 * `ADR-0002` : Modular Monolith & découpage en Bounded Contexts.
 * `ADR-0007` : PostgreSQL unique comme runtime source of truth pour le MVP.
 * `ADR-0011` : Architecture hexagonale (Core/Port/Adapter) et persistance DBAL sans ORM.
+* `ADR-0015` : React Flow comme moteur de rendu pour le canvas du Studio.
+* `PDR-0003` : Espace de travail pleine largeur et barre d'outils flottante en mode Canvas.
+* `PDR-0004` : Roue radiale d'outils au curseur, poignées contextuelles et tracé libre magnétique.
 
