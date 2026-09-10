@@ -14,13 +14,14 @@ beforeAll(() => {
 
 describe('NankoCanvas', () => {
   const sampleAst: NankoAst = {
+    dslVersion: 1,
     shapes: [
-      { id: 'front', type: 'rectangle', label: 'Storefront Web' },
-      { id: 'db', type: 'circle', label: 'PostgreSQL DB' },
-      { id: 'note', type: 'text', label: 'Documentation note' },
+      { id: 'front', type: 'rectangle', label: 'Storefront Web', desc: null },
+      { id: 'db', type: 'circle', label: 'PostgreSQL DB', desc: null },
+      { id: 'note', type: 'text', label: 'Documentation note', desc: null },
     ],
     connectors: [
-      { source: 'front', target: 'db', label: 'SQL Query' },
+      { source: 'front', target: 'db', label: 'SQL Query', desc: null },
     ],
     layout: {
       front: { x: 100, y: 100 },
@@ -49,7 +50,7 @@ describe('NankoCanvas', () => {
   })
 
   it('affiche les instructions de création par raccourcis dans l\'état vide', () => {
-    const emptyAst: NankoAst = { shapes: [], connectors: [], layout: {} }
+    const emptyAst: NankoAst = { dslVersion: 1, shapes: [], connectors: [], layout: {} }
     render(<NankoCanvas ast={emptyAst} />)
 
     expect(screen.getByTestId('canvas-empty-state')).toBeInTheDocument()

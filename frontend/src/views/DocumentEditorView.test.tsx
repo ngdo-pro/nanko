@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithProviders } from '@/testing/test-utils'
@@ -53,9 +53,10 @@ describe('DocumentEditorView', () => {
         name: 'Architecture Test',
         slug: 'architecture-test',
         layer: 1,
-        sourceCode: 'rectangle front "Front"',
+        sourceCode: 'rectangle front label="Front"',
         ast: {
-          shapes: [{ id: 'front', type: 'rectangle', label: 'Front' }],
+          dslVersion: 1,
+          shapes: [{ id: 'front', type: 'rectangle', label: 'Front', desc: null }],
           connectors: [],
           layout: {},
         },
@@ -70,7 +71,7 @@ describe('DocumentEditorView', () => {
 
     expect(screen.getByTestId('document-title')).toHaveTextContent('Architecture Test')
     expect(screen.getByTestId('document-layer-badge')).toHaveTextContent('Layer 1')
-    expect(screen.getByTestId('source-code-textarea')).toHaveValue('rectangle front "Front"')
+    expect(screen.getByTestId('source-code-textarea')).toHaveValue('rectangle front label="Front"')
     expect(screen.getByTestId('ast-shape-front')).toBeInTheDocument()
     expect(screen.getByTestId('saved-status-badge')).toBeInTheDocument()
   })
@@ -86,7 +87,7 @@ describe('DocumentEditorView', () => {
         slug: 'architecture-test',
         layer: 0,
         sourceCode: 'initial',
-        ast: { shapes: [], connectors: [], layout: {} },
+        ast: { dslVersion: 1, shapes: [], connectors: [], layout: {} },
         createdAt: '2026-09-06T12:00:00Z',
         updatedAt: '2026-09-06T12:00:00Z',
       },
@@ -133,9 +134,10 @@ describe('DocumentEditorView', () => {
         name: 'Architecture Test',
         slug: 'architecture-test',
         layer: 0,
-        sourceCode: 'rectangle front "Front"',
+        sourceCode: 'rectangle front label="Front"',
         ast: {
-          shapes: [{ id: 'front', type: 'rectangle', label: 'Front' }],
+          dslVersion: 1,
+          shapes: [{ id: 'front', type: 'rectangle', label: 'Front', desc: null }],
           connectors: [],
           layout: {},
         },
@@ -166,6 +168,7 @@ describe('DocumentEditorView', () => {
     expect(screen.getByTestId('layout-mode-code')).toHaveClass('is-active')
     expect(screen.getByTestId('editor-topbar')).toHaveClass('is-static')
     expect(screen.getByTestId('source-code-textarea')).toBeInTheDocument()
+    expect(screen.getByTestId('ast-dsl-version')).toHaveTextContent('DSL v1')
     expect(screen.queryByTestId('nanko-canvas')).not.toBeInTheDocument()
 
     // Retour vers Split
@@ -186,9 +189,10 @@ describe('DocumentEditorView', () => {
         name: 'Architecture Test',
         slug: 'architecture-test',
         layer: 0,
-        sourceCode: 'rectangle front "Front"',
+        sourceCode: 'rectangle front label="Front"',
         ast: {
-          shapes: [{ id: 'front', type: 'rectangle', label: 'Front' }],
+          dslVersion: 1,
+          shapes: [{ id: 'front', type: 'rectangle', label: 'Front', desc: null }],
           connectors: [],
           layout: {},
         },
@@ -204,7 +208,7 @@ describe('DocumentEditorView', () => {
     // Modification du code dans l'éditeur
     const textarea = screen.getByTestId('source-code-textarea')
     await user.clear(textarea)
-    await user.type(textarea, 'rectangle api "API Gateway"{enter}circle db "Database"')
+    await user.type(textarea, 'rectangle api label="API Gateway"{enter}circle db label="Database"')
 
     // Clic sur le bouton Canvas
     const canvasBtn = screen.getByTestId('layout-mode-canvas')
@@ -225,9 +229,10 @@ describe('DocumentEditorView', () => {
         name: 'Architecture Test',
         slug: 'architecture-test',
         layer: 0,
-        sourceCode: 'rectangle front "Front"',
+        sourceCode: 'rectangle front label="Front"',
         ast: {
-          shapes: [{ id: 'front', type: 'rectangle', label: 'Front' }],
+          dslVersion: 1,
+          shapes: [{ id: 'front', type: 'rectangle', label: 'Front', desc: null }],
           connectors: [],
           layout: { front: { x: 10, y: 20 } },
         },
@@ -249,12 +254,10 @@ describe('DocumentEditorView', () => {
 
     // Le code source dans le textarea doit maintenant contenir circle_1
     const textarea = screen.getByTestId('source-code-textarea') as HTMLTextAreaElement
-    expect(textarea.value).toContain('circle circle_1 "Circle 1"')
+    expect(textarea.value).toContain('circle circle_1 label="Circle 1"')
     expect(textarea.value).toContain('circle_1: x=')
 
     // Le nouveau nœud doit être présent dans le rendu
     expect(screen.getByTestId('canvas-node-circle_1')).toBeInTheDocument()
   })
 })
-
-

@@ -66,14 +66,15 @@ describe('Documents Schemas', () => {
   })
 
   describe('nankoAstSchema', () => {
-    it('valide un AST complet avec shapes, connectors et layout', () => {
+    it('valide un AST complet avec shapes, connectors, desc, dslVersion et layout', () => {
       const result = nankoAstSchema.safeParse({
+        dslVersion: 1,
         shapes: [
-          { id: 'app', type: 'rectangle', label: 'App' },
-          { id: 'db', type: 'circle', label: 'DB' },
+          { id: 'app', type: 'rectangle', label: 'App', desc: 'Application principale' },
+          { id: 'db', type: 'circle', label: 'DB', desc: null },
         ],
         connectors: [
-          { source: 'app', target: 'db', label: 'requête' },
+          { source: 'app', target: 'db', label: 'requête', desc: 'Requêtes SQL' },
         ],
         layout: {
           app: { x: 100, y: 100 },
@@ -82,9 +83,12 @@ describe('Documents Schemas', () => {
       })
       expect(result.success).toBe(true)
       if (result.success) {
+        expect(result.data.dslVersion).toBe(1)
         expect(result.data.shapes).toHaveLength(2)
+        expect(result.data.shapes[0]?.desc).toBe('Application principale')
         expect(result.data.connectors).toHaveLength(1)
         expect(result.data.connectors[0]?.label).toBe('requête')
+        expect(result.data.connectors[0]?.desc).toBe('Requêtes SQL')
       }
     })
 
@@ -92,6 +96,7 @@ describe('Documents Schemas', () => {
       const result = nankoAstSchema.safeParse({})
       expect(result.success).toBe(true)
       if (result.success) {
+        expect(result.data.dslVersion).toBe(1)
         expect(result.data.shapes).toEqual([])
         expect(result.data.connectors).toEqual([])
         expect(result.data.layout).toEqual({})

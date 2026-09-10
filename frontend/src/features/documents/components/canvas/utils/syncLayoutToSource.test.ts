@@ -4,16 +4,16 @@ import { updateNankoSourceLayout, updateNankoSourceBulkLayout } from './syncLayo
 describe('syncLayoutToSource', () => {
   describe('updateNankoSourceLayout', () => {
     it('insère la section !LAYOUT si elle est absente', () => {
-      const code = 'rectangle api "API Gateway"\ncircle db "PostgreSQL"'
+      const code = 'rectangle api label="API Gateway"\ncircle db label="PostgreSQL"'
       const updated = updateNankoSourceLayout(code, 'api', { x: 120.4, y: 80.6 })
 
       expect(updated).toContain('!LAYOUT\napi: x=120, y=81\n!END')
       expect(updated.startsWith(code)).toBe(true)
     })
 
-    it('met à jour la ligne d\'un nœud existant dans !LAYOUT', () => {
+    it("met à jour la ligne d'un nœud existant dans !LAYOUT", () => {
       const code = [
-        'rectangle api "API Gateway"',
+        'rectangle api label="API Gateway"',
         '!LAYOUT',
         'api: x=100, y=100',
         'db: x=300, y=200',
@@ -29,8 +29,8 @@ describe('syncLayoutToSource', () => {
 
     it('ajoute un nouveau nœud dans un !LAYOUT existant', () => {
       const code = [
-        'rectangle api "API Gateway"',
-        'circle db "Database"',
+        'rectangle api label="API Gateway"',
+        'circle db label="Database"',
         '!LAYOUT',
         'api: x=100, y=100',
         '!END',
@@ -45,7 +45,7 @@ describe('syncLayoutToSource', () => {
 
   describe('updateNankoSourceBulkLayout', () => {
     it('génère un bloc !LAYOUT complet pour plusieurs nœuds', () => {
-      const code = 'rectangle front "Front"\nrectangle api "API"'
+      const code = 'rectangle front label="Front"\nrectangle api label="API"'
       const layout = {
         front: { x: 100, y: 100 },
         api: { x: 350, y: 100 },
@@ -57,7 +57,7 @@ describe('syncLayoutToSource', () => {
 
     it('remplace complètement un bloc !LAYOUT existant', () => {
       const code = [
-        'rectangle front "Front"',
+        'rectangle front label="Front"',
         '!LAYOUT',
         'old: x=1, y=2',
         '!END',

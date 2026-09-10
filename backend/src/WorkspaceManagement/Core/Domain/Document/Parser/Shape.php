@@ -10,10 +10,11 @@ final readonly class Shape
         public string $id,
         public string $type,
         public string $label,
+        public ?string $desc = null,
     ) {}
 
     /**
-     * @return array{id: string, type: string, label: string}
+     * @return array{id: string, type: string, label: string, desc: string|null}
      */
     public function toArray(): array
     {
@@ -21,6 +22,7 @@ final readonly class Shape
             'id' => $this->id,
             'type' => $this->type,
             'label' => $this->label,
+            'desc' => $this->desc,
         ];
     }
 }

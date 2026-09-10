@@ -10,10 +10,11 @@ final readonly class Connector
         public string $source,
         public string $target,
         public ?string $label = null,
+        public ?string $desc = null,
     ) {}
 
     /**
-     * @return array{source: string, target: string, label: string|null}
+     * @return array{source: string, target: string, label: string|null, desc: string|null}
      */
     public function toArray(): array
     {
@@ -21,6 +22,7 @@ final readonly class Connector
             'source' => $this->source,
             'target' => $this->target,
             'label' => $this->label,
+            'desc' => $this->desc,
         ];
     }
 }

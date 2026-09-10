@@ -5,7 +5,7 @@ import { SourceCodeEditor } from './SourceCodeEditor'
 
 describe('SourceCodeEditor', () => {
   it('affiche le code source et la numérotation des lignes', () => {
-    const code = 'rectangle app "App"\ncircle db "DB"'
+    const code = 'rectangle app label="App"\ncircle db label="DB"'
     render(<SourceCodeEditor value={code} onChange={vi.fn()} />)
 
     expect(screen.getByText('1')).toBeInTheDocument()

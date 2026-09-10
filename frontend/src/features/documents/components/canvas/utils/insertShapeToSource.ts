@@ -121,7 +121,7 @@ export function insertShapeToSource(
 
   const defaultLabel = `${TYPE_DEFAULT_LABELS[options.type]} ${newShapeId.split('_')[1] ?? ''}`.trim()
   const label = options.label ?? defaultLabel
-  const declaration = `${options.type} ${newShapeId} "${label}"`
+  const declaration = `${options.type} ${newShapeId} label="${label}"`
 
   const layoutIndex = sourceCode.indexOf('!LAYOUT')
 

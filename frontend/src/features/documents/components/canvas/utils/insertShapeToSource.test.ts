@@ -10,11 +10,12 @@ describe('insertShapeToSource', () => {
   it('extrait fidèlement les identifiants existants du code source', () => {
     const code = `
 @id test-doc
+@dsl-version 1
 @layer 0
 
-rectangle app "App Web"
-circle db "Database"
-text notes "Architecture v1"
+rectangle app label="App Web"
+circle db label="Database"
+text notes label="Architecture v1"
 
 !LAYOUT
 app: x=100, y=200
@@ -43,7 +44,7 @@ app: x=100, y=200
     })
 
     expect(newShapeId).toBe('rect_1')
-    expect(newSourceCode).toContain('rectangle rect_1 "Rectangle 1"')
+    expect(newSourceCode).toContain('rectangle rect_1 label="Rectangle 1"')
     expect(newSourceCode).toContain('!LAYOUT')
     expect(newSourceCode).toContain('rect_1: x=150, y=250')
     expect(newSourceCode).toContain('!END')
@@ -57,7 +58,7 @@ app: x=100, y=200
   })
 
   it('insère une forme avant le bloc !LAYOUT existant et met à jour les coordonnées', () => {
-    const initialCode = `rectangle auth "Authentification"\n\n!LAYOUT\nauth: x=50, y=80\n!END\n`
+    const initialCode = `rectangle auth label="Authentification"\n\n!LAYOUT\nauth: x=50, y=80\n!END\n`
 
     const { newSourceCode, newShapeId } = insertShapeToSource(initialCode, {
       type: 'circle',
@@ -66,7 +67,7 @@ app: x=100, y=200
     })
 
     expect(newShapeId).toBe('circle_1')
-    expect(newSourceCode).toContain('circle circle_1 "PostgreSQL DB"')
+    expect(newSourceCode).toContain('circle circle_1 label="PostgreSQL DB"')
     expect(newSourceCode).toContain('circle_1: x=300, y=400')
     expect(newSourceCode).toContain('auth: x=50, y=80')
 
@@ -84,14 +85,14 @@ app: x=100, y=200
   })
 
   it('supporte les nœuds textuels avec label personnalisé', () => {
-    const { newSourceCode, newShapeId } = insertShapeToSource('rectangle api "API"', {
+    const { newSourceCode, newShapeId } = insertShapeToSource('rectangle api label="API"', {
       type: 'text',
       position: { x: 10, y: 20 },
       label: 'Note de service',
     })
 
     expect(newShapeId).toBe('text_1')
-    expect(newSourceCode).toContain('text text_1 "Note de service"')
+    expect(newSourceCode).toContain('text text_1 label="Note de service"')
     expect(newSourceCode).toContain('text_1: x=10, y=20')
 
     const { ast, syntaxError } = parseNankoSource(newSourceCode)
@@ -100,7 +101,7 @@ app: x=100, y=200
   })
 
   it('regroupe les shapes ensemble au-dessus des connecteurs', () => {
-    const initialCode = `rectangle app "App Web"\n\napp -> db "requête SQL"\n\n!LAYOUT\napp: x=100, y=100\n!END`
+    const initialCode = `rectangle app label="App Web"\n\napp -> db label="requête SQL"\n\n!LAYOUT\napp: x=100, y=100\n!END`
 
     const { newSourceCode, newShapeId } = insertShapeToSource(initialCode, {
       type: 'circle',

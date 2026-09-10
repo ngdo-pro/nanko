@@ -4,12 +4,14 @@ export const nankoAstShapeSchema = z.object({
   id: z.string(),
   type: z.enum(['rectangle', 'circle', 'text']),
   label: z.string(),
+  desc: z.string().optional().nullable().default(null),
 })
 
 export const nankoAstConnectorSchema = z.object({
   source: z.string(),
   target: z.string(),
-  label: z.string().optional().nullable(),
+  label: z.string().optional().nullable().default(null),
+  desc: z.string().optional().nullable().default(null),
 })
 
 export const nodeCoordinatesSchema = z.object({
@@ -20,6 +22,7 @@ export const nodeCoordinatesSchema = z.object({
 export const nankoAstLayoutSchema = z.record(z.string(), nodeCoordinatesSchema)
 
 export const nankoAstSchema = z.object({
+  dslVersion: z.number().int().default(1),
   shapes: z.array(nankoAstShapeSchema).default([]),
   connectors: z.array(nankoAstConnectorSchema).default([]),
   layout: z
