@@ -65,7 +65,7 @@ final class DocumentEndpointsTest extends WebTestCase
             [],
             [],
             ['CONTENT_TYPE' => 'application/json'],
-            json_encode(['sourceCode' => 'rectangle s1 "S1"']),
+            json_encode(['sourceCode' => 'rectangle s1 label="S1"']),
         );
 
         self::assertResponseStatusCodeSame(401);

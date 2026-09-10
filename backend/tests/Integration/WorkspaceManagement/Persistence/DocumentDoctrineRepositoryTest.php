@@ -60,8 +60,9 @@ final class DocumentDoctrineRepositoryTest extends KernelTestCase
 
         $docId = DocumentId::generate();
         $ast = [
+            'dslVersion' => 1,
             'shapes' => [
-                ['id' => 's1', 'type' => 'rectangle', 'label' => 'Service 1'],
+                ['id' => 's1', 'type' => 'rectangle', 'label' => 'Service 1', 'desc' => null],
             ],
             'connectors' => [],
             'layout' => [],
@@ -73,7 +74,7 @@ final class DocumentDoctrineRepositoryTest extends KernelTestCase
             name: 'Architecture Core',
             slug: 'architecture-core',
             layer: Layer::fromInt(0),
-            sourceCode: 'rectangle s1 "Service 1"',
+            sourceCode: 'rectangle s1 label="Service 1"',
             ast: $ast,
         );
 
@@ -84,7 +85,7 @@ final class DocumentDoctrineRepositoryTest extends KernelTestCase
         self::assertSame('Architecture Core', $loaded->name());
         self::assertSame('architecture-core', $loaded->slug());
         self::assertSame(0, $loaded->layer()->toInt());
-        self::assertSame('rectangle s1 "Service 1"', $loaded->sourceCode());
+        self::assertSame('rectangle s1 label="Service 1"', $loaded->sourceCode());
         self::assertEquals($ast, $loaded->ast());
 
         $loadedBySlug = $this->docRepo->findByProjectAndSlug($projectId, 'architecture-core');
@@ -96,16 +97,17 @@ final class DocumentDoctrineRepositoryTest extends KernelTestCase
 
         // Test update
         $newAst = [
+            'dslVersion' => 1,
             'shapes' => [
-                ['id' => 's1', 'type' => 'rectangle', 'label' => 'Service 1'],
-                ['id' => 's2', 'type' => 'circle', 'label' => 'DB'],
+                ['id' => 's1', 'type' => 'rectangle', 'label' => 'Service 1', 'desc' => null],
+                ['id' => 's2', 'type' => 'circle', 'label' => 'DB', 'desc' => null],
             ],
             'connectors' => [
-                ['source' => 's1', 'target' => 's2', 'label' => 'query'],
+                ['source' => 's1', 'target' => 's2', 'label' => 'query', 'desc' => null],
             ],
             'layout' => [],
         ];
-        $loaded->updateSourceCode('rectangle s1 "Service 1"\ncircle s2 "DB"\ns1 -> s2 "query"', $newAst);
+        $loaded->updateSourceCode("rectangle s1 label=\"Service 1\"\ncircle s2 label=\"DB\"\ns1 -> s2 label=\"query\"", $newAst);
         $this->docRepo->save($loaded);
 
         $reloaded = $this->docRepo->findById($docId);

@@ -70,9 +70,10 @@ test.describe('Visualisation Graphique en Canvas Interactif avec React Flow (015
     await expect(textarea).toBeVisible()
 
     const nankoCode = [
-      'rectangle app "Application Web"',
-      'circle db "Base PostgreSQL"',
-      'app -> db "requêtes SQL"',
+      '@dsl-version 1',
+      'rectangle app label="Application Web"',
+      'circle db label="Base PostgreSQL"',
+      'app -> db label="requêtes SQL"',
     ].join('\n')
 
     await textarea.fill(nankoCode)

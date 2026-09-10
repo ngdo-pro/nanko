@@ -70,9 +70,10 @@ test.describe('Gestion des Documents et Édition .nanko (014)', () => {
     await expect(textarea).toBeVisible()
 
     const nankoCode = [
-      'rectangle front "Storefront Next.js"',
-      'circle api "Catalogue API"',
-      'front -> api "fetch products"',
+      '@dsl-version 1',
+      'rectangle front label="Storefront Next.js" desc="Frontend web public"',
+      'circle api label="Catalogue API"',
+      'front -> api label="fetch products"',
     ].join('\n')
 
     await textarea.fill(nankoCode)
@@ -90,17 +91,22 @@ test.describe('Gestion des Documents et Édition .nanko (014)', () => {
     await expect(savedBadge).toBeVisible()
 
     // 6. Vérification de l'AST inspecté
+    await page.getByTestId('layout-mode-code').click()
+    await expect(page.getByTestId('ast-dsl-version')).toHaveText('DSL v1')
     const shapeFront = page.getByTestId('ast-shape-front')
     const shapeApi = page.getByTestId('ast-shape-api')
     const connector = page.getByTestId('ast-connector-front-api')
 
     await expect(shapeFront).toBeVisible()
     await expect(shapeFront).toContainText('Storefront Next.js')
+    await expect(shapeFront).toContainText('Frontend web public')
     await expect(shapeApi).toBeVisible()
     await expect(shapeApi).toContainText('Catalogue API')
     await expect(connector).toBeVisible()
     await expect(connector).toContainText('front')
     await expect(connector).toContainText('api')
+
+    await page.getByTestId('layout-mode-split').click()
 
     // 7. Persistance après rafraîchissement
     await page.reload()
@@ -163,7 +169,7 @@ test.describe('Gestion des Documents et Édition .nanko (014)', () => {
     await expect(textarea).toBeVisible()
 
     // Code avec référence cible inexistante
-    const invalidCode = 'rectangle app "Mon App"\napp -> service_inconnu "call"'
+    const invalidCode = 'rectangle app label="Mon App"\napp -> service_inconnu label="call"'
     await textarea.fill(invalidCode)
 
     await page.getByTestId('save-document-button').click()

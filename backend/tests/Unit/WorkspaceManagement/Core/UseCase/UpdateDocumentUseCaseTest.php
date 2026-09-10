@@ -58,7 +58,7 @@ final class UpdateDocumentUseCaseTest extends TestCase
             ->willReturn(OrganisationMember::create(MemberId::generate(), $orgId, $userId, Role::MEMBER));
 
         $useCase = new UpdateDocumentUseCase($docRepo, $projectRepo, $memberRepo);
-        $newCode = "rectangle s1 \"Service 1\"\ncircle db \"DB\"\ns1 -> db \"query\"\n";
+        $newCode = "@dsl-version 1\nrectangle s1 label=\"Service 1\"\ncircle db label=\"DB\"\ns1 -> db label=\"query\"\n";
         $command = new UpdateDocumentCommand($docId, $userId, $newCode);
 
         $updated = $useCase->execute($command);
@@ -143,7 +143,7 @@ final class UpdateDocumentUseCaseTest extends TestCase
             ->willReturn(OrganisationMember::create(MemberId::generate(), $orgId, $userId, Role::MEMBER));
 
         $useCase = new UpdateDocumentUseCase($docRepo, $projectRepo, $memberRepo);
-        $invalidCode = "rectangle s1 \"S1\"\ns1 -> nonexistent \"link\"\n";
+        $invalidCode = "rectangle s1 label=\"S1\"\ns1 -> nonexistent label=\"link\"\n";
         $command = new UpdateDocumentCommand($docId, $userId, $invalidCode);
 
         $this->expectException(InvalidNankoSyntaxException::class);

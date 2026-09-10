@@ -14,7 +14,12 @@ export const AstInspector: React.FC<AstInspectorProps> = ({ ast, syntaxError }) 
     <div className="ast-inspector-panel" data-qa="ast-inspector">
       {/* En-tête */}
       <div className="ast-inspector-header">
-        <span className="ast-inspector-title">Inspecteur AST</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span className="ast-inspector-title">Inspecteur AST</span>
+          <span className="ast-version-badge text-xs px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono" data-qa="ast-dsl-version">
+            DSL v{ast?.dslVersion ?? 1}
+          </span>
+        </div>
         {syntaxError ? (
           <span className="ast-syntax-pill invalid">
             Erreur syntaxe
@@ -62,6 +67,11 @@ export const AstInspector: React.FC<AstInspectorProps> = ({ ast, syntaxError }) 
                   <div className="ast-shape-info">
                     <span className="ast-shape-id">{shape.id}</span>
                     <span className="ast-shape-label">&ldquo;{shape.label}&rdquo;</span>
+                    {shape.desc && (
+                      <span className="ast-shape-desc text-xs text-slate-400 block mt-0.5">
+                        {shape.desc}
+                      </span>
+                    )}
                   </div>
                   <span className="ast-shape-type-badge">{shape.type}</span>
                 </div>
@@ -94,6 +104,9 @@ export const AstInspector: React.FC<AstInspectorProps> = ({ ast, syntaxError }) 
                   </div>
                   {conn.label && (
                     <p className="ast-connector-label">&ldquo;{conn.label}&rdquo;</p>
+                  )}
+                  {conn.desc && (
+                    <p className="ast-connector-desc text-xs text-slate-400 mt-0.5">{conn.desc}</p>
                   )}
                 </div>
               ))}

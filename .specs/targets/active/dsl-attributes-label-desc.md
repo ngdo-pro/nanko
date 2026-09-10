@@ -56,11 +56,15 @@ Cette Target formalise l'enrichissement sémantique du format déclaratif `.nank
 
 ### 3.1. Règles Grammaticales du Format `.nanko`
 
-1. **Format des attributs :**
+1. **Directives de métadonnées d'en-tête :**
+   * `@id <slug>` : identifiant unique du schéma.
+   * `@dsl-version <entier>` : version de la grammaire DSL du document (défaut : `1`). Permet au parseur d'anticiper les ruptures futures et d'assurer une rétrocompatibilité déterministe.
+   * `@layer <entier>` : niveau de profondeur architecturale.
+2. **Format des attributs :**
    * Syntaxe stricte `clé="valeur"`.
    * Les guillemets doubles `"` sont obligatoires autour de la valeur.
    * L'ordre des attributs est entièrement libre sur la ligne (ex: `desc="..." label="..."` est équivalent à `label="..." desc="..."`).
-2. **Déclaration des Shapes :**
+3. **Déclaration des Shapes :**
    ```text
    <shape_type> <id> label="<valeur>" [desc="<valeur>"]
    ```
@@ -68,14 +72,14 @@ Cette Target formalise l'enrichissement sémantique du format déclaratif `.nank
    * `id` : identifiant alphanumérique (avec `_` et `-`).
    * `label` : obligatoire pour toute Shape valide.
    * `desc` : optionnel.
-3. **Déclaration des Connecteurs :**
+4. **Déclaration des Connecteurs :**
    ```text
    <source_id> -> <target_id> [label="<valeur>" [desc="<valeur>"]]
    ```
    * Un connecteur sans attribut (`src -> tgt`) est valide.
    * Un connecteur avec label seul (`src -> tgt label="HTTP"`) est valide.
    * **Règle d'intégrité :** `desc` exige obligatoirement la présence d'un `label`. Déclarer une `desc` sans `label` sur un connecteur déclenche une erreur syntaxique à la ligne correspondante.
-4. **Architecture du Tokenizer :**
+5. **Architecture du Tokenizer :**
    * Découpage de la ligne en mot-clé initial + arguments positionnels + ensemble de paires `clé="valeur"`.
    * Rejet immédiat de toute valeur d'attribut non entourée de guillemets doubles.
 
@@ -98,7 +102,7 @@ Cette Target formalise l'enrichissement sémantique du format déclaratif `.nank
 - **Invariant 1 (Unicité des IDs)** : Chaque identifiant de Shape demeure strictement unique au sein du document.
 - **Invariant 2 (Intégrité référentielle des connecteurs)** : `source` et `target` doivent référencer des identifiants de Shapes existantes.
 - **Invariant 3 (Dépendance label/desc sur relation)** : Un connecteur ne peut pas porter un attribut `desc` sans avoir d'attribut `label`.
-- **Invariant 4 (Normalisation AST)** : Les entités de l'AST (`Shape` et `Connector`) exposent systématiquement `label` et `desc` (nullable si absent).
+- **Invariant 4 (Normalisation AST et Version de schéma)** : L'AST expose obligatoirement `dslVersion` (entier, défaut 1) ainsi que les entités `Shape` et `Connector` avec `label` et `desc` (nullable si absent).
 
 ### 4.2. Matrice des Capabilities requises
 
@@ -142,7 +146,8 @@ Pour garantir une livraison rapide et ciblée, les aspects suivants sont exclus 
 Feuille de route indicative pour l'implémentation de cette Target :
 
 - [ ] **Delta 1 (`018-dsl-tokenizer-and-ast-attributes`)** :
-  - Création du tokenizer générique clé-valeur dans le Backend Symfony (`NankoParser.php`, `Shape.php`, `Connector.php`) et dans le Frontend TypeScript (`nankoParser.ts`, `schemas.ts`).
+  - Support de la directive d'en-tête `@dsl-version <int>` (défaut `1`) et exposition du champ `dslVersion: int` dans l'AST normalisé.
+  - Création du tokenizer générique clé-valeur dans le Backend Symfony (`NankoParser.php`, `NankoAst.php`, `Shape.php`, `Connector.php`) et dans le Frontend TypeScript (`nankoParser.ts`, `schemas.ts`).
   - Validation des contraintes de guillemets stricts et de la règle `desc` requérant `label` sur les connecteurs.
   - Mise à niveau directe de tous les tests unitaires et fixtures de documents existants.
 - [ ] **Delta 2 (`019-board-visual-rendering-label-desc`)** :

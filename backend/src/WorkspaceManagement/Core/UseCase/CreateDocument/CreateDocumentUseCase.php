@@ -44,7 +44,7 @@ final readonly class CreateDocumentUseCase
         }
 
         $templateSourceCode = sprintf(
-            "@id %s\n@layer %d\n\nrectangle app \"%s\"\n",
+            "@id %s\n@dsl-version 1\n@layer %d\n\nrectangle app label=\"%s\"\n",
             $command->slug,
             $command->layer->toInt(),
             $command->name,

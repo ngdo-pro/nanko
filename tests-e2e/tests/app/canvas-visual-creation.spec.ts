@@ -95,7 +95,7 @@ test.describe('Création Visuelle d\'Éléments sur le Canvas par Roue Radiale e
 
     // Le code source doit être enrichi
     const textarea = page.getByTestId('source-code-textarea')
-    await expect(textarea).toHaveValue(/rectangle rect_1 "Rectangle 1"/)
+    await expect(textarea).toHaveValue(/rectangle rect_1 label="Rectangle 1"/)
     await expect(textarea).toHaveValue(/rect_1:\s*x=\d+,\s*y=\d+/)
 
     // 5. Test du raccourci direct 'c' (création immédiate d'un cercle)
@@ -104,7 +104,7 @@ test.describe('Création Visuelle d\'Éléments sur le Canvas par Roue Radiale e
 
     const nodeCircle = page.getByTestId('canvas-node-circle_1')
     await expect(nodeCircle).toBeVisible()
-    await expect(textarea).toHaveValue(/circle circle_1 "Circle 1"/)
+    await expect(textarea).toHaveValue(/circle circle_1 label="Circle 1"/)
 
     // 6. Sauvegarde manuelle et vérification de la persistance
     const saveButton = page.getByTestId('save-document-button')
