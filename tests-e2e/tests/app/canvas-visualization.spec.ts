@@ -106,6 +106,10 @@ test.describe('Visualisation Graphique en Canvas Interactif avec React Flow (015
     await nodeTooltip.hover()
     await expect(nodeTooltip).toBeVisible()
 
+    // Un clic sur le tooltip ne sélectionne pas le nœud parent
+    await nodeTooltip.click()
+    await expect(nodeApp).not.toHaveClass(/is-selected/)
+
     // Départ du curseur -> disparition du tooltip après délai de grâce
     await page.mouse.move(0, 0)
     await expect(nodeTooltip).not.toBeVisible()

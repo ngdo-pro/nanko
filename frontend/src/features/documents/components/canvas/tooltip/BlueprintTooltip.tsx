@@ -66,8 +66,11 @@ export const BlueprintTooltip: React.FC<BlueprintTooltipProps> = ({
       data-testid={dataQa}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
+      onMouseUp={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
+      onPointerUp={(e) => e.stopPropagation()}
       onWheel={(e) => e.stopPropagation()}
     >
       {(typeBadge || id) && (

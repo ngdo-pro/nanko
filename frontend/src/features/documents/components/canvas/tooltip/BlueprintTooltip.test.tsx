@@ -195,6 +195,21 @@ describe('BlueprintTooltip', () => {
     const stopMousedownSpy = vi.spyOn(mouseDownEvent, 'stopPropagation')
     fireEvent(tooltip, mouseDownEvent)
     expect(stopMousedownSpy).toHaveBeenCalled()
+
+    const clickEvent = new Event('click', { bubbles: true })
+    const stopClickSpy = vi.spyOn(clickEvent, 'stopPropagation')
+    fireEvent(tooltip, clickEvent)
+    expect(stopClickSpy).toHaveBeenCalled()
+
+    const mouseUpEvent = new Event('mouseup', { bubbles: true })
+    const stopMouseupSpy = vi.spyOn(mouseUpEvent, 'stopPropagation')
+    fireEvent(tooltip, mouseUpEvent)
+    expect(stopMouseupSpy).toHaveBeenCalled()
+
+    const pointerUpEvent = new Event('pointerup', { bubbles: true })
+    const stopPointerupSpy = vi.spyOn(pointerUpEvent, 'stopPropagation')
+    fireEvent(tooltip, pointerUpEvent)
+    expect(stopPointerupSpy).toHaveBeenCalled()
   })
 
   it('annule l\'affichage du tooltip si la souris quitte avant 300 ms', () => {
