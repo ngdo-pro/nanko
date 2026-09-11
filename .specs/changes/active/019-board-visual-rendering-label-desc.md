@@ -15,8 +15,8 @@
   * Sur le canvas, chaque forme (`RectangleNode`, `CircleNode`, `TextNode`) portant un attribut `desc` affiche un sous-titre textuel stylisé sous son libellé principal (`label`).
   * La description visible sur la forme est automatiquement tronquée à **2 lignes maximum** avec ellipse (`ellipsis`) pour préserver les dimensions compactes des nœuds et la clarté du graphe sans débordement.
   * Au survol prolongé d'une shape (> 300 ms), une infobulle (*Tooltip*) Blueprint soignée apparaît au-dessus de l'élément, affichant son type, son identifiant, son `label` et l'intégralité de sa `desc` sans troncature (avec ascenseur discret si le texte dépasse 500 caractères).
-  * Sur chaque connecteur (`NankoEdge`), le badge central affiche le `label` du flux. Si une `desc` est présente, un micro-indicateur discret s'affiche sur le badge, et le survol du badge révèle une infobulle Blueprint détaillant le flux technique.
-  * Les shapes et connecteurs sans `desc` conservent leur rendu épuré sans zone vide ni espacement superflu.
+  * Sur chaque connecteur (`NankoEdge`), le badge central affiche exclusivement le `label` du flux lorsqu'il est renseigné (sans préfixe technique `source -> target`), pour un rendu visuel épuré. Si une `desc` est présente, un micro-indicateur discret s'affiche sur le badge, et le survol du badge révèle une infobulle Blueprint détaillant le flux technique.
+  * Les shapes sans `desc` et les connecteurs sans `label` conservent leur rendu épuré sans zone vide ni espacement superflu.
 * **In Scope (Ce qui est ajouté/modifié) :**
   * **Transmission des données dans `NankoCanvas.tsx` :**
     * Injection de `desc: shape.desc` dans le `data` de chaque nœud React Flow.
@@ -27,11 +27,12 @@
     * Intégration d'une infobulle Blueprint accessible (`role="tooltip"`, `data-qa="node-tooltip-{id}"`) apparaissant au survol de la shape.
   * **Composant Arête (`NankoEdge.tsx`) :**
     * Détection de `desc` dans `data`.
+    * Suppression du libellé verbeux `source -> target` sur le badge central pour n'afficher que le `label` du flux et l'indicateur de description.
     * Badge de connecteur enrichi d'un indicateur de détail et d'un tooltip Blueprint au survol (`data-qa="edge-tooltip-{source}-{target}"`).
   * **Design System & Styles (`App.css`) :**
     * Définition des règles CSS de sous-titre : typographie secondaire (`0.75rem`), couleur atténuée (`var(--text-muted)` / `#94A3B8`), interligne 1.25.
     * Troncature multi-ligne standardisée : `-webkit-line-clamp: 2`, `display: -webkit-box`, `-webkit-box-orient: vertical`, `overflow: hidden`, `text-overflow: ellipsis`.
-    * Style de l'infobulle Blueprint : fond sombre translucide (`rgba(1, 28, 37, 0.95)`), bordure technique (`1px solid var(--structure, #5EEAD4)`), flou d'arrière-plan (`backdrop-filter: blur(8px)`), ombre portée marquée, flèche indicatrice.
+    * Style de l'infobulle Blueprint adapté aux thèmes sombre et clair : fond sombre translucide en mode dark (`rgba(1, 28, 37, 0.96)`) et fond blanc translucide en mode light (`rgba(255, 255, 255, 0.98)`), bordure technique (`var(--brand)`), typographies adaptatives (`var(--heading)`, `var(--body-text)`), flou d'arrière-plan (`backdrop-filter: blur(8px)`), ombres portées calibrées et flèche indicatrice.
   * **Tests Unitaires & E2E :**
     * Tests unitaires sur le rendu des nœuds et arêtes avec et sans `desc` (`RectangleNode.test.tsx`, `CircleNode.test.tsx`, `NankoEdge.test.tsx`, `NankoCanvas.test.tsx`).
     * Scénario E2E Playwright dans `canvas-visualization.spec.ts` validant le sous-titre tronqué et l'affichage du tooltip au survol.
@@ -291,31 +292,31 @@ export interface NankoNodeData {
 
 ## 9. Plan d'exécution séquentiel
 
-- [ ] **Phase 1 : Frontend Canvas & Composants Graphiques (`frontend/src/features/documents/`)**
-  - [ ] 1. Mettre à jour `NankoCanvas.tsx` pour injecter `desc: shape.desc` dans `rawNodes` et `desc: connector.desc` dans `buildEdgesFromAst`.
-  - [ ] 2. Créer le composant `BlueprintTooltip.tsx` gérant le positionnement flottant et l'affichage stylisé de l'en-tête, du libellé et de la description.
-  - [ ] 3. Adapter `RectangleNode.tsx` pour afficher `.nanko-node-desc` (tronqué à 2 lignes) et déclencher le `BlueprintTooltip` au survol avec délai de 300 ms.
-  - [ ] 4. Adapter `CircleNode.tsx` pour afficher le sous-titre de description et le tooltip en respectant la géométrie circulaire.
-  - [ ] 5. Adapter `TextNode.tsx` pour intégrer la description et le tooltip.
-  - [ ] 6. Adapter `NankoEdge.tsx` pour afficher un indicateur visuel de détail sur le badge et ouvrir le tooltip au survol.
-  - [ ] 7. Ajouter les styles Blueprint associés dans `App.css` (troncature multi-lignes, infobulles, animations d'apparition, scrollbar).
+- [x] **Phase 1 : Frontend Canvas & Composants Graphiques (`frontend/src/features/documents/`)**
+  - [x] 1. Mettre à jour `NankoCanvas.tsx` pour injecter `desc: shape.desc` dans `rawNodes` et `desc: connector.desc` dans `buildEdgesFromAst`.
+  - [x] 2. Créer le composant `BlueprintTooltip.tsx` gérant le positionnement flottant et l'affichage stylisé de l'en-tête, du libellé et de la description.
+  - [x] 3. Adapter `RectangleNode.tsx` pour afficher `.nanko-node-desc` (tronqué à 2 lignes) et déclencher le `BlueprintTooltip` au survol avec délai de 300 ms.
+  - [x] 4. Adapter `CircleNode.tsx` pour afficher le sous-titre de description et le tooltip en respectant la géométrie circulaire.
+  - [x] 5. Adapter `TextNode.tsx` pour intégrer la description et le tooltip.
+  - [x] 6. Adapter `NankoEdge.tsx` pour afficher un indicateur visuel de détail sur le badge et ouvrir le tooltip au survol.
+  - [x] 7. Ajouter les styles Blueprint associés dans `App.css` (troncature multi-lignes, infobulles, animations d'apparition, scrollbar).
 
-- [ ] **Phase 2 : Tests Unitaires Frontend (`frontend/`)**
-  - [ ] 1. Créer les tests unitaires pour `BlueprintTooltip.test.tsx`.
-  - [ ] 2. Mettre à jour / créer les tests unitaires pour `RectangleNode.test.tsx`, `CircleNode.test.tsx`, `TextNode.test.tsx` vérifiant :
+- [x] **Phase 2 : Tests Unitaires Frontend (`frontend/`)**
+  - [x] 1. Créer les tests unitaires pour `BlueprintTooltip.test.tsx`.
+  - [x] 2. Mettre à jour / créer les tests unitaires pour `RectangleNode.test.tsx`, `CircleNode.test.tsx`, `TextNode.test.tsx` vérifiant :
     - Présence du libellé seul quand `desc` est absente.
     - Présence du sous-titre descriptif avec classe de troncature quand `desc` est fournie.
     - Rendu du tooltip lors de la simulation de survol.
-  - [ ] 3. Créer les tests unitaires pour `NankoEdge.test.tsx` vérifiant le badge et le tooltip.
-  - [ ] 4. Valider l'ensemble de la suite frontend : `pnpm --filter frontend typecheck`, `pnpm --filter frontend lint`, `pnpm --filter frontend test`.
+  - [x] 3. Créer les tests unitaires pour `NankoEdge.test.tsx` vérifiant le badge et le tooltip.
+  - [x] 4. Valider l'ensemble de la suite frontend : `pnpm --filter frontend typecheck`, `pnpm --filter frontend lint`, `pnpm --filter frontend test`.
 
-- [ ] **Phase 3 : End-to-End (`tests-e2e/`)**
-  - [ ] 1. Enrichir `canvas-visualization.spec.ts` pour tester :
+- [x] **Phase 3 : End-to-End (`tests-e2e/`)**
+  - [x] 1. Enrichir `canvas-visualization.spec.ts` pour tester :
     - L'affichage d'un document doté de shapes et connecteurs avec `desc`.
     - La visibilité du sous-titre descriptif tronqué sur le nœud rectangulaire.
     - Le déclenchement du tooltip Blueprint au survol d'un nœud et la présence de la description complète.
     - Le déclenchement du tooltip Blueprint au survol du badge d'arête.
-  - [ ] 2. Valider la suite complète : `make test-e2e`.
+  - [x] 2. Valider la suite complète : `make test-e2e`.
 
 - [ ] **Phase 4 : Synchronisation documentaire (Automatisable via `/sync-current`)**
   - [ ] 1. Mettre à jour `.specs/current/domains/workspace-management/behavior.md` (Parcours 7 décrivant les sous-titres et tooltips).
