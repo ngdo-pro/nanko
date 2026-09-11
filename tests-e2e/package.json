@@ -8,7 +8,7 @@
     "test:env": "node --test config/env.test.ts"
   },
   "devDependencies": {
-    "@playwright/test": "^1.48.0",
+    "@playwright/test": "^1.63.0",
     "@types/node": "^24.13.3",
     "zod": "^4.5.4"
   }

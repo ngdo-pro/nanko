@@ -4,6 +4,10 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
 
   - package-ecosystem: "docker"
     directory: "/backend"
@@ -14,6 +18,9 @@ updates:
     directory: "/frontend"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "docker"
     directory: "/landing"
@@ -49,3 +56,11 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      npm-dev-dependencies:
+        dependency-type: "development"
+      npm-dependencies:
+        dependency-type: "production"
+    ignore:
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
