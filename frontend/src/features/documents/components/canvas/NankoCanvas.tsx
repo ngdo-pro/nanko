@@ -55,6 +55,7 @@ function buildNodesFromAst(ast: NankoAst): Node[] {
       type: shape.type,
       data: {
         label: shape.label,
+        desc: shape.desc,
         nodeId: shape.id,
         shapeType: shape.type,
       },
@@ -84,7 +85,7 @@ function buildEdgesFromAst(ast: NankoAst, colorMode: 'dark' | 'light'): Edge[] {
     target: connector.target,
     type: 'nanko',
     label: connector.label ?? undefined,
-    data: { label: connector.label },
+    data: { label: connector.label, desc: connector.desc },
     markerEnd: {
       type: MarkerType.ArrowClosed,
       width: 14,

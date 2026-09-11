@@ -71,9 +71,9 @@ test.describe('Visualisation Graphique en Canvas Interactif avec React Flow (015
 
     const nankoCode = [
       '@dsl-version 1',
-      'rectangle app label="Application Web"',
-      'circle db label="Base PostgreSQL"',
-      'app -> db label="requêtes SQL"',
+      'rectangle app label="Application Web" desc="Frontend React SPA haute performance"',
+      'circle db label="Base PostgreSQL" desc="Cluster primaire de données"',
+      'app -> db label="requêtes SQL" desc="Pool PgBouncer port 5432"',
     ].join('\n')
 
     await textarea.fill(nankoCode)
@@ -83,7 +83,7 @@ test.describe('Visualisation Graphique en Canvas Interactif avec React Flow (015
     await saveButton.click()
     await expect(page.getByTestId('saved-status-badge')).toBeVisible()
 
-    // 5. Validation du Rendu Nominal sur le Canvas en vue Split
+    // 5. Validation du Rendu Nominal sur le Canvas en vue Split (Spec 019 : label, desc et tooltips)
     const canvas = page.getByTestId('nanko-canvas')
     await expect(canvas).toBeVisible()
 
@@ -92,7 +92,43 @@ test.describe('Visualisation Graphique en Canvas Interactif avec React Flow (015
     await expect(nodeApp).toBeVisible()
     await expect(nodeDb).toBeVisible()
     await expect(nodeApp).toContainText('Application Web')
+    await expect(nodeApp.locator('.nanko-node-desc')).toHaveText('Frontend React SPA haute performance')
     await expect(nodeDb).toContainText('Base PostgreSQL')
+    await expect(nodeDb.locator('.nanko-node-desc')).toHaveText('Cluster primaire de données')
+
+    // Survol du nœud app pour déclencher le tooltip Blueprint (délai > 300 ms)
+    await nodeApp.hover()
+    const nodeTooltip = page.getByTestId('node-tooltip-app')
+    await expect(nodeTooltip).toBeVisible({ timeout: 2000 })
+    await expect(nodeTooltip).toContainText('Frontend React SPA haute performance')
+
+    // Transition interactive vers le tooltip pendant le délai de grâce (Warhammer pin)
+    await nodeTooltip.hover()
+    await expect(nodeTooltip).toBeVisible()
+
+    // Un clic sur le tooltip ne sélectionne pas le nœud parent
+    await nodeTooltip.click()
+    await expect(nodeApp).not.toHaveClass(/is-selected/)
+
+    // Départ du curseur -> disparition du tooltip après délai de grâce
+    await page.mouse.move(0, 0)
+    await expect(nodeTooltip).not.toBeVisible()
+
+    // Survol du badge de connecteur app -> db pour déclencher le tooltip de connecteur
+    const connectorBadge = page.getByTestId('ast-connector-app-db')
+    await expect(connectorBadge).toBeVisible()
+    await expect(connectorBadge).toContainText('requêtes SQL')
+    await expect(connectorBadge).not.toContainText('app → db')
+    await expect(page.getByTestId('edge-desc-indicator-app-db')).toBeVisible()
+
+    await connectorBadge.hover()
+    const edgeTooltip = page.getByTestId('edge-tooltip-app-db')
+    await expect(edgeTooltip).toBeVisible({ timeout: 2000 })
+    await expect(edgeTooltip).toContainText('Pool PgBouncer port 5432')
+
+    // Départ du curseur -> disparition du tooltip de connecteur
+    await page.mouse.move(0, 0)
+    await expect(edgeTooltip).not.toBeVisible()
 
     // 6. Basculement des modes d'affichage (Split, Canvas, Code)
     const modeCanvasBtn = page.getByTestId('layout-mode-canvas')

@@ -42,6 +42,30 @@ describe('NankoCanvas', () => {
     expect(screen.getByText('Documentation note')).toBeInTheDocument()
   })
 
+  it('rend les sous-titres descriptifs lorsque desc est renseigné dans l\'AST', () => {
+    const astWithDesc: NankoAst = {
+      dslVersion: 1,
+      shapes: [
+        { id: 'api', type: 'rectangle', label: 'API Gateway', desc: 'Passerelle publique sécurisée' },
+        { id: 'db', type: 'circle', label: 'PostgreSQL', desc: 'Cluster primaire' },
+      ],
+      connectors: [
+        { source: 'api', target: 'db', label: 'SQL', desc: 'PgBouncer port 5432' },
+      ],
+      layout: {
+        api: { x: 100, y: 100 },
+        db: { x: 300, y: 100 },
+      },
+    }
+
+    render(<NankoCanvas ast={astWithDesc} />)
+
+    expect(screen.getByText('API Gateway')).toBeInTheDocument()
+    expect(screen.getByText('Passerelle publique sécurisée')).toBeInTheDocument()
+    expect(screen.getByText('PostgreSQL')).toBeInTheDocument()
+    expect(screen.getByText('Cluster primaire')).toBeInTheDocument()
+  })
+
   it('affiche le badge de pause lorsque syntaxError est présent', () => {
     render(<NankoCanvas ast={sampleAst} syntaxError="Erreur de syntaxe ligne 4" />)
 

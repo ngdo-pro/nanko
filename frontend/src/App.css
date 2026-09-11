@@ -1631,6 +1631,7 @@
 
 .nanko-node-rectangle {
   min-width: 190px;
+  max-width: 240px;
   background-color: var(--surface);
   border: 1.5px solid var(--border-strong);
 }
@@ -1745,6 +1746,7 @@
 .nanko-node-body {
   padding: 0.6rem 0.8rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
@@ -1755,6 +1757,26 @@
   font-weight: 500;
   color: var(--heading);
   word-break: break-word;
+}
+
+/* Sous-titre descriptif dans la shape */
+.nanko-node-desc {
+  font-size: 0.75rem;
+  line-height: 1.25;
+  color: var(--text-muted, #94A3B8);
+  margin-top: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  pointer-events: none;
+}
+
+.nanko-node-circle .nanko-node-desc {
+  font-size: 0.7rem;
+  max-width: 95px;
 }
 
 /* Ports de connexion Handles (7px carrés avec débordement de 3.5px) */
@@ -1789,10 +1811,17 @@
 }
 
 /* Labels d'arêtes */
+.react-flow__edgelabel-renderer {
+  z-index: 10 !important;
+}
+
 .nanko-edge-label-container {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  pointer-events: auto !important;
+  z-index: 10;
 }
 
 .nanko-edge-label {
@@ -1804,6 +1833,170 @@
   padding: 0.15rem 0.45rem;
   white-space: nowrap;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.nanko-edge-desc-indicator {
+  color: var(--brand, #5EEAD4);
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+/* Animation apparition du tooltip */
+@keyframes nanko-tooltip-fade-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 4px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Infobulle Blueprint (Tooltip) - Base & Mode Clair */
+.nanko-blueprint-tooltip {
+  position: absolute;
+  z-index: 1000;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid var(--brand);
+  box-shadow: 0 8px 24px -4px rgba(28, 43, 36, 0.16), 0 2px 6px rgba(44, 74, 59, 0.1);
+  border-radius: 4px;
+  padding: 8px 12px;
+  min-width: 180px;
+  max-width: 320px;
+  pointer-events: auto;
+  cursor: default;
+  user-select: text;
+  backdrop-filter: blur(8px);
+  animation: nanko-tooltip-fade-in 0.15s ease-out;
+  text-align: left;
+}
+
+/* Mode Sombre (Dark) */
+:root[data-theme="dark"] .nanko-blueprint-tooltip {
+  background: rgba(1, 28, 37, 0.96);
+  border: 1px solid var(--brand, #5EEAD4);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), 0 0 12px rgba(94, 234, 212, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) .nanko-blueprint-tooltip {
+    background: rgba(1, 28, 37, 0.96);
+    border: 1px solid var(--brand, #5EEAD4);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), 0 0 12px rgba(94, 234, 212, 0.2);
+  }
+}
+
+.nanko-blueprint-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: var(--brand) transparent transparent transparent;
+}
+
+.nanko-blueprint-tooltip.is-flipped {
+  bottom: auto;
+  top: calc(100% + 8px);
+}
+
+.nanko-blueprint-tooltip.is-flipped::after {
+  top: auto;
+  bottom: 100%;
+  border-color: transparent transparent var(--brand) transparent;
+}
+
+.nanko-blueprint-tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  font-family: var(--font-mono, monospace);
+  color: var(--brand);
+  margin-bottom: 4px;
+  border-bottom: 1px solid color-mix(in srgb, var(--brand) 25%, transparent);
+  padding-bottom: 2px;
+}
+
+.nanko-blueprint-tooltip-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--heading);
+  margin-bottom: 4px;
+}
+
+.nanko-blueprint-tooltip-desc {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--body-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 160px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.nanko-blueprint-tooltip-desc::-webkit-scrollbar {
+  width: 4px;
+}
+
+.nanko-blueprint-tooltip-desc::-webkit-scrollbar-thumb {
+  background: var(--brand);
+  border-radius: 2px;
+}
+
+.nanko-blueprint-tooltip-footer {
+  margin-top: 6px;
+  padding-top: 4px;
+  border-top: 1px dashed color-mix(in srgb, var(--brand) 30%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.nanko-blueprint-tooltip-lock-track {
+  width: 100%;
+  height: 2px;
+  background: color-mix(in srgb, var(--brand) 20%, transparent);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.nanko-blueprint-tooltip-lock-bar {
+  width: 0%;
+  height: 100%;
+  background: var(--brand);
+  animation: nanko-tooltip-lock-fill 0.3s ease-out forwards;
+}
+
+.nanko-blueprint-tooltip-lock-bar.is-active {
+  width: 100% !important;
+  box-shadow: 0 0 6px var(--brand);
+}
+
+@keyframes nanko-tooltip-lock-fill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.nanko-blueprint-tooltip-hint {
+  font-size: 0.65rem;
+  font-family: var(--font-mono, monospace);
+  color: color-mix(in srgb, var(--body-text) 70%, transparent);
+  text-align: right;
+  user-select: none;
 }
 
 /* Barre de contrôles flottante */
