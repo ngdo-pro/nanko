@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router'
+import clsx from 'clsx'
+import styles from './DocumentEditorView.module.css'
 import {
   useDocument,
   useUpdateDocument,
@@ -112,15 +114,23 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
 
   return (
     <div
-      className={`editor-studio ${layoutMode === 'canvas' ? 'is-canvas-mode' : 'is-split-or-code-mode'}`}
+      className={clsx(
+        styles.editorStudio,
+        'editor-studio',
+        layoutMode === 'canvas' ? [styles.isCanvasMode, 'is-canvas-mode'] : [styles.isSplitOrCodeMode, 'is-split-or-code-mode'],
+      )}
       data-qa="document-editor-view"
     >
       {/* Barre d'outils supérieure */}
       <header
-        className={`editor-topbar ${layoutMode === 'canvas' ? 'is-floating' : 'is-static'}`}
+        className={clsx(
+          styles.editorTopbar,
+          'editor-topbar',
+          layoutMode === 'canvas' ? [styles.isFloating, 'is-floating'] : [styles.isStatic, 'is-static'],
+        )}
         data-qa="editor-topbar"
       >
-        <div className="editor-topbar-left">
+        <div className={clsx(styles.editorTopbarLeft, 'editor-topbar-left')}>
           <button
             type="button"
             className="btn btn-secondary"
@@ -129,39 +139,39 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
           >
             &larr; Projets
           </button>
-          <div className="editor-doc-meta">
-            <div className="editor-doc-title-row">
-              <h1 className="editor-doc-title" data-qa="document-title">
+          <div className={clsx(styles.editorDocMeta, 'editor-doc-meta')}>
+            <div className={clsx(styles.editorDocTitleRow, 'editor-doc-title-row')}>
+              <h1 className={clsx(styles.editorDocTitle, 'editor-doc-title')} data-qa="document-title">
                 {document.name}
               </h1>
-              <span className="badge-layer" data-qa="document-layer-badge">
+              <span className={clsx(styles.badgeLayer, 'badge-layer')} data-qa="document-layer-badge">
                 Layer {document.layer}
               </span>
             </div>
-            <span className="editor-doc-slug">{document.slug}</span>
+            <span className={clsx(styles.editorDocSlug, 'editor-doc-slug')}>{document.slug}</span>
           </div>
         </div>
 
         {/* Sélecteur de mode central */}
-        <div className="editor-topbar-center">
+        <div className={clsx(styles.editorTopbarCenter, 'editor-topbar-center')}>
           <LayoutSelector mode={layoutMode} onChange={setLayoutMode} />
         </div>
 
-        <div className="editor-topbar-right">
+        <div className={clsx(styles.editorTopbarRight, 'editor-topbar-right')}>
           {/* Badge d'état de sauvegarde */}
           {updateMutation.isPending ? (
-            <span className="save-status-pill saving">
-              <span className="status-dot" />
+            <span className={clsx(styles.saveStatusPill, styles.saving, 'save-status-pill saving')}>
+              <span className={clsx(styles.statusDot, 'status-dot')} />
               Sauvegarde...
             </span>
           ) : hasUnsavedChanges ? (
-            <span className="save-status-pill unsaved" data-qa="unsaved-changes-badge">
-              <span className="status-dot" />
+            <span className={clsx(styles.saveStatusPill, styles.unsaved, 'save-status-pill unsaved')} data-qa="unsaved-changes-badge">
+              <span className={clsx(styles.statusDot, 'status-dot')} />
               Modifications non enregistrées
             </span>
           ) : (
-            <span className="save-status-pill saved" data-qa="saved-status-badge">
-              <span className="status-dot" />
+            <span className={clsx(styles.saveStatusPill, styles.saved, 'save-status-pill saved')} data-qa="saved-status-badge">
+              <span className={clsx(styles.statusDot, 'status-dot')} />
               Enregistré ✓
             </span>
           )}
@@ -182,12 +192,17 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
       {/* Alerte d'erreur de syntaxe globale */}
       {effectiveSyntaxError && (
         <div
-          className={`syntax-error-card editor-syntax-error-banner ${layoutMode === 'canvas' ? 'is-floating-error' : ''}`}
+          className={clsx(
+            styles.syntaxErrorCard,
+            styles.editorSyntaxErrorBanner,
+            'syntax-error-card editor-syntax-error-banner',
+            layoutMode === 'canvas' && [styles.isFloatingError, 'is-floating-error'],
+          )}
           role="alert"
           data-qa="syntax-error-alert"
           style={{ marginBottom: layoutMode === 'canvas' ? 0 : '1rem' }}
         >
-          <div className="syntax-error-header">
+          <div className={clsx(styles.syntaxErrorHeader, 'syntax-error-header')}>
             <span>⚠️</span>
             <span>Erreur de syntaxe .nanko</span>
           </div>
@@ -196,9 +211,9 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
       )}
 
       {/* Zone de travail selon le mode sélectionné */}
-      <div className={`editor-workspace-container layout-${layoutMode}`}>
+      <div className={clsx(styles.editorWorkspaceContainer, 'editor-workspace-container', `layout-${layoutMode}`, layoutMode === 'canvas' && styles.layoutCanvas)}>
         {layoutMode === 'split' && (
-          <div className="editor-workspace-grid mode-split">
+          <div className={clsx(styles.editorWorkspaceGrid, styles.modeSplit, 'editor-workspace-grid mode-split')}>
             <SourceCodeEditor
               value={code}
               onChange={setCode}
@@ -217,7 +232,7 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
         )}
 
         {layoutMode === 'canvas' && (
-          <div className="editor-workspace-canvas-only mode-canvas">
+          <div className={clsx(styles.editorWorkspaceCanvasOnly, styles.modeCanvas, 'editor-workspace-canvas-only mode-canvas')}>
             <NankoCanvas
               ast={activeAst}
               syntaxError={effectiveSyntaxError}
@@ -229,8 +244,8 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
         )}
 
         {layoutMode === 'code' && (
-          <div className="editor-workspace-code-only mode-code">
-            <div className="code-editor-full">
+          <div className={clsx(styles.editorWorkspaceCodeOnly, styles.modeCode, 'editor-workspace-code-only mode-code')}>
+            <div className={clsx(styles.codeEditorFull, 'code-editor-full')}>
               <SourceCodeEditor
                 value={code}
                 onChange={setCode}
@@ -239,7 +254,7 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
                 documentSlug={document.slug}
               />
             </div>
-            <div className="code-ast-inspector-side">
+            <div className={clsx(styles.codeAstInspectorSide, 'code-ast-inspector-side')}>
               <AstInspector
                 ast={activeAst}
                 syntaxError={effectiveSyntaxError}
@@ -267,9 +282,9 @@ export const DocumentEditorView: React.FC = () => {
 
   if (fetchError || !document || !projectId) {
     return (
-      <div className="card editor-error-state" data-qa="document-error-view">
-        <h2 className="editor-error-title">Document introuvable ou inaccessible</h2>
-        <p className="editor-error-text">
+      <div className={clsx('card', styles.editorErrorState, 'editor-error-state')} data-qa="document-error-view">
+        <h2 className={clsx(styles.editorErrorTitle, 'editor-error-title')}>Document introuvable ou inaccessible</h2>
+        <p className={clsx(styles.editorErrorText, 'editor-error-text')}>
           Vous n'avez pas accès à ce document ou il a été supprimé.
         </p>
         <button

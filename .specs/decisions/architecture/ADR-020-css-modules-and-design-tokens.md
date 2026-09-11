@@ -26,5 +26,5 @@ Il était nécessaire d'adopter un standard clair, robuste et pérenne pour le s
   * Typage et auto-complétion au build sans runtime overhead.
   * Préservation de la palette de tokens natifs sans couche d'abstraction superflue.
 * **Conséquences & Dette acceptée :**
-  * Période de transition avec cohabitation entre `App.css` et les modules au fur et à mesure des refontes de composants.
+  * Migration intégrale réalisée pour l'ensemble des composants applicatifs au cours de la spec 020, réduisant `App.css` aux seuls conteneurs et primitives racines.
   * La règle d'interdiction de `!important` doit être appliquée avec rigueur par l'équipe et les agents via le skill `nanko-css`.

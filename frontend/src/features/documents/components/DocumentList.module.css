@@ -1,0 +1,29 @@
+.dashboardDocumentsSection {
+  margin-top: 2rem;
+}
+
+.documentsSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.documentsSectionTitle {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--heading);
+  margin: 0 0 0.25rem 0;
+}
+
+.documentsSectionSubtitle {
+  font-size: 0.88rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.documentsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}

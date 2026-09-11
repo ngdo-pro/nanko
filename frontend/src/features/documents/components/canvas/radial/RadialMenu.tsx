@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react'
+import clsx from 'clsx'
 import type { ShapePrimitiveType } from '../utils/insertShapeToSource'
 import {
   SECTORS,
@@ -8,6 +9,7 @@ import {
   OUTER_RADIUS,
   describeArc,
 } from './radialMenuConfig'
+import styles from './RadialMenu.module.css'
 
 export interface RadialMenuProps {
   x: number
@@ -56,14 +58,14 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({ x, y, onSelect, onHoverS
 
   return (
     <div
-      className="radial-menu-overlay"
+      className={clsx(styles.radialMenuOverlay, 'radial-menu-overlay')}
       style={{ left: `${x}px`, top: `${y}px` }}
       data-qa="radial-menu"
       onContextMenu={(e) => e.preventDefault()}
       onMouseLeave={() => onHoverSector?.(null)}
     >
       <svg
-        className="radial-menu-svg"
+        className={clsx(styles.radialMenuSvg, 'radial-menu-svg')}
         viewBox="0 0 200 200"
         width="200"
         height="200"
@@ -90,7 +92,7 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({ x, y, onSelect, onHoverS
           return (
             <g
               key={sector.type}
-              className={`radial-sector ${isHovered ? 'is-hovered' : ''}`}
+              className={clsx(styles.radialSector, 'radial-sector', isHovered && [styles.isHovered, 'is-hovered'])}
               data-qa={sector.dataQa}
               onClick={(e) => handleSelect(sector.type, e)}
               onMouseEnter={() => handleMouseEnterSector(sector.type)}
@@ -105,22 +107,22 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({ x, y, onSelect, onHoverS
             >
               <path
                 d={pathD}
-                className="radial-sector-path"
+                className={clsx(styles.radialSectorPath, 'radial-sector-path')}
               />
 
               {/* Icône & Libellé */}
-              <g transform={`translate(${sector.centerPos.x}, ${sector.centerPos.y})`} className="radial-sector-content">
+              <g transform={`translate(${sector.centerPos.x}, ${sector.centerPos.y})`} className={clsx(styles.radialSectorContent, 'radial-sector-content')}>
                 {sector.type === 'rectangle' && (
-                  <rect x="-9" y="-12" width="18" height="12" rx="2" className="radial-icon" />
+                  <rect x="-9" y="-12" width="18" height="12" rx="2" className={clsx(styles.radialIcon, 'radial-icon')} />
                 )}
                 {sector.type === 'circle' && (
-                  <circle cx="0" cy="-6" r="7" className="radial-icon" />
+                  <circle cx="0" cy="-6" r="7" className={clsx(styles.radialIcon, 'radial-icon')} />
                 )}
 
-                <text x="0" y="9" textAnchor="middle" className="radial-label">
+                <text x="0" y="9" textAnchor="middle" className={clsx(styles.radialLabel, 'radial-label')}>
                   {sector.label}
                 </text>
-                <text x="0" y="17" textAnchor="middle" className="radial-shortcut">
+                <text x="0" y="17" textAnchor="middle" className={clsx(styles.radialShortcut, 'radial-shortcut')}>
                   [{sector.shortcut}]
                 </text>
               </g>
@@ -130,7 +132,7 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({ x, y, onSelect, onHoverS
 
         {/* Pastille centrale */}
         <g
-          className="radial-center-button"
+          className={clsx(styles.radialCenterButton, 'radial-center-button')}
           onClick={handleCenterClick}
           onMouseEnter={handleCenterMouseEnter}
           data-qa="radial-center-cancel"
@@ -142,8 +144,8 @@ export const RadialMenu: React.FC<RadialMenuProps> = ({ x, y, onSelect, onHoverS
             }
           }}
         >
-          <circle cx={CENTER_X} cy={CENTER_Y} r={INNER_RADIUS - 3} className="radial-center-circle" />
-          <text x={CENTER_X} y={CENTER_Y + 4} textAnchor="middle" className="radial-center-text">
+          <circle cx={CENTER_X} cy={CENTER_Y} r={INNER_RADIUS - 3} className={clsx(styles.radialCenterCircle, 'radial-center-circle')} />
+          <text x={CENTER_X} y={CENTER_Y + 4} textAnchor="middle" className={clsx(styles.radialCenterText, 'radial-center-text')}>
             ×
           </text>
         </g>

@@ -1,6 +1,8 @@
 import React from 'react'
+import clsx from 'clsx'
 import { useWorkspace } from '../hooks/useWorkspace'
 import type { Project } from '../schemas'
+import styles from './ProjectSwitcher.module.css'
 
 export const ProjectSwitcher: React.FC = () => {
   const { activeProject, projects, setActiveProject } = useWorkspace()
@@ -10,10 +12,10 @@ export const ProjectSwitcher: React.FC = () => {
   }
 
   return (
-    <div className="project-switcher" data-qa="project-switcher">
-      <span className="project-switcher-label">Projet :</span>
+    <div className={clsx(styles.projectSwitcher, 'project-switcher')} data-qa="project-switcher">
+      <span className={clsx(styles.projectSwitcherLabel, 'project-switcher-label')}>Projet :</span>
       <select
-        className="project-switcher-select"
+        className={clsx(styles.projectSwitcherSelect, 'project-switcher-select')}
         value={activeProject.id}
         onChange={(e) => {
           const selected = projects.find((p: Project) => p.id === e.target.value)

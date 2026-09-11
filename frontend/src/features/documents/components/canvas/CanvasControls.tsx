@@ -1,5 +1,7 @@
 import React from 'react'
 import { useReactFlow } from '@xyflow/react'
+import clsx from 'clsx'
+import styles from './CanvasControls.module.css'
 
 interface CanvasControlsProps {
   onAutoLayout?: () => void
@@ -15,25 +17,25 @@ export const CanvasControls: React.FC<CanvasControlsProps> = ({
   const { zoomIn, zoomOut, fitView } = useReactFlow()
 
   return (
-    <div className="canvas-custom-controls" data-qa="canvas-controls">
+    <div className={clsx(styles.canvasCustomControls, 'canvas-custom-controls')} data-qa="canvas-controls">
       {onAutoLayout && (
         <button
           type="button"
-          className="canvas-control-btn btn-auto-layout"
+          className={clsx(styles.canvasControlBtn, styles.btnAutoLayout, 'canvas-control-btn btn-auto-layout')}
           onClick={onAutoLayout}
           data-qa="auto-layout-button"
           title="Réorganiser automatiquement le graphe (Auto-Layout)"
         >
-          <span className="control-icon">⟳</span>
+          <span className={clsx(styles.controlIcon, 'control-icon')}>⟳</span>
           <span>Réorganiser</span>
         </button>
       )}
 
-      <div className="canvas-control-divider" />
+      <div className={clsx(styles.canvasControlDivider, 'canvas-control-divider')} />
 
       <button
         type="button"
-        className="canvas-control-btn"
+        className={clsx(styles.canvasControlBtn, 'canvas-control-btn')}
         onClick={() => zoomIn({ duration: 200 })}
         data-qa="canvas-zoom-in"
         title="Zoom avant"
@@ -42,7 +44,7 @@ export const CanvasControls: React.FC<CanvasControlsProps> = ({
       </button>
       <button
         type="button"
-        className="canvas-control-btn"
+        className={clsx(styles.canvasControlBtn, 'canvas-control-btn')}
         onClick={() => zoomOut({ duration: 200 })}
         data-qa="canvas-zoom-out"
         title="Zoom arrière"
@@ -51,7 +53,7 @@ export const CanvasControls: React.FC<CanvasControlsProps> = ({
       </button>
       <button
         type="button"
-        className="canvas-control-btn"
+        className={clsx(styles.canvasControlBtn, 'canvas-control-btn')}
         onClick={() => fitView({ duration: 300, padding: 0.2 })}
         data-qa="canvas-fit-view"
         title="Recentrer la vue (Fit view)"
@@ -62,7 +64,7 @@ export const CanvasControls: React.FC<CanvasControlsProps> = ({
       {onToggleMiniMap && (
         <button
           type="button"
-          className={`canvas-control-btn ${showMiniMap ? 'is-active' : ''}`}
+          className={clsx(styles.canvasControlBtn, 'canvas-control-btn', showMiniMap && [styles.isActive, 'is-active'])}
           onClick={onToggleMiniMap}
           data-qa="toggle-minimap-button"
           title="Afficher/Masquer la MiniMap"

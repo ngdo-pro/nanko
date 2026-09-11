@@ -13,27 +13,30 @@
   `frontend/src/App.css` a atteint ~2100 lignes de CSS global non scopé (navbar, portail, dashboard, éditeur studio, canvas React Flow, menu radial). Le projet va continuer à grossir, et cette approche pose trois risques croissants :
   - **Collisions de classes non détectables statiquement** : rien n'empêche deux composants de se disputer un même nom de classe (`.card`, `.header`, etc.) sans erreur de compilation.
   - **Aucune convention documentée** : rien n'indique à un futur contributeur (humain ou agent) comment structurer du CSS dans ce projet, ce qui a laissé s'accumuler des couleurs hexadécimales dupliquées (`#ef4444`, `#10b981`, `#f59e0b` répétés 3 fois chacun) au lieu d'utiliser les tokens sémantiques déjà en place (`--danger` existe, mais pas d'équivalent `--success` / `--warning`), et 17 occurrences de `!important` jamais auditées.
-  - **Écart documentation / réalité** : `.specs/architecture.md` liste "Tailwind CSS" dans la stack frontend, mais aucune trace de Tailwind n'existe dans le repo (pas de dépendance `package.json`, pas de fichier de configuration, pas de classe utilitaire réellement utilisée). Le projet utilise en réalité du CSS global classique avec des design tokens en custom properties (`index.css`).
-  - **Décision actée avec l'utilisateur** : migrer vers CSS Modules (scoping automatique par composant) plutôt qu'un simple découpage en fichiers CSS globaux, de façon progressive fichier par fichier — les deux systèmes cohabitent le temps de la transition — en commençant par un pilote sur les nœuds et arêtes du canvas (`CircleNode`, `RectangleNode`, `TextNode`, `NankoEdge`), qui disposent déjà chacun de leur test isolé, pour valider l'approche avant de traiter le reste de `App.css`.
+  - **Écart documentation / réalité** : `.specs/architecture.md` liste "Tailwind CSS" dans la stack frontend, mais aucune trace de Tailwind n'existe dans le repo (pas de dépendance `package.json`, pas de fichier de configuration, pas de classe utilitaire réellement utilisée). Le projet utilise en réalité du CSS global classique avec des design tokens en  - **Décision actée avec l'utilisateur :** initialement démarrée sur un pilote (nœuds et arêtes canvas), la décision a été prise d'étendre la migration à l'intégralité des composants de l'application au sein de cette spec/PR. `App.css` est allégé pour ne conserver que les resets et conteneurs racine globaux, tandis que tous les styles de composants migrent vers des fichiers `*.module.css` colocalisés.
 
 * **Impact utilisateur & développeur :**
   - **Pour l'utilisateur final :** Aucun changement visuel perceptible. Parité stricte du rendu avant/après (aucune valeur de style calculée ne doit changer).
-  - **Pour l'équipe d'ingénierie (humaine ou agent) :** Un skill de projet documente désormais comment écrire du CSS dans Nanko (CSS Modules, emplacement des tokens, règles `!important`, convention de nommage), évitant de re-découvrir ces règles à chaque session. Les couleurs sémantiques et les cas de cascade complexes (React Flow) sont désormais documentés et intentionnels plutôt qu'accumulés au hasard.
+  - **Pour l'équipe d'ingénierie (humaine ou agent) :** Élimination définitive des collisions de classes globales sur toute la base de code, encapsulation stricte par composant, conformité totale avec le skill `nanko-css`.
 
 * **In Scope (Ce qui est ajouté/modifié) :**
-  - **Tokens sémantiques manquants** : ajout de `--success` et `--warning` (variantes light + dark) dans `frontend/src/index.css`, aux côtés de `--danger` qui existe déjà.
-  - **Remplacement des couleurs hex en dur** dans `App.css` par les tokens correspondants : `#ef4444` → `--danger`, `#10b981` → `--success`, `#f59e0b` → `--warning` (dans `.alert-error`, `.save-status-pill.*`, `.ast-syntax-pill.*`). Les 3 pastilles décoratives du bandeau "code card" (`#ff5f56` / `#ffbd2e` / `#27c93f`, simulant les feux macOS) restent en dur car purement décoratives et non thématiques — décision documentée en commentaire dans le CSS.
-  - **Audit ligne par ligne des 17 `!important`** de `App.css` (zone React Flow : `.nanko-canvas-container .react-flow*`, `.nanko-handle*`, `.nanko-minimap`, `.react-flow__edgelabel-renderer`) : chaque occurrence est classée *conservée et justifiée* (override nécessaire de styles inline injectés par `@xyflow/react`) ou *retirée* (remplacée par une spécificité/ordre de cascade plus propre).
-  - **Migration pilote en CSS Modules** des 4 composants canvas déjà isolément testés : `CircleNode.tsx`, `RectangleNode.tsx`, `TextNode.tsx`, `NankoEdge.tsx` — création de leurs fichiers `*.module.css` colocalisés, suppression des règles correspondantes de `App.css`.
-  - **Création d'un skill de projet** `.claude/skills/nanko-css/SKILL.md` documentant : CSS Modules comme standard de scoping, `index.css` comme unique source des design tokens (couleurs, fonts), la règle `!important` (acceptable uniquement pour override de librairie tierce non stylable autrement, interdit sinon), la convention de nommage des classes (camelCase dans les fichiers `.module.css`, consommées via `styles.xxx`), et l'inventaire des fichiers déjà migrés vs restants dans `App.css` pour guider les migrations futures au fil de l'eau.
-  - **Correction de `.specs/architecture.md`** (section stack frontend) : retrait de la mention "Tailwind CSS", remplacement par la stack réelle ("CSS Modules colocalisés + Design tokens en CSS Custom Properties (`index.css`), sans framework utilitaire").
+  - **Tokens sémantiques manquants** : ajout de `--success` et `--warning` (variantes light + dark) dans `frontend/src/index.css`.
+  - **Remplacement des couleurs hex en dur** dans `App.css` par les tokens correspondants (`var(--danger)`, `var(--success)`, `var(--warning)`).
+  - **Audit exhaustif des `!important`** dans `App.css` et dans les modules : chaque occurrence résiduelle est annotée et justifiée.
+  - **Migration complète de tous les composants vers CSS Modules colocalisés :**
+    - Layout & navigation : `Navbar`, `ThemeSwitch`, `UserMenu`
+    - Portail d'authentification : `UnauthenticatedView`
+    - Dashboard & workspaces : `DashboardView`, `OrganisationSwitcher`, `ProjectSwitcher`, `CreateProjectModal`
+    - Documents & Studio : `DocumentCard`, `DocumentList`, `CreateDocumentModal`, `DocumentEditorView`, `SourceCodeEditor`, `AstInspector`
+    - Canvas & interactifs : `NankoCanvas`, `LayoutSelector`, `CanvasControls`, `RadialMenu`, `BlueprintTooltip`, `CircleNode`, `RectangleNode`, `TextNode`, `NankoEdge`
+  - **Purge correspondante dans `App.css`** pour éliminer les règles dupliquées.
+  - **Création du skill de projet** `nanko-css` (partagé via symlink `.claude/skills -> ../.agents/skills`).
+  - **Documentation :** Mise à jour de `.specs/architecture.md`, `tech.md` et création de `ADR-020`.
 
 * **Out of Scope (Exclusions strictes) :**
-  - Migration complète du reste de `App.css` (navbar, portail, dashboard, éditeur studio, menu radial, tooltip Blueprint) : seuls les 4 composants pilotes migrent dans le cadre de cette spec. Le reste suit au fil de l'eau, guidé par le skill créé, hors du plan d'exécution ci-dessous.
   - Introduction de Tailwind CSS ou de tout autre framework utilitaire.
   - Tout changement visuel, UX ou comportemental perceptible par l'utilisateur.
-  - Le rendu du tooltip Blueprint (`BlueprintTooltip.tsx`, `.nanko-blueprint-tooltip*`) introduit par la spec active 019 : cette spec n'y touche pas tant que 019 n'est pas archivée, pour éviter un conflit de merge sur des fichiers en cours de construction.
-  - Toute modification backend, base de données ou contrat d'API (aucun impact, changement strictement frontend + documentation + outillage).
+  - Toute modification backend, base de données ou contrat d'API.ion backend, base de données ou contrat d'API (aucun impact, changement strictement frontend + documentation + outillage).
 
 ---
 
@@ -42,7 +45,7 @@
 > [!NOTE]
 > Cette évolution est une **refonte purement structurelle du CSS frontend** — aucun flux utilisateur, requête réseau ou séquence d'interaction n'est modifié. Le diagramme de séquence standard (§2 du template) est donc remplacé par la topologie de fichiers avant/après.
 
-### 2.1. Topologie des Fichiers CSS Avant / Après (périmètre pilote)
+### 2.1. Topologie des Fichiers CSS Avant / Après (migration intégrale)
 
 ```text
 AVANT (CSS global unique) :
@@ -52,32 +55,51 @@ frontend/src/
     ├── .nanko-node-circle, .nanko-node-rectangle, .nanko-node-text   (nodes canvas)
     ├── .nanko-edge-label, .nanko-edge-label-container                (edges canvas)
     ├── .alert-error, .save-status-pill.*, .ast-syntax-pill.*         (hex en dur #ef4444/#10b981/#f59e0b)
+    ├── .navbar*, .theme-switch*, .user-menu*, .portal*               (layout, auth)
+    ├── .dashboard*, .modal*, .document-card*, .document-list*        (workspaces, modals)
+    ├── .editor*, .source-editor*, .ast-inspector*                    (studio, editeur)
     └── .nanko-handle, .react-flow*                                   (17 !important non audités)
 
-APRÈS (pilote CSS Modules + tokens étendus) :
+APRÈS (migration complète CSS Modules + tokens étendus) :
 frontend/src/
 ├── index.css                              # + --success, --warning (light & dark)
-├── App.css                                 # Réduit : classes des 4 composants pilotes retirées,
-│                                            # hex remplacés par var(--success)/var(--warning)/var(--danger),
-│                                            # !important annotés (conservés justifiés ou retirés)
-└── features/documents/components/canvas/
-    ├── nodes/
-    │   ├── CircleNode.tsx                  # import styles from './CircleNode.module.css'
-    │   ├── CircleNode.module.css           # NOUVEAU - classes scopées (ex: .nodeCircle, .isSelected)
-    │   ├── RectangleNode.tsx
-    │   ├── RectangleNode.module.css        # NOUVEAU
-    │   ├── TextNode.tsx
-    │   └── TextNode.module.css             # NOUVEAU
-    └── edges/
-        ├── NankoEdge.tsx
-        └── NankoEdge.module.css            # NOUVEAU
+├── App.css                                 # Réduit à 198 lignes : resets, conteneurs racines, primitives boutons et formulaires
+├── components/
+│   ├── BrandLogo.module.css
+│   ├── ThemeSwitch.module.css
+│   └── layout/Navbar.module.css
+├── features/
+│   ├── auth/components/UserMenu.module.css
+│   ├── workspaces/components/
+│   │   ├── OrganisationSwitcher.module.css
+│   │   ├── ProjectSwitcher.module.css
+│   │   └── CreateProjectModal.module.css
+│   └── documents/components/
+│       ├── DocumentCard.module.css
+│       ├── DocumentList.module.css
+│       ├── CreateDocumentModal.module.css
+│       ├── SourceCodeEditor.module.css
+│       ├── AstInspector.module.css
+│       └── canvas/
+│           ├── NankoCanvas.module.css
+│           ├── LayoutSelector.module.css
+│           ├── CanvasControls.module.css
+│           ├── nodes/{CircleNode,RectangleNode,TextNode}.module.css
+│           ├── edges/NankoEdge.module.css
+│           ├── radial/RadialMenu.module.css
+│           └── tooltip/BlueprintTooltip.module.css
+└── views/
+    ├── UnauthenticatedView.module.css
+    ├── DashboardView.module.css
+    └── DocumentEditorView.module.css
 
-.claude/skills/
-└── nanko-css/
-    └── SKILL.md                            # NOUVEAU - conventions CSS du projet
+.agents/skills/nanko-css/
+└── SKILL.md                                # Conventions CSS & inventaire 100% migré
 
 .specs/
-└── architecture.md                         # Corrigé : stack frontend réelle (CSS Modules, pas Tailwind)
+├── architecture.md                         # Stack frontend réelle (CSS Modules + Custom Properties)
+└── decisions/architecture/
+    └── ADR-020-css-modules-and-design-tokens.md
 ```
 
 ---

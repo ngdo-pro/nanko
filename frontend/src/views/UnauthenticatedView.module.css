@@ -1,0 +1,171 @@
+.portalContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 3.5rem;
+  padding: 2rem 0;
+}
+
+.portalHero {
+  text-align: center;
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.heroBadge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  background-color: var(--grid-line);
+  color: var(--brand-text);
+  border: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+
+.heroTitle {
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.25rem;
+}
+
+.textBrand {
+  color: var(--brand);
+}
+
+.heroSubtitle {
+  font-size: 1.15rem;
+  color: var(--muted);
+  max-width: 680px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.portalGrid {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 2rem;
+}
+
+@media (max-width: 900px) {
+  .portalGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+}
+
+.portalCardCta {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.cardTag {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.cardDescription {
+  font-size: 1.05rem;
+  color: var(--body-text);
+  line-height: 1.5;
+  margin: 1.25rem 0 2rem;
+}
+
+.btnCta {
+  width: 100%;
+  padding: 0.85rem 1.5rem;
+  font-size: 1rem;
+}
+
+.cardFooterNote {
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.portalCodeCard {
+  padding: 0;
+  overflow: hidden;
+  background-color: var(--surface);
+  border-color: var(--border-strong);
+}
+
+.codeCardHeader {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: var(--code-bg);
+  border-bottom: 1px solid var(--border);
+  gap: 0.85rem;
+}
+
+.codeDots {
+  display: flex;
+  gap: 6px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+/* Pastilles décoratives du bandeau code card (simulation des contrôles macOS) - couleurs fixes non thématiques */
+.dotRed { background-color: #ff5f56; }
+.dotYellow { background-color: #ffbd2e; }
+.dotGreen { background-color: #27c93f; }
+
+.codeCardTitle {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.codeBlock {
+  margin: 0;
+  padding: 1.5rem;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  overflow-x: auto;
+  color: var(--heading);
+}
+
+.portalTenets {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  flex-wrap: wrap;
+  padding: 1rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.tenetItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.92rem;
+  color: var(--body-text);
+  font-weight: 500;
+}
+
+.tenetCheck {
+  color: var(--brand);
+  font-weight: bold;
+}

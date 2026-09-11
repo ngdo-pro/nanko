@@ -1,0 +1,39 @@
+.userMenuAuthenticated {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.userAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--brand);
+  color: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.85rem;
+  user-select: none;
+}
+
+.userEmail {
+  font-size: 0.88rem;
+  color: var(--body-text);
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .userEmail {
+    display: none;
+  }
+}
+
+.userMenuLoading {
+  font-size: 0.88rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
+}

@@ -1,0 +1,30 @@
+.organisationSwitcher {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.organisationSwitcherLabel {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.organisationSwitcherSelect {
+  background-color: var(--bg);
+  color: var(--heading);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.organisationSwitcherSelect:hover {
+  border-color: var(--brand);
+}

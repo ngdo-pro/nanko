@@ -1,4 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react'
+import clsx from 'clsx'
+import styles from './BlueprintTooltip.module.css'
 
 export interface BlueprintTooltipProps {
   typeBadge?: string
@@ -60,7 +62,11 @@ export const BlueprintTooltip: React.FC<BlueprintTooltipProps> = ({
   return (
     <div
       ref={tooltipRef}
-      className={`nanko-blueprint-tooltip nodrag nopan nowheel ${isFlipped ? 'is-flipped' : ''}`}
+      className={clsx(
+        styles.nankoBlueprintTooltip,
+        'nanko-blueprint-tooltip nodrag nopan nowheel',
+        isFlipped && [styles.isFlipped, 'is-flipped'],
+      )}
       role="tooltip"
       data-qa={dataQa}
       data-testid={dataQa}
@@ -74,25 +80,25 @@ export const BlueprintTooltip: React.FC<BlueprintTooltipProps> = ({
       onWheel={(e) => e.stopPropagation()}
     >
       {(typeBadge || id) && (
-        <div className="nanko-blueprint-tooltip-header">
-          {typeBadge && <span className="nanko-node-badge">{typeBadge}</span>}
-          {id && <span className="nanko-node-id">{id}</span>}
+        <div className={clsx(styles.nankoBlueprintTooltipHeader, 'nanko-blueprint-tooltip-header')}>
+          {typeBadge && <span className={clsx(styles.nankoNodeBadge, 'nanko-node-badge')}>{typeBadge}</span>}
+          {id && <span className={clsx(styles.nankoNodeId, 'nanko-node-id')}>{id}</span>}
         </div>
       )}
-      {title && <div className="nanko-blueprint-tooltip-title">{title}</div>}
+      {title && <div className={clsx(styles.nankoBlueprintTooltipTitle, 'nanko-blueprint-tooltip-title')}>{title}</div>}
       <div
         ref={descRef}
-        className="nanko-blueprint-tooltip-desc nodrag nowheel"
+        className={clsx(styles.nankoBlueprintTooltipDesc, 'nanko-blueprint-tooltip-desc nodrag nowheel')}
         onWheel={(e) => e.stopPropagation()}
       >
         {desc}
       </div>
       {isScrollable && (
-        <div className="nanko-blueprint-tooltip-footer" data-qa="tooltip-scroll-indicator">
-          <div className="nanko-blueprint-tooltip-lock-track">
-            <div className={`nanko-blueprint-tooltip-lock-bar ${isHovered ? 'is-active' : ''}`} />
+        <div className={clsx(styles.nankoBlueprintTooltipFooter, 'nanko-blueprint-tooltip-footer')} data-qa="tooltip-scroll-indicator">
+          <div className={clsx(styles.nankoBlueprintTooltipLockTrack, 'nanko-blueprint-tooltip-lock-track')}>
+            <div className={clsx(styles.nankoBlueprintTooltipLockBar, 'nanko-blueprint-tooltip-lock-bar', isHovered && [styles.isActive, 'is-active'])} />
           </div>
-          <span className="nanko-blueprint-tooltip-hint">
+          <span className={clsx(styles.nankoBlueprintTooltipHint, 'nanko-blueprint-tooltip-hint')}>
             {isHovered ? '↕ Défilement actif' : '↕ Survolez pour faire défiler'}
           </span>
         </div>

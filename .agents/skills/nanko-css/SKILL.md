@@ -62,18 +62,40 @@ Toute couleur, espacement, police ou ombre doit impérativement référencer une
 * **Seule exception acceptée :** La surcharge de styles inline ou de styles internes injectés par des bibliothèques tierces non configurables via leur API (ex: `@xyflow/react` pour les dimensions de `.react-flow`, les handles carrés ou le `pointer-events` d'`EdgeLabelRenderer`).
 * **Obligation d'annotation :** Chaque occurrence de `!important` doit obligatoirement être précédée d'un commentaire explicitant la contrainte technique de la librairie tierce qui l'impose.
 
-## 4. État des Lieux de la Migration Progressive
+## 4. État des Lieux de la Migration (100% Complète)
+
+Tous les composants applicatifs et fonctionnels ont été intégralement migrés vers des CSS Modules colocalisés dans le cadre de la spec 020. `App.css` est réduit à sa portion congrue : uniquement les conteneurs racines (`.app-container`, `.app-main`), les primitives boutons (`.btn*`), les primitives de formulaire (`.form-*`), le spinner global de chargement et le footer.
 
 ### Composants Migrés (CSS Modules)
 * [x] `CircleNode` (`frontend/src/features/documents/components/canvas/nodes/CircleNode.module.css`)
 * [x] `RectangleNode` (`frontend/src/features/documents/components/canvas/nodes/RectangleNode.module.css`)
 * [x] `TextNode` (`frontend/src/features/documents/components/canvas/nodes/TextNode.module.css`)
 * [x] `NankoEdge` (`frontend/src/features/documents/components/canvas/edges/NankoEdge.module.css`)
+* [x] `BrandLogo` (`frontend/src/components/BrandLogo.module.css`)
+* [x] `Navbar` (`frontend/src/components/layout/Navbar.module.css`)
+* [x] `ThemeSwitch` (`frontend/src/components/ThemeSwitch.module.css`)
+* [x] `UserMenu` (`frontend/src/features/auth/components/UserMenu.module.css`)
+* [x] `UnauthenticatedView` (`frontend/src/views/UnauthenticatedView.module.css`)
+* [x] `DashboardView` (`frontend/src/views/DashboardView.module.css`)
+* [x] `OrganisationSwitcher` (`frontend/src/features/workspaces/components/OrganisationSwitcher.module.css`)
+* [x] `ProjectSwitcher` (`frontend/src/features/workspaces/components/ProjectSwitcher.module.css`)
+* [x] `CreateProjectModal` (`frontend/src/features/workspaces/components/CreateProjectModal.module.css`)
+* [x] `DocumentCard` (`frontend/src/features/documents/components/DocumentCard.module.css`)
+* [x] `DocumentList` (`frontend/src/features/documents/components/DocumentList.module.css`)
+* [x] `CreateDocumentModal` (`frontend/src/features/documents/components/CreateDocumentModal.module.css`)
+* [x] `DocumentEditorView` (`frontend/src/views/DocumentEditorView.module.css`)
+* [x] `SourceCodeEditor` (`frontend/src/features/documents/components/SourceCodeEditor.module.css`)
+* [x] `AstInspector` (`frontend/src/features/documents/components/AstInspector.module.css`)
+* [x] `LayoutSelector` (`frontend/src/features/documents/components/canvas/LayoutSelector.module.css`)
+* [x] `CanvasControls` (`frontend/src/features/documents/components/canvas/CanvasControls.module.css`)
+* [x] `NankoCanvas` (`frontend/src/features/documents/components/canvas/NankoCanvas.module.css`)
+* [x] `BlueprintTooltip` (`frontend/src/features/documents/components/canvas/tooltip/BlueprintTooltip.module.css`)
+* [x] `RadialMenu` (`frontend/src/features/documents/components/canvas/radial/RadialMenu.module.css`)
 
-### Composants / Domaines Restants dans `App.css` (À migrer au fil de l'eau)
-* [ ] Barre de navigation globale & portail (`.app-navbar`, `.portal-*`)
-* [ ] Modales & Dashboard (`.modal-*`, `.dashboard-*`, `.project-*`)
-* [ ] Éditeur Studio & Inspecteur AST (`.editor-*`, `.source-editor-*`, `.ast-inspector-*`)
-* [ ] Tooltip Blueprint (`.nanko-blueprint-tooltip*` — issu de la spec 019)
-* [ ] Barre de contrôles flottante du canvas (`.canvas-custom-controls`, `.canvas-control-*`)
-* [ ] Roue d'outils radiale (`.radial-menu-*`)
+### Reste dans `App.css` (Primitives globales immuables)
+* Conteneurs racines de page (`.app-container`, `.app-main`)
+* Primitives boutons (`.btn`, `.btn-primary`, `.btn-secondary`, `.btn-ghost`)
+* Primitives de formulaires (`.form-group`, `.form-label`, `.input`, `.form-hint`)
+* État de chargement global (`.app-loading-state`, `.spinner-logo`)
+* Pied de page global (`.app-footer`, `.footer-links`)
+

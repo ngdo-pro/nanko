@@ -1,4 +1,5 @@
-import React from 'react'
+import clsx from 'clsx'
+import styles from './BrandLogo.module.css'
 
 export interface BrandIconProps {
   size?: number
@@ -62,10 +63,10 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`brand-wrapper ${className}`.trim()}>
+    <div className={clsx(styles.brandWrapper, className, 'brand-wrapper')}>
       <a
         href={href}
-        className="nav-logo"
+        className={clsx(styles.navLogo, 'nav-logo')}
         data-qa="nav-logo"
         aria-label="Nanko, accueil"
       >
@@ -73,7 +74,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
         <span className="brand-name">NANKO</span>
       </a>
       {withTagline && (
-        <span className="brand-tagline" data-qa="brand-tagline">
+        <span className={clsx(styles.brandTagline, 'brand-tagline')} data-qa="brand-tagline">
           ARCHITECTURE DE CODE
         </span>
       )}

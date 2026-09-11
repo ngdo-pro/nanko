@@ -1,6 +1,8 @@
 import React from 'react'
+import clsx from 'clsx'
 import { useAuth } from '../hooks/useAuth'
 import { trackEvent } from '@/lib/analytics'
+import styles from './UserMenu.module.css'
 
 export const UserMenu: React.FC = () => {
   const { isAuthenticated, isLoading, user, login, logout } = useAuth()
@@ -8,7 +10,7 @@ export const UserMenu: React.FC = () => {
   if (isLoading) {
     return (
       <div
-        className="user-menu-loading"
+        className={clsx(styles.userMenuLoading, 'user-menu-loading')}
         data-qa="user-menu-loading"
       >
         <span className="spinner-dot" aria-label="Chargement...">...</span>
@@ -37,11 +39,11 @@ export const UserMenu: React.FC = () => {
 
   return (
     <div
-      className="user-menu-authenticated"
+      className={clsx(styles.userMenuAuthenticated, 'user-menu-authenticated')}
       data-qa="user-menu"
     >
       <div
-        className="user-avatar"
+        className={clsx(styles.userAvatar, 'user-avatar')}
         title={email}
         data-qa="user-avatar"
         aria-label={`Compte de ${email}`}
@@ -49,7 +51,7 @@ export const UserMenu: React.FC = () => {
         {initial}
       </div>
       <span
-        className="user-email"
+        className={clsx(styles.userEmail, 'user-email')}
         data-qa="user-email"
       >
         {email}
