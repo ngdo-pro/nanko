@@ -1,0 +1,29 @@
+.edgeLabelContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  /* Surcharge indispensable de pointer-events: none imposé par le conteneur EdgeLabelRenderer de @xyflow/react */
+  pointer-events: auto !important;
+  z-index: 10;
+}
+
+.edgeLabel {
+  background-color: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--heading);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 0.15rem 0.45rem;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+
+.edgeDescIndicator {
+  color: var(--brand, #5EEAD4);
+  font-weight: 700;
+  margin-left: 2px;
+}

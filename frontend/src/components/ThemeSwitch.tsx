@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
+import clsx from 'clsx'
 import { type ThemeChoice, applyTheme, getInitialTheme } from './theme'
+import styles from './ThemeSwitch.module.css'
 
 export const ThemeSwitch: React.FC<{ className?: string }> = ({ className = '' }) => {
   const [theme, setTheme] = useState<ThemeChoice>(getInitialTheme)
@@ -15,7 +17,7 @@ export const ThemeSwitch: React.FC<{ className?: string }> = ({ className = '' }
 
   return (
     <div
-      className={`theme-switch ${className}`.trim()}
+      className={clsx(styles.themeSwitch, className, 'theme-switch')}
       role="group"
       aria-label="Thème d'affichage"
       data-qa="theme-switch"
@@ -27,7 +29,7 @@ export const ThemeSwitch: React.FC<{ className?: string }> = ({ className = '' }
         aria-pressed={theme === 'light'}
         aria-label="Thème clair"
         title="Clair"
-        className={theme === 'light' ? 'active' : ''}
+        className={clsx(styles.themeBtn, theme === 'light' && [styles.isActive, 'active'])}
         onClick={() => handleSelect('light')}
       >
         <svg
@@ -51,7 +53,7 @@ export const ThemeSwitch: React.FC<{ className?: string }> = ({ className = '' }
         aria-pressed={theme === 'system'}
         aria-label="Suivre le système"
         title="Système"
-        className={theme === 'system' ? 'active' : ''}
+        className={clsx(styles.themeBtn, theme === 'system' && [styles.isActive, 'active'])}
         onClick={() => handleSelect('system')}
       >
         <svg
@@ -76,7 +78,7 @@ export const ThemeSwitch: React.FC<{ className?: string }> = ({ className = '' }
         aria-pressed={theme === 'dark'}
         aria-label="Thème sombre"
         title="Sombre"
-        className={theme === 'dark' ? 'active' : ''}
+        className={clsx(styles.themeBtn, theme === 'dark' && [styles.isActive, 'active'])}
         onClick={() => handleSelect('dark')}
       >
         <svg

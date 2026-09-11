@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
+import clsx from 'clsx'
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -23,6 +24,7 @@ import { TextNode } from './nodes/TextNode'
 import { NankoEdge } from './edges/NankoEdge'
 import { CanvasControls } from './CanvasControls'
 import { RadialMenu } from './radial/RadialMenu'
+import styles from './NankoCanvas.module.css'
 import { calculateDagreLayout } from './utils/dagreLayout'
 import type { ShapePrimitiveType } from './utils/insertShapeToSource'
 import type { NankoAst } from '@/features/documents'
@@ -360,23 +362,23 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
   return (
     <div
       ref={containerRef}
-      className="nanko-canvas-container"
+      className={clsx(styles.nankoCanvasContainer, 'nanko-canvas-container')}
       data-qa="nanko-canvas"
       onPointerMove={handlePointerMove}
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
     >
       {syntaxError && (
-        <div className="canvas-syntax-pause-badge" data-qa="canvas-syntax-pause-badge">
-          <span className="pause-dot" />
+        <div className={clsx(styles.canvasSyntaxPauseBadge, 'canvas-syntax-pause-badge')} data-qa="canvas-syntax-pause-badge">
+          <span className={clsx(styles.pauseDot, 'pause-dot')} />
           <span>Syntaxe en cours d'édition - Canvas en pause</span>
         </div>
       )}
 
       {nodes.length === 0 && !syntaxError && (
-        <div className="canvas-empty-state" data-qa="canvas-empty-state">
-          <p className="canvas-empty-title">Aucun élément graphique</p>
-          <span className="canvas-empty-subtitle">
+        <div className={clsx(styles.canvasEmptyState, 'canvas-empty-state')} data-qa="canvas-empty-state">
+          <p className={clsx(styles.canvasEmptyTitle, 'canvas-empty-title')}>Aucun élément graphique</p>
+          <span className={clsx(styles.canvasEmptySubtitle, 'canvas-empty-subtitle')}>
             Maintenez la touche <strong>A</strong> ou <strong>Tab</strong> pour ouvrir la roue d'outils, ou utilisez les touches <strong>R</strong>, <strong>C</strong>.
           </span>
         </div>
@@ -423,7 +425,7 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
         {showMiniMap && (
           <MiniMap
             position="bottom-right"
-            className="nanko-minimap"
+            className={clsx(styles.nankoMinimap, 'nanko-minimap')}
             nodeStrokeWidth={2}
             maskColor={colorMode === 'dark' ? 'rgba(4, 20, 26, 0.7)' : 'rgba(255, 255, 255, 0.7)'}
           />

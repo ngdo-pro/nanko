@@ -1,0 +1,173 @@
+.dashboardContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.dashboardHeader {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1.5rem;
+}
+
+.dashboardWelcomeTag {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--brand);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.dashboardTitle {
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.dashboardSubtitle {
+  font-size: 1.05rem;
+  color: var(--muted);
+}
+
+.dashboardEmptyState {
+  text-align: center;
+  padding: 4rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.emptyStateIcon {
+  margin-bottom: 1.5rem;
+  opacity: 0.85;
+}
+
+.emptyStateTitle {
+  font-size: 1.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.emptyStateDescription {
+  color: var(--muted);
+  max-width: 480px;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.emptyStateActions {
+  display: flex;
+  gap: 1rem;
+}
+
+.dashboardSyntaxReminder {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .dashboardSyntaxReminder {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+
+.syntaxHeader {
+  display: flex;
+  align-items: center;
+}
+
+.syntaxTitle {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.syntaxContent code {
+  font-size: 0.85rem;
+  color: var(--brand-text);
+}
+
+.dashboardProjectsSection {
+  margin-bottom: 2rem;
+}
+
+.projectsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.projectsTitle {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.projectsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.projectCard {
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background-color: var(--surface);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-align: left;
+}
+
+.projectCard:hover {
+  border-color: var(--brand);
+  transform: translateY(-1px);
+}
+
+.projectCard.active,
+.active {
+  border-color: var(--brand);
+  background-color: color-mix(in srgb, var(--brand) 6%, var(--surface));
+  box-shadow: 0 0 0 1px var(--brand);
+}
+
+.projectCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.projectCardName {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--heading);
+}
+
+.projectBadgeActive {
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: var(--brand);
+  background: color-mix(in srgb, var(--brand) 15%, transparent);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.projectCardSlug {
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--muted);
+}

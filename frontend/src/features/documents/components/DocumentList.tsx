@@ -1,6 +1,8 @@
 import React from 'react'
+import clsx from 'clsx'
 import { type DocumentListItem } from '../schemas'
 import { DocumentCard } from './DocumentCard'
+import styles from './DocumentList.module.css'
 
 export interface DocumentListProps {
   documents: DocumentListItem[]
@@ -14,11 +16,11 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   onNewDocument,
 }) => {
   return (
-    <section className="dashboard-documents-section" data-qa="documents-section">
-      <div className="documents-section-header">
+    <section className={clsx(styles.dashboardDocumentsSection, 'dashboard-documents-section')} data-qa="documents-section">
+      <div className={clsx(styles.documentsSectionHeader, 'documents-section-header')}>
         <div>
-          <h2 className="documents-section-title">Mes Documents</h2>
-          <p className="documents-section-subtitle">
+          <h2 className={clsx(styles.documentsSectionTitle, 'documents-section-title')}>Mes Documents</h2>
+          <p className={clsx(styles.documentsSectionSubtitle, 'documents-section-subtitle')}>
             Schémas d'architecture versionnés pour ce projet.
           </p>
         </div>
@@ -32,7 +34,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
         </button>
       </div>
 
-      <div className="documents-grid" data-qa="documents-grid">
+      <div className={clsx(styles.documentsGrid, 'documents-grid')} data-qa="documents-grid">
         {documents.map((doc) => (
           <DocumentCard key={doc.id} document={doc} projectId={projectId} />
         ))}

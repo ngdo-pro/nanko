@@ -1,6 +1,8 @@
 import React from 'react'
+import clsx from 'clsx'
 import { useWorkspace } from '../hooks/useWorkspace'
 import type { Organisation } from '../schemas'
+import styles from './OrganisationSwitcher.module.css'
 
 export const OrganisationSwitcher: React.FC = () => {
   const { isSolo, activeOrganisation, organisations, setActiveOrganisation } = useWorkspace()
@@ -11,10 +13,10 @@ export const OrganisationSwitcher: React.FC = () => {
   }
 
   return (
-    <div className="organisation-switcher" data-qa="organisation-switcher">
-      <span className="organisation-switcher-label">Organisation :</span>
+    <div className={clsx(styles.organisationSwitcher, 'organisation-switcher')} data-qa="organisation-switcher">
+      <span className={clsx(styles.organisationSwitcherLabel, 'organisation-switcher-label')}>Organisation :</span>
       <select
-        className="organisation-switcher-select"
+        className={clsx(styles.organisationSwitcherSelect, 'organisation-switcher-select')}
         value={activeOrganisation.id}
         onChange={(e) => {
           const selected = organisations.find((org: Organisation) => org.id === e.target.value)

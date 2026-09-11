@@ -1,4 +1,6 @@
 import React, { useEffect, useRef } from 'react'
+import clsx from 'clsx'
+import styles from './SourceCodeEditor.module.css'
 
 export interface SourceCodeEditorProps {
   value: string
@@ -34,7 +36,6 @@ export const SourceCodeEditor: React.FC<SourceCodeEditorProps> = ({
       e.preventDefault()
       const textarea = textareaRef.current
       if (!textarea) return
-
       const start = textarea.selectionStart
       const end = textarea.selectionEnd
       const updated = value.substring(0, start) + '  ' + value.substring(end)
@@ -50,23 +51,23 @@ export const SourceCodeEditor: React.FC<SourceCodeEditorProps> = ({
   const fileName = documentSlug ? `${documentSlug}.nanko` : 'document.nanko'
 
   return (
-    <div className="source-editor-panel" data-qa="source-code-editor">
+    <div className={clsx(styles.sourceEditorPanel, 'source-editor-panel')} data-qa="source-code-editor">
       {/* En-tête de l'onglet code */}
-      <div className="source-editor-header">
-        <div className="source-editor-tab">
-          <span className="tab-badge-nanko">NANKO</span>
+      <div className={clsx(styles.sourceEditorHeader, 'source-editor-header')}>
+        <div className={clsx(styles.sourceEditorTab, 'source-editor-tab')}>
+          <span className={clsx(styles.tabBadgeNanko, 'tab-badge-nanko')}>NANKO</span>
           <span>{fileName}</span>
         </div>
-        <span className="source-editor-hints">
+        <span className={clsx(styles.sourceEditorHints, 'source-editor-hints')}>
           {lines.length} {lines.length === 1 ? 'ligne' : 'lignes'} &middot; Tab = 2 espaces &middot; Cmd+S
         </span>
       </div>
 
       {/* Corps avec numérotation et zone d'écriture */}
-      <div className="source-editor-body">
-        <div className="editor-line-numbers" aria-hidden="true">
+      <div className={clsx(styles.sourceEditorBody, 'source-editor-body')}>
+        <div className={clsx(styles.editorLineNumbers, 'editor-line-numbers')} aria-hidden="true">
           {lines.map((_, i) => (
-            <div key={i} className="editor-line-number">
+            <div key={i} className={clsx(styles.editorLineNumber, 'editor-line-number')}>
               {i + 1}
             </div>
           ))}
@@ -74,7 +75,7 @@ export const SourceCodeEditor: React.FC<SourceCodeEditorProps> = ({
 
         <textarea
           ref={textareaRef}
-          className="editor-textarea"
+          className={clsx(styles.editorTextarea, 'editor-textarea')}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}

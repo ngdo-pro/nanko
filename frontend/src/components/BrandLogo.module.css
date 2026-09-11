@@ -1,0 +1,38 @@
+.brandWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.navLogo {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-family: var(--font-brand);
+  font-weight: 600;
+  font-size: 1.25rem;
+  letter-spacing: 0.05em;
+  color: var(--heading);
+  transition: opacity 0.15s ease;
+  text-decoration: none;
+}
+
+.navLogo:hover {
+  opacity: 0.85;
+}
+
+.brandTagline {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  border-left: 1px solid var(--border);
+  padding-left: 0.85rem;
+  text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+  .brandTagline {
+    display: none;
+  }
+}

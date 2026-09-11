@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
+import clsx from 'clsx'
 import { useCreateProject } from '../api/createProject'
 import { createProjectSchema } from '../schemas'
 import { useWorkspace } from '../hooks/useWorkspace'
 import { ApiError } from '@/types/api'
+import styles from './CreateProjectModal.module.css'
 
 export interface CreateProjectModalProps {
   isOpen: boolean
@@ -93,13 +95,13 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
   }
 
   return (
-    <div className="modal-backdrop" data-qa="create-project-modal-backdrop">
-      <div className="modal-content card" data-qa="create-project-modal">
-        <header className="modal-header">
-          <h2 className="modal-title">Nouveau Projet</h2>
+    <div className={clsx(styles.modalBackdrop, 'modal-backdrop')} data-qa="create-project-modal-backdrop">
+      <div className={clsx(styles.modalContent, 'modal-content card')} data-qa="create-project-modal">
+        <header className={clsx(styles.modalHeader, 'modal-header')}>
+          <h2 className={clsx(styles.modalTitle, 'modal-title')}>Nouveau Projet</h2>
           <button
             type="button"
-            className="btn-icon"
+            className={clsx(styles.btnIcon, 'btn-icon')}
             onClick={onClose}
             aria-label="Fermer"
             data-qa="close-modal-button"
@@ -108,9 +110,9 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
           </button>
         </header>
 
-        <form onSubmit={handleSubmit} className="modal-form">
+        <form onSubmit={handleSubmit} className={clsx(styles.modalForm, 'modal-form')}>
           {validationError && (
-            <div className="alert alert-error" data-qa="create-project-error" role="alert">
+            <div className={clsx('alert', styles.alertError, 'alert-error')} data-qa="create-project-error" role="alert">
               {validationError}
             </div>
           )}
@@ -151,7 +153,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ isOpen, 
             </small>
           </div>
 
-          <footer className="modal-footer">
+          <footer className={clsx(styles.modalFooter, 'modal-footer')}>
             <button
               type="button"
               className="btn btn-secondary"

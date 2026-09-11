@@ -1,0 +1,33 @@
+.layoutSelectorGroup {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--code-bg);
+  border: 1px solid var(--border);
+  padding: 2px;
+  gap: 2px;
+}
+
+.layoutSelectorBtn {
+  padding: 0.35rem 0.85rem;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.layoutSelectorBtn:hover {
+  color: var(--heading);
+}
+
+.layoutSelectorBtn.isActive,
+.isActive {
+  background-color: var(--surface);
+  color: var(--brand);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}

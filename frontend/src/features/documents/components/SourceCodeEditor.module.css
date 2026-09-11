@@ -1,0 +1,92 @@
+.sourceEditorPanel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+}
+
+.sourceEditorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1rem;
+  background-color: var(--code-bg);
+  border-bottom: 1px solid var(--border);
+}
+
+.sourceEditorTab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--heading);
+}
+
+.tabBadgeNanko {
+  background-color: var(--brand);
+  color: var(--bg);
+  font-size: 0.65rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
+}
+
+.sourceEditorHints {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.sourceEditorBody {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  background-color: var(--surface);
+  position: relative;
+  overflow: hidden;
+}
+
+.editorLineNumbers {
+  width: 48px;
+  background-color: color-mix(in srgb, var(--code-bg) 60%, var(--surface));
+  border-right: 1px solid var(--border);
+  padding: 1rem 0.5rem;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--muted-2);
+  user-select: none;
+}
+
+.editorLineNumber {
+  height: 1.6em;
+}
+
+.editorTextarea {
+  flex: 1;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  margin: 0;
+  border: none;
+  background: transparent;
+  color: var(--heading);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  tab-size: 2;
+  outline: none;
+  resize: none;
+  overflow-y: auto;
+}
+
+.editorTextarea::selection {
+  background-color: color-mix(in srgb, var(--brand) 25%, transparent);
+}

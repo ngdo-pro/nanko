@@ -5,7 +5,7 @@
 ```text
 monorepo/
 ├── backend/       # API Symfony 8 (PHP 8.4+) - Architecture hexagonale, DBAL, API REST & OAuth 2.0
-├── frontend/      # SPA React 19 (TypeScript, Vite, Tailwind CSS, TanStack Query, Zod)
+├── frontend/      # SPA React 19 (TypeScript, Vite, CSS Modules, TanStack Query, Zod)
 ├── landing/       # Site vitrine public (www.nanko.dev)
 ├── library/       # Catalogue de composants partagés (library.nanko.dev)
 ├── tests-e2e/     # Tests End-to-End Playwright (exécution ciblée préprod)
@@ -17,7 +17,7 @@ monorepo/
 
 ## 2. Stack Technique & Versions de Référence
 * **Backend (`backend/`) :** PHP 8.4+, Symfony 8.x, PostgreSQL 16+, Doctrine DBAL (pas d'ORM - cf. ADR 0011), `symfony/uid` (UUIDv7), architecture modulaire en Bounded Contexts (`backend/src/<BoundedContext>/Core/` et `backend/src/<BoundedContext>/Adapter/`), vérification des frontières avec Deptrac.
-* **Frontend (`frontend/`) :** Node.js 22+, React 19, TypeScript 5+, Vite, Tailwind CSS, TanStack Query, React Hook Form, Zod, Oxlint.
+* **Frontend (`frontend/`) :** Node.js 22+, React 19, TypeScript 5+, Vite, CSS Modules colocalisés + Design tokens en CSS Custom Properties (`index.css`) sans framework utilitaire, TanStack Query, React Hook Form, Zod, Oxlint.
 * **E2E & Outillage (`tests-e2e/`) :** Playwright, pnpm workspaces (`pnpm-workspace.yaml`).
 
 ---

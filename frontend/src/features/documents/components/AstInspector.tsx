@@ -1,5 +1,7 @@
 import React from 'react'
+import clsx from 'clsx'
 import { type NankoAst } from '../schemas'
+import styles from './AstInspector.module.css'
 
 export interface AstInspectorProps {
   ast?: NankoAst | null
@@ -11,35 +13,35 @@ export const AstInspector: React.FC<AstInspectorProps> = ({ ast, syntaxError }) 
   const connectors = ast?.connectors ?? []
 
   return (
-    <div className="ast-inspector-panel" data-qa="ast-inspector">
+    <div className={clsx(styles.astInspectorPanel, 'ast-inspector-panel')} data-qa="ast-inspector">
       {/* En-tête */}
-      <div className="ast-inspector-header">
+      <div className={clsx(styles.astInspectorHeader, 'ast-inspector-header')}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span className="ast-inspector-title">Inspecteur AST</span>
-          <span className="ast-version-badge text-xs px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono" data-qa="ast-dsl-version">
+          <span className={clsx(styles.astInspectorTitle, 'ast-inspector-title')}>Inspecteur AST</span>
+          <span className={clsx(styles.astVersionBadge, 'ast-version-badge text-xs px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono')} data-qa="ast-dsl-version">
             DSL v{ast?.dslVersion ?? 1}
           </span>
         </div>
         {syntaxError ? (
-          <span className="ast-syntax-pill invalid">
+          <span className={clsx(styles.astSyntaxPill, styles.invalid, 'ast-syntax-pill invalid')}>
             Erreur syntaxe
           </span>
         ) : (
-          <span className="ast-syntax-pill valid">
+          <span className={clsx(styles.astSyntaxPill, styles.valid, 'ast-syntax-pill valid')}>
             ✓ Syntaxe valide
           </span>
         )}
       </div>
 
-      <div className="ast-inspector-body">
+      <div className={clsx(styles.astInspectorBody, 'ast-inspector-body')}>
         {/* Alerte erreur de syntaxe */}
         {syntaxError && (
           <div
-            className="syntax-error-card"
+            className={clsx(styles.syntaxErrorCard, 'syntax-error-card')}
             role="alert"
             data-qa="syntax-error-alert"
           >
-            <div className="syntax-error-header">
+            <div className={clsx(styles.syntaxErrorHeader, 'syntax-error-header')}>
               <span>⚠️</span>
               <span>Erreur de syntaxe .nanko</span>
             </div>
@@ -49,31 +51,31 @@ export const AstInspector: React.FC<AstInspectorProps> = ({ ast, syntaxError }) 
 
         {/* Section Shapes */}
         <div>
-          <div className="ast-section-header">
-            <span className="ast-section-title">Shapes</span>
-            <span className="ast-section-count">{shapes.length}</span>
+          <div className={clsx(styles.astSectionHeader, 'ast-section-header')}>
+            <span className={clsx(styles.astSectionTitle, 'ast-section-title')}>Shapes</span>
+            <span className={clsx(styles.astSectionCount, 'ast-section-count')}>{shapes.length}</span>
           </div>
 
           {shapes.length === 0 ? (
-            <p className="ast-empty-hint">Aucune Shape déclarée.</p>
+            <p className={clsx(styles.astEmptyHint, 'ast-empty-hint')}>Aucune Shape déclarée.</p>
           ) : (
-            <div className="ast-items-list" data-qa="ast-shapes-list">
+            <div className={clsx(styles.astItemsList, 'ast-items-list')} data-qa="ast-shapes-list">
               {shapes.map((shape) => (
                 <div
                   key={shape.id}
-                  className="ast-card-shape"
+                  className={clsx(styles.astCardShape, 'ast-card-shape')}
                   data-qa={`ast-shape-${shape.id}`}
                 >
-                  <div className="ast-shape-info">
-                    <span className="ast-shape-id">{shape.id}</span>
-                    <span className="ast-shape-label">&ldquo;{shape.label}&rdquo;</span>
+                  <div className={clsx(styles.astShapeInfo, 'ast-shape-info')}>
+                    <span className={clsx(styles.astShapeId, 'ast-shape-id')}>{shape.id}</span>
+                    <span className={clsx(styles.astShapeLabel, 'ast-shape-label')}>&ldquo;{shape.label}&rdquo;</span>
                     {shape.desc && (
-                      <span className="ast-shape-desc text-xs text-slate-400 block mt-0.5">
+                      <span className={clsx(styles.astShapeDesc, 'ast-shape-desc text-xs text-slate-400 block mt-0.5')}>
                         {shape.desc}
                       </span>
                     )}
                   </div>
-                  <span className="ast-shape-type-badge">{shape.type}</span>
+                  <span className={clsx(styles.astShapeTypeBadge, 'ast-shape-type-badge')}>{shape.type}</span>
                 </div>
               ))}
             </div>
@@ -82,31 +84,31 @@ export const AstInspector: React.FC<AstInspectorProps> = ({ ast, syntaxError }) 
 
         {/* Section Connecteurs */}
         <div>
-          <div className="ast-section-header">
-            <span className="ast-section-title">Connecteurs</span>
-            <span className="ast-section-count">{connectors.length}</span>
+          <div className={clsx(styles.astSectionHeader, 'ast-section-header')}>
+            <span className={clsx(styles.astSectionTitle, 'ast-section-title')}>Connecteurs</span>
+            <span className={clsx(styles.astSectionCount, 'ast-section-count')}>{connectors.length}</span>
           </div>
 
           {connectors.length === 0 ? (
-            <p className="ast-empty-hint">Aucun connecteur déclaré.</p>
+            <p className={clsx(styles.astEmptyHint, 'ast-empty-hint')}>Aucun connecteur déclaré.</p>
           ) : (
-            <div className="ast-items-list" data-qa="ast-connectors-list">
+            <div className={clsx(styles.astItemsList, 'ast-items-list')} data-qa="ast-connectors-list">
               {connectors.map((conn, idx) => (
                 <div
                   key={`${conn.source}-${conn.target}-${idx}`}
-                  className="ast-card-connector"
+                  className={clsx(styles.astCardConnector, 'ast-card-connector')}
                   data-qa={`ast-connector-${conn.source}-${conn.target}`}
                 >
-                  <div className="ast-connector-flow">
+                  <div className={clsx(styles.astConnectorFlow, 'ast-connector-flow')}>
                     <span>{conn.source}</span>
-                    <span className="connector-arrow">&rarr;</span>
+                    <span className={clsx(styles.connectorArrow, 'connector-arrow')}>&rarr;</span>
                     <span>{conn.target}</span>
                   </div>
                   {conn.label && (
-                    <p className="ast-connector-label">&ldquo;{conn.label}&rdquo;</p>
+                    <p className={clsx(styles.astConnectorLabel, 'ast-connector-label')}>&ldquo;{conn.label}&rdquo;</p>
                   )}
                   {conn.desc && (
-                    <p className="ast-connector-desc text-xs text-slate-400 mt-0.5">{conn.desc}</p>
+                    <p className={clsx(styles.astConnectorDesc, 'ast-connector-desc text-xs text-slate-400 mt-0.5')}>{conn.desc}</p>
                   )}
                 </div>
               ))}

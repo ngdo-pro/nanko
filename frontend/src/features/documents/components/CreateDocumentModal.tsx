@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router'
+import clsx from 'clsx'
 import { useCreateDocument } from '../api/createDocument'
 import { createDocumentSchema, type DocumentDetail } from '../schemas'
 import { ApiError } from '@/types/api'
+import styles from './CreateDocumentModal.module.css'
 
 export interface CreateDocumentModalProps {
   isOpen: boolean
@@ -104,20 +106,20 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
 
   return (
     <div
-      className="modal-overlay"
+      className={clsx(styles.modalOverlay, 'modal-overlay')}
       role="dialog"
       aria-modal="true"
       aria-labelledby="create-document-title"
       data-qa="create-document-modal"
     >
-      <div className="card modal-card">
-        <div className="modal-header">
-          <h2 id="create-document-title" className="modal-title">
+      <div className={clsx('card', styles.modalCard, 'modal-card')}>
+        <div className={clsx(styles.modalHeader, 'modal-header')}>
+          <h2 id="create-document-title" className={clsx(styles.modalTitle, 'modal-title')}>
             Nouveau Document
           </h2>
           <button
             type="button"
-            className="modal-close"
+            className={clsx(styles.modalClose, 'modal-close')}
             onClick={onClose}
             aria-label="Fermer la boîte de dialogue"
             data-qa="cancel-document-button"
@@ -126,9 +128,9 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="modal-form">
+        <form onSubmit={handleSubmit} className={clsx(styles.modalForm, 'modal-form')}>
           {validationError && (
-            <div className="form-error-banner" role="alert" data-qa="document-form-error">
+            <div className={clsx(styles.formErrorBanner, 'form-error-banner')} role="alert" data-qa="document-form-error">
               {validationError}
             </div>
           )}
@@ -187,7 +189,7 @@ export const CreateDocumentModal: React.FC<CreateDocumentModalProps> = ({
             </span>
           </div>
 
-          <div className="modal-actions">
+          <div className={clsx(styles.modalActions, 'modal-actions')}>
             <button
               type="button"
               className="btn btn-secondary"
