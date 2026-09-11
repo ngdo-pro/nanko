@@ -159,7 +159,10 @@
 }
 
 .astShapeDesc {
-  /* desc details */
+  display: block;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.125rem;
 }
 
 .astShapeTypeBadge {
@@ -211,5 +214,7 @@
 }
 
 .astConnectorDesc {
-  /* connector desc */
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.125rem;
 }
