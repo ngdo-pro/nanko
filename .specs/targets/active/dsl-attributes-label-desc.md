@@ -150,10 +150,10 @@ Feuille de route indicative pour l'implémentation de cette Target :
   - Création du tokenizer générique clé-valeur dans le Backend Symfony (`NankoParser.php`, `NankoAst.php`, `Shape.php`, `Connector.php`) et dans le Frontend TypeScript (`nankoParser.ts`, `schemas.ts`).
   - Validation des contraintes de guillemets stricts et de la règle `desc` requérant `label` sur les connecteurs.
   - Mise à niveau directe de tous les tests unitaires et fixtures de documents existants.
-- [ ] **Delta 2 (`019-board-visual-rendering-label-desc`)** :
-  - Adaptation de `NankoNode.tsx` pour afficher le sous-titre `desc` tronqué à 2 lignes avec `ellipsis`.
-  - Intégration de l'infobulle / tooltip Blueprint au survol des shapes et des arêtes (`NankoEdge.tsx`).
-  - Mise à jour de l'inspecteur d'AST pour visualiser `desc`.
+- [x] **Delta 2 (`019-board-visual-rendering-label-desc`)** :
+  - Adaptation des composants de nœuds (`RectangleNode`, `CircleNode`, `TextNode`) pour afficher le sous-titre `desc` tronqué à 2 lignes avec `ellipsis`.
+  - Intégration de l'infobulle / tooltip Blueprint accessible (`BlueprintTooltip`) au survol des shapes et des arêtes (`NankoEdge.tsx`).
+  - Visualisation fluide et enrichissement des tests E2E.
 - [ ] **Delta 3 (`020-studio-inplace-and-popover-editing`)** :
   - Édition in-place au double-clic sur le `label`.
   - Popover contextuelle rapide au-dessus de l'élément pour éditer `label` et `desc` sans passer par le code textuel.
