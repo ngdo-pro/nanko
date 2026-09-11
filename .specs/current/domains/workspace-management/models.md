@@ -25,8 +25,13 @@
 * **Entité :** `backend/src/WorkspaceManagement/Core/Domain/Document/Document.php`
 * **Identifiant :** `backend/src/WorkspaceManagement/Core/Domain/Document/Id.php` (UUIDv7)
 * **Value Object :** `backend/src/WorkspaceManagement/Core/Domain/Document/Layer.php`
-* **Service Parseur & AST :** `backend/src/WorkspaceManagement/Core/Domain/Document/Parser/NankoParser.php`, `Ast.php`, `Shape.php`, `Connector.php`.
-* **Parseur Client & Synchronisation Spatiale :** `frontend/src/features/documents/components/canvas/utils/nankoParser.ts`, `syncLayoutToSource.ts`, `dagreLayout.ts` assurant l'extraction syntaxique temps réel, l'agencement spatial hiérarchique (avec prise en compte des géométries rectangulaires et circulaires) et la synchronisation bidirectionnelle du bloc `!LAYOUT` vers le code source.
+* **Service Parseur & AST :** `backend/src/WorkspaceManagement/Core/Domain/Document/Parser/` :
+  * `NankoParser.php` : Tokenizer générique d'attributs déclaratifs clé-valeur (`key="valeur"`), gestion stricte des guillemets doubles et échappement `\"`, vérification de la directive `@dsl-version`, validation obligatoire du `label` pour les shapes et interdiction de `desc` sans `label` sur les connecteurs.
+  * `NankoAst.php` : Arbre syntaxique dénormalisé enrichi du champ `public int $dslVersion = 1`.
+  * `Shape.php` : Nœud de forme typé enrichi du champ `public ?string $desc = null`.
+  * `Connector.php` : Arête orientée enrichie du champ `public ?string $desc = null`.
+  * `InvalidNankoSyntaxException.php` : Exception typée portant le numéro de ligne et le motif exact d'erreur de syntaxe.
+* **Parseur Client & Synchronisation Spatiale :** `frontend/src/features/documents/components/canvas/utils/nankoParser.ts`, `syncLayoutToSource.ts`, `dagreLayout.ts`, `insertShapeToSource.ts` assurant l'extraction syntaxique symétrique en temps réel (détection des directives `@dsl-version`, validation des attributs), l'agencement spatial hiérarchique (avec prise en compte des géométries rectangulaires et circulaires) et la synchronisation bidirectionnelle du bloc `!LAYOUT` vers le code source.
 * **Port Repository :** `backend/src/WorkspaceManagement/Core/Port/Document/Repository.php`
 * **Adapter Persistence :** `backend/src/WorkspaceManagement/Adapter/Driven/Persistence/Document/DoctrineRepository.php`
 
@@ -97,7 +102,7 @@
 | `slug` | `varchar(100)` | Non | - | Slug lisible du document |
 | `layer` | `integer` | Non | `DEFAULT 0` | Attribut de profondeur du Document au sein du Projet |
 | `source_code` | `text` | Non | - | Code source textuel brut au format `.nanko` |
-| `ast` | `jsonb` | Non | `DEFAULT '{}'::jsonb` | Arbre syntaxique dénormalisé (shapes, connectors, layout) |
+| `ast` | `jsonb` | Non | `DEFAULT '{}'::jsonb` | Arbre syntaxique dénormalisé (`dslVersion`, `shapes` avec `id`, `type`, `label`, `desc`, `connectors` avec `source`, `target`, `label`, `desc`, et `layout`) |
 | `created_at` | `timestamp with time zone` | Non | - | Date de création |
 | `updated_at` | `timestamp with time zone` | Non | - | Date de dernière mise à jour |
 | *(composite)* | `(project_id, slug)` | Non | `UNIQUE INDEX uniq_document_project_slug` | Unicité du slug de document par projet |

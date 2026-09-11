@@ -411,11 +411,11 @@ export type NankoAst = z.infer<typeof nankoAstSchema>;
   - [x] 2. Ajouter un test vérifiant la persistance et restitution d'un document doté d'attributs `label` et `desc`.
   - [x] **Validation Tests E2E :** `pnpm --filter tests-e2e exec playwright test`.
 
-- [ ] **Phase 4 : Synchronisation documentaire (Automatisable via `/sync-current`)**
-  - [ ] 1. Répercuter la directive `@dsl-version` et la grammaire déclarative d'attributs dans `.specs/current/domains/workspace-management/behavior.md`.
-  - [ ] 2. Répercuter les contrats et schémas AST enrichis (`dslVersion`, `desc`) dans `.specs/current/domains/workspace-management/contracts.md`.
-  - [ ] 3. Répercuter la description du parseur dans `.specs/current/domains/workspace-management/models.md` et `tech.md`.
-  - [ ] 4. Déplacer ce fichier dans `.specs/changes/archive/018-dsl-tokenizer-and-ast-attributes.md`.
+- [x] **Phase 4 : Synchronisation documentaire (Automatisable via `/sync-current`)**
+  - [x] 1. Répercuter la directive `@dsl-version` et la grammaire déclarative d'attributs dans `.specs/current/domains/workspace-management/behavior.md`.
+  - [x] 2. Répercuter les contrats et schémas AST enrichis (`dslVersion`, `desc`) dans `.specs/current/domains/workspace-management/contracts.md`.
+  - [x] 3. Répercuter la description du parseur dans `.specs/current/domains/workspace-management/models.md` et `tech.md`.
+  - [x] 4. Déplacer ce fichier dans `.specs/changes/archive/018-dsl-tokenizer-and-ast-attributes.md`.
 
 ---
 

@@ -145,7 +145,7 @@ Pour garantir une livraison rapide et ciblée, les aspects suivants sont exclus 
 
 Feuille de route indicative pour l'implémentation de cette Target :
 
-- [ ] **Delta 1 (`018-dsl-tokenizer-and-ast-attributes`)** :
+- [x] **Delta 1 (`018-dsl-tokenizer-and-ast-attributes`)** :
   - Support de la directive d'en-tête `@dsl-version <int>` (défaut `1`) et exposition du champ `dslVersion: int` dans l'AST normalisé.
   - Création du tokenizer générique clé-valeur dans le Backend Symfony (`NankoParser.php`, `NankoAst.php`, `Shape.php`, `Connector.php`) et dans le Frontend TypeScript (`nankoParser.ts`, `schemas.ts`).
   - Validation des contraintes de guillemets stricts et de la règle `desc` requérant `label` sur les connecteurs.

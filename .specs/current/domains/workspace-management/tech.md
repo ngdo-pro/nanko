@@ -4,7 +4,7 @@
 
 ### Backend (`backend/src/WorkspaceManagement/`)
 * **Architecture hexagonale stricte :**
-  * `Core/Domain/` : Entités pures et Value Objects (`Organisation`, `OrganisationMember`, `Project`, `Document`, `Id`, `Role`, `Layer`). Parsing syntaxique pur du format `.nanko` (`NankoParser`, `Ast`, `Shape`, `Connector`). Zéro dépendance vers le framework.
+  * `Core/Domain/` : Entités pures et Value Objects (`Organisation`, `OrganisationMember`, `Project`, `Document`, `Id`, `Role`, `Layer`). Parsing syntaxique déclaratif du format `.nanko` avec tokenizer générique clé-valeur, support des directives `@dsl-version`, gestion des guillemets stricts et échappement `\"` (`NankoParser`, `NankoAst`, `Shape`, `Connector`). Zéro dépendance vers le framework.
   * `Core/Port/` : Interfaces des repositories (`Organisation/Repository`, `OrganisationMember/Repository`, `Project/Repository`, `Document/Repository`).
   * `Core/UseCase/` : Orchestration métier (`GetOrCreatePersonalOrganisationUseCase`, `ListProjectsUseCase`, `CreateProjectUseCase`, `ListDocumentsUseCase`, `CreateDocumentUseCase`, `GetDocumentUseCase`, `UpdateDocumentUseCase`) et exceptions associées (`AccessDeniedException`, `OrganisationNotFoundException`, `ProjectSlugAlreadyExistsException`, `DocumentNotFoundException`, `DocumentSlugAlreadyExistsException`, `InvalidNankoSyntaxException`).
   * `Adapter/Driven/Persistence/` : Implémentations concrètes Doctrine DBAL (`Doctrine\DBAL\Connection`) avec hydratation manuelle et sérialisation/désérialisation JSONB du champ `ast`.
@@ -24,11 +24,11 @@
   * Persistance locale : Conservation du projet actif dans le `localStorage`.
 * **Module Documents (`features/documents/`) :**
   * `api/` : `getDocuments`, `getDocument`, `createDocument`, `updateDocument`.
-  * `schemas.ts` : Schémas Zod pour l'AST (`nankoAstSchema`, `nodeCoordinatesSchema`, `nankoAstLayoutSchema`), items de liste (`documentListItemSchema`), détails (`documentDetailSchema`) et mutations.
-  * `components/` : `CreateDocumentModal`, `DocumentCard`, `DocumentList`, `SourceCodeEditor`, `AstInspector`.
+  * `schemas.ts` : Schémas Zod pour l'AST (`nankoAstSchema` avec `dslVersion`, `nankoAstShapeSchema` et `nankoAstConnectorSchema` avec `desc`, `nodeCoordinatesSchema`, `nankoAstLayoutSchema`), items de liste (`documentListItemSchema`), détails (`documentDetailSchema`) et mutations.
+  * `components/` : `CreateDocumentModal`, `DocumentCard`, `DocumentList`, `SourceCodeEditor`, `AstInspector` (badge `DSL v1`, affichage de `label` et `desc`).
     * `components/canvas/` : `NankoCanvas` (composant React Flow principal avec gestion dark/light et minimap, capture des raccourcis clavier `A`, `Tab`, `R`, `C` avec protection contre le focus d'inputs, projection spatiale `screenToFlowPosition`), `LayoutSelector` (sélecteur Split / Canvas / Code), `CanvasControls` (barre flottante dans `<Panel position="bottom-left">`), `nodes/` (`RectangleNode`, `CircleNode` avec vraie géométrie circulaire 130px × 130px, `TextNode`), `edges/` (`NankoEdge`).
     * `components/canvas/radial/` : `RadialMenu` (composant roue radiale avec 2 secteurs vectoriels continus 180° fermant 360°, pastille centrale d'échappement, surbrillance au survol et geste de marquage *release-to-create*), `radialMenuConfig.ts`.
-    * `components/canvas/utils/` : `dagreLayout.ts` (agencement hiérarchique spatial via `@dagrejs/dagre` intégrant les dimensions circulaires), `nankoParser.ts` (parseur client réactif avec détection d'erreurs en temps réel), `syncLayoutToSource.ts` (injection et synchronisation du bloc `!LAYOUT ... !END`), `insertShapeToSource.ts` (insertion sémantique avec calcul d'identifiant unique, regroupement des formes au-dessus des connecteurs et mise à jour des coordonnées).
+    * `components/canvas/utils/` : `dagreLayout.ts` (agencement hiérarchique spatial via `@dagrejs/dagre` intégrant les dimensions circulaires), `nankoParser.ts` (parseur client réactif avec tokenizer clé-valeur, validation `@dsl-version` et détection d'erreurs en temps réel), `syncLayoutToSource.ts` (injection et synchronisation du bloc `!LAYOUT ... !END`), `insertShapeToSource.ts` (génération de `<type> <id> label="<Label>"`, regroupement des formes au-dessus des connecteurs et mise à jour des coordonnées).
   * `hooks/` : `useDocuments`, `useDocument`.
   * **Dépendances graphiques :** `@xyflow/react` (moteur de graphe interactif) et `@dagrejs/dagre` (calcul d'auto-layout).
 * **Mise en Page & Vue Éditeur (`components/layout/AppLayout.tsx` & `views/DocumentEditorView.tsx`) :**
@@ -69,6 +69,7 @@
 * `ADR-0007` : PostgreSQL unique comme runtime source of truth pour le MVP.
 * `ADR-0011` : Architecture hexagonale (Core/Port/Adapter) et persistance DBAL sans ORM.
 * `ADR-0015` : React Flow comme moteur de rendu pour le canvas du Studio.
+* `ADR-0018` : Grammaire DSL, Tokenizer Clé-Valeur et Versionnage de Schéma (`@dsl-version`).
 * `PDR-0003` : Espace de travail pleine largeur et barre d'outils flottante en mode Canvas.
 * `PDR-0004` : Roue radiale d'outils au curseur, poignées contextuelles et tracé libre magnétique.
 
