@@ -136,10 +136,12 @@
     "name": "Architecture Globale",
     "slug": "architecture-globale",
     "layer": 0,
-    "sourceCode": "@id architecture-globale\n@layer 0\n\nrectangle app \"Application\"\n",
+    "sourceCode": "@id architecture-globale\n@dsl-version 1\n@layer 0\n\nrectangle app label=\"Application\"\n",
     "ast": {
-      "shapes": [{ "id": "app", "type": "rectangle", "label": "Application" }],
-      "connectors": []
+      "dslVersion": 1,
+      "shapes": [{ "id": "app", "type": "rectangle", "label": "Application", "desc": null }],
+      "connectors": [],
+      "layout": {}
     },
     "createdAt": "2026-09-07T10:00:00Z",
     "updatedAt": "2026-09-07T10:00:00Z"
@@ -166,10 +168,17 @@
     "name": "Architecture Globale",
     "slug": "architecture-globale",
     "layer": 0,
-    "sourceCode": "@id architecture-globale\n@layer 0\n\nrectangle app \"Application\"\n",
+    "sourceCode": "@id architecture-globale\n@dsl-version 1\n@layer 0\n\nrectangle app label=\"Application\" desc=\"Point d'entrée web\"\ncircle db label=\"Database\"\napp -> db label=\"requêtes SQL\" desc=\"Connexion TLS\"\n",
     "ast": {
-      "shapes": [{ "id": "app", "type": "rectangle", "label": "Application" }],
-      "connectors": []
+      "dslVersion": 1,
+      "shapes": [
+        { "id": "app", "type": "rectangle", "label": "Application", "desc": "Point d'entrée web" },
+        { "id": "db", "type": "circle", "label": "Database", "desc": null }
+      ],
+      "connectors": [
+        { "source": "app", "target": "db", "label": "requêtes SQL", "desc": "Connexion TLS" }
+      ],
+      "layout": {}
     },
     "createdAt": "2026-09-07T10:00:00Z",
     "updatedAt": "2026-09-07T10:30:00Z"
@@ -188,7 +197,7 @@
 #### Request Payload (`UpdateDocumentInput`)
 ```json
 {
-  "sourceCode": "@id architecture-globale\n@layer 0\n\nrectangle app \"Application\"\ncircle db \"Database\"\napp -> db \"requêtes SQL\"\n"
+  "sourceCode": "@id architecture-globale\n@dsl-version 1\n@layer 0\n\nrectangle app label=\"Application\" desc=\"Point d'entrée\"\ncircle db label=\"Database\"\napp -> db label=\"requêtes SQL\"\n"
 }
 ```
 
@@ -201,14 +210,15 @@
     "name": "Architecture Globale",
     "slug": "architecture-globale",
     "layer": 0,
-    "sourceCode": "@id architecture-globale\n@layer 0\n\nrectangle app \"Application\"\ncircle db \"Database\"\napp -> db \"requêtes SQL\"\n",
+    "sourceCode": "@id architecture-globale\n@dsl-version 1\n@layer 0\n\nrectangle app label=\"Application\" desc=\"Point d'entrée\"\ncircle db label=\"Database\"\napp -> db label=\"requêtes SQL\"\n",
     "ast": {
+      "dslVersion": 1,
       "shapes": [
-        { "id": "app", "type": "rectangle", "label": "Application" },
-        { "id": "db", "type": "circle", "label": "Database" }
+        { "id": "app", "type": "rectangle", "label": "Application", "desc": "Point d'entrée" },
+        { "id": "db", "type": "circle", "label": "Database", "desc": null }
       ],
       "connectors": [
-        { "source": "app", "target": "db", "label": "requêtes SQL" }
+        { "source": "app", "target": "db", "label": "requêtes SQL", "desc": null }
       ],
       "layout": {}
     },
@@ -283,12 +293,14 @@ export const nankoAstShapeSchema = z.object({
   id: z.string(),
   type: z.enum(['rectangle', 'circle', 'text']),
   label: z.string(),
+  desc: z.string().optional().nullable().default(null),
 });
 
 export const nankoAstConnectorSchema = z.object({
   source: z.string(),
   target: z.string(),
-  label: z.string().optional().nullable(),
+  label: z.string().optional().nullable().default(null),
+  desc: z.string().optional().nullable().default(null),
 });
 
 export const nodeCoordinatesSchema = z.object({
@@ -299,6 +311,7 @@ export const nodeCoordinatesSchema = z.object({
 export const nankoAstLayoutSchema = z.record(z.string(), nodeCoordinatesSchema);
 
 export const nankoAstSchema = z.object({
+  dslVersion: z.number().int().default(1),
   shapes: z.array(nankoAstShapeSchema).default([]),
   connectors: z.array(nankoAstConnectorSchema).default([]),
   layout: z

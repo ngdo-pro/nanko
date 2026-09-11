@@ -29,9 +29,10 @@ Permettre aux utilisateurs et aux équipes de structurer leurs architectures dan
   * Une modale s'ouvre permettant de saisir le nom, le slug (auto-généré) et la profondeur (`Layer`, défaut 0).
   * À la validation, le document est créé avec un template source initial `.nanko` et l'utilisateur est immédiatement redirigé vers l'éditeur.
 * **Parcours 5 : Édition, analyse syntaxique et persistance du code source .nanko**
-  * Sur la route `/projects/:projectId/documents/:documentId`, l'utilisateur dispose d'un éditeur dark theme pour le code source `.nanko` et d'un inspecteur d'AST en temps réel (Shapes, Connectors).
-  * Il enregistre ses modifications via le bouton « Enregistrer » ou le raccourci clavier `Cmd+S` / `Ctrl+S`.
-  * Le backend valide la syntaxe `.nanko` (`NankoParser`) et met à jour l'AST dénormalisé. En cas d'erreur de syntaxe, l'utilisateur est averti avec la ligne précise sans aucune perte de son code saisi.
+  * Sur la route `/projects/:projectId/documents/:documentId`, l'utilisateur dispose d'un éditeur dark theme pour le code source `.nanko` et d'un inspecteur d'AST en temps réel (affichage de la version DSL `DSL v1`, des Shapes avec `label` et `desc`, et des Connecteurs).
+  * Le format `.nanko` s'appuie sur une grammaire déclarative clé-valeur stricte et sur la directive d'en-tête `@dsl-version 1` (défaut 1).
+  * L'utilisateur enregistre ses modifications via le bouton « Enregistrer » ou le raccourci clavier `Cmd+S` / `Ctrl+S`.
+  * Le backend valide la syntaxe `.nanko` (`NankoParser`) et met à jour l'AST dénormalisé (`NankoAst` enrichi de `dslVersion: 1`). En cas d'erreur de syntaxe, l'utilisateur est averti avec la ligne précise sans aucune perte de son code saisi.
   * Si l'utilisateur tente de quitter la page avec des modifications non sauvegardées, un avertissement `beforeunload` est déclenché.
 * **Parcours 6 : Consultation des Documents sur le Dashboard**
   * L'état vide du Dashboard est remplacé par la grille des documents du projet actif (`DocumentList`), affichant pour chaque document son nom, layer, nombre de shapes/connectors et date de modification.
@@ -58,7 +59,7 @@ Permettre aux utilisateurs et aux équipes de structurer leurs architectures dan
   * **Geste de marquage fluide (*Release-to-create*) :** En maintenant `A` ou `Tab`, déplacer le curseur vers un secteur met en surbrillance la forme (`Rectangle` ou `Circle`). Relâcher la touche dépose immédiatement l'élément à l'emplacement exact et referme la roue en un geste unique sans clic supplémentaire. Le clic direct sur un secteur reste également supporté. Si la touche est relâchée au centre (pastille `×`) ou hors des secteurs, la roue se referme sans création.
   * **Raccourcis de frappe rapide :** Frapper les touches `R` (Rectangle) ou `C` (Circle) dépose immédiatement la forme sous le curseur (ou au centre du viewport si le pointeur est hors canvas).
   * **Protection des zones de saisie (*Focus Guard*) :** Neutralisation stricte de l'ouverture de la roue et des raccourcis de création lorsque le focus se trouve dans l'éditeur Monaco ou un champ de texte.
-  * **Regroupement sémantique et synchronisation DSL :** La forme créée est injectée dans le code source `.nanko` en bloc avec les shapes existantes au-dessus des connecteurs, le bloc `!LAYOUT` est synchronisé avec les coordonnées spatiales `(x, y)` calculées, et l'état de modifications non enregistrées est activé pour une sauvegarde via `Cmd+S`.
+  * **Regroupement sémantique et synchronisation DSL :** La forme créée est injectée dans le code source `.nanko` en bloc avec les shapes existantes au-dessus des connecteurs (format `<type> <id> label="<Label>"`), le bloc `!LAYOUT` est synchronisé avec les coordonnées spatiales `(x, y)` calculées, et l'état de modifications non enregistrées est activé pour une sauvegarde via `Cmd+S`.
 
 ## 4. Règles de Gestion Métier (Lexique Invariant cf. CONTEXT.md)
 * **Organisation :** Regroupement racine possédant des Projets et des membres. Ne jamais employer les termes « Tenant » ou « Workspace ».
@@ -66,7 +67,13 @@ Permettre aux utilisateurs et aux équipes de structurer leurs architectures dan
 * **OrganisationMember :** Relation d'appartenance entre un utilisateur (`app_user`) et une organisation, qualifiée par un rôle (`owner`, `member`).
 * **Project :** Conteneur plat de documents au sein d'une organisation. Unicité stricte du slug de projet par organisation (`uniq_project_org_slug`).
 * **Document :** Schéma d'architecture positionné sur un `Layer` (profondeur / z-index entier >= 0), rattaché à un `Project`. Porte directement son identité (`name`, `slug`, `layer`) et son contenu (`source_code` textuel au format `.nanko`, `ast` JSONB dénormalisé). Unicité stricte du slug par projet (`uniq_document_project_slug`).
-* **Format .nanko & Parseur :** Format textuel déclaratif versionnable modélisant des entités graphiques (`Shape` : `rectangle`, `circle`, `text`), logiques (`Connector` : `source -> target "label"`) et spatiales (bloc `!LAYOUT\nnodeId: x=..., y=...\n!END`). Intégrité référentielle stricte : les connecteurs et coordonnées ne peuvent référencer que des shapes déclarées dans le document.
+* **Format .nanko & Parseur :** Format textuel déclaratif versionnable modélisant :
+  * Directives d'en-tête : `@id <slug>`, `@dsl-version <int>` (défaut `1`, rejet strict de toute version non supportée), `@layer <int>`.
+  * Entités graphiques (`Shape` : `rectangle`, `circle`, `text`) au format `<type> <id> label="<Libellé>" [desc="<Description>"]`. L'attribut `label` est obligatoire pour toute shape.
+  * Relations logiques (`Connector`) au format `<source> -> <target> [label="<Libellé>" [desc="<Description>"]]`. L'attribut `desc` exige impérativement un `label` ; un connecteur avec `desc` mais sans `label` est strictement rejeté.
+  * Blocs spatiaux : `!LAYOUT\nnodeId: x=..., y=...\n!END`.
+  * Tokenizer clé-valeur : Les valeurs d'attributs doivent obligatoirement être entourées de guillemets doubles `"..."` avec support des guillemets internes échappés `\"`. L'ordre des attributs sur la ligne est libre.
+  * Intégrité référentielle stricte : les connecteurs et coordonnées ne peuvent référencer que des shapes déclarées dans le document.
 * **Persistance du contexte :** Le projet actif est conservé côté client (`localStorage`) et réinitialisé intelligemment si l'organisation active change.
 
 ## 5. Matrice des Échecs & Cas Limites
@@ -78,6 +85,6 @@ Permettre aux utilisateurs et aux équipes de structurer leurs architectures dan
 | Tentative de création d'un projet avec un slug déjà utilisé dans l'organisation | Code 409 `PROJECT_SLUG_EXISTS` affiché directement dans la modale sans rechargement. |
 | Tentative de création d'un document avec un slug déjà utilisé dans le projet | Code 409 `DOCUMENT_SLUG_EXISTS` affiché dans la modale sans rechargement. |
 | Nom de projet ou document invalide | Code 422 `UNPROCESSABLE_ENTITY` avec message de validation sous le champ concerné. |
-| Erreur de syntaxe dans le code source `.nanko` à l'enregistrement | Code 422 `INVALID_NANKO_SYNTAX` affichant un panneau d'erreur rouge avec le numéro de ligne et le motif, préservant le code dans l'éditeur. |
+| Erreur de syntaxe dans le code source `.nanko` à l'enregistrement (ex: attribut sans guillemets doubles, shape sans `label`, `desc` sans `label` sur connecteur, version DSL non supportée) | Code 422 `INVALID_NANKO_SYNTAX` affichant un panneau d'erreur rouge avec le numéro de ligne et le motif exact, préservant le code dans l'éditeur. |
 | Erreur de syntaxe locale en cours de frappe dans l'éditeur | Le canvas affiche le badge « Canvas en pause » et maintient le dernier AST valide sans crasher ni effacer le graphe. |
 
