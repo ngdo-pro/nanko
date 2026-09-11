@@ -17,7 +17,13 @@ export const RectangleNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const label = nodeData?.label || id
   const desc = nodeData?.desc || null
   const displayId = nodeData?.nodeId || id
-  const { isVisible, handleMouseEnter, handleMouseLeave } = useHoverTooltip(300)
+  const {
+    isVisible,
+    handleMouseEnter,
+    handleMouseLeave,
+    handleTooltipMouseEnter,
+    handleTooltipMouseLeave,
+  } = useHoverTooltip(300)
 
   return (
     <div
@@ -49,6 +55,8 @@ export const RectangleNode: React.FC<NodeProps> = ({ id, data, selected }) => {
           title={label}
           desc={desc}
           dataQa={`node-tooltip-${id}`}
+          onMouseEnter={handleTooltipMouseEnter}
+          onMouseLeave={handleTooltipMouseLeave}
         />
       )}
 

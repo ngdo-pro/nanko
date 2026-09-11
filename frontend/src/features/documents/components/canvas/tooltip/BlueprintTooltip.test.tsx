@@ -4,7 +4,13 @@ import { BlueprintTooltip } from './BlueprintTooltip'
 import { useHoverTooltip } from './useHoverTooltip'
 
 const TestHoverComponent = ({ desc }: { desc?: string | null }) => {
-  const { isVisible, handleMouseEnter, handleMouseLeave } = useHoverTooltip(300)
+  const {
+    isVisible,
+    handleMouseEnter,
+    handleMouseLeave,
+    handleTooltipMouseEnter,
+    handleTooltipMouseLeave,
+  } = useHoverTooltip(300)
 
   return (
     <div
@@ -20,6 +26,8 @@ const TestHoverComponent = ({ desc }: { desc?: string | null }) => {
           title="API Gateway"
           desc={desc}
           dataQa="node-tooltip-gateway"
+          onMouseEnter={handleTooltipMouseEnter}
+          onMouseLeave={handleTooltipMouseLeave}
         />
       )}
     </div>
@@ -70,7 +78,7 @@ describe('BlueprintTooltip', () => {
     expect(screen.getByText("Point d'entrée HTTPS public avec terminaison TLS")).toBeInTheDocument()
   })
 
-  it('déclenche l\'affichage du tooltip après 300 ms de survol (anti-scintillement)', () => {
+  it('déclenche l\'affichage du tooltip après 300 ms de survol (anti-scintillement) et applique le délai de grâce au départ', () => {
     render(<TestHoverComponent desc="Passerelle haute disponibilité" />)
 
     const trigger = screen.getByTestId('test-target')
@@ -91,9 +99,70 @@ describe('BlueprintTooltip', () => {
     expect(screen.getByRole('tooltip')).toBeInTheDocument()
     expect(screen.getByText('Passerelle haute disponibilité')).toBeInTheDocument()
 
-    // Au mouseLeave, le tooltip disparaît immédiatement
+    // Au mouseLeave, le tooltip reste visible pendant le délai de grâce (250 ms)
     fireEvent.mouseLeave(trigger)
+    expect(screen.getByRole('tooltip')).toBeInTheDocument()
+
+    act(() => {
+      vi.advanceTimersByTime(250)
+    })
     expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+  })
+
+  it('permet le survol du tooltip pendant le délai de grâce et maintient son affichage', () => {
+    render(<TestHoverComponent desc="Passerelle avec texte long et défilement" />)
+
+    const trigger = screen.getByTestId('test-target')
+    fireEvent.mouseEnter(trigger)
+
+    act(() => {
+      vi.advanceTimersByTime(300)
+    })
+    const tooltip = screen.getByRole('tooltip')
+    expect(tooltip).toBeInTheDocument()
+
+    // Le curseur quitte le déclencheur pour transiter vers le tooltip
+    fireEvent.mouseLeave(trigger)
+    act(() => {
+      vi.advanceTimersByTime(100) // dans les 250 ms de grâce
+    })
+    // Le curseur entre sur le tooltip
+    fireEvent.mouseEnter(tooltip)
+
+    // Le délai de grâce initial s'écoule entièrement mais le tooltip reste ouvert
+    act(() => {
+      vi.advanceTimersByTime(300)
+    })
+    expect(screen.getByRole('tooltip')).toBeInTheDocument()
+
+    // Quand le curseur quitte le tooltip, il disparaît après le délai de grâce
+    fireEvent.mouseLeave(tooltip)
+    act(() => {
+      vi.advanceTimersByTime(250)
+    })
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument()
+  })
+
+  it('affiche l\'indicateur de défilement visuel pour les descriptions longues (> 120 caractères)', () => {
+    const longDesc = 'A'.repeat(150)
+    render(
+      <BlueprintTooltip
+        typeBadge="rectangle"
+        id="gateway"
+        title="API Gateway"
+        desc={longDesc}
+        dataQa="node-tooltip-gateway"
+      />,
+    )
+
+    const indicator = screen.getByTestId('tooltip-scroll-indicator')
+    expect(indicator).toBeInTheDocument()
+    expect(screen.getByText('↕ Survolez pour faire défiler')).toBeInTheDocument()
+
+    // Au survol du tooltip, le texte d'invite bascule en état actif
+    const tooltip = screen.getByRole('tooltip')
+    fireEvent.mouseEnter(tooltip)
+    expect(screen.getByText('↕ Défilement actif')).toBeInTheDocument()
   })
 
   it('annule l\'affichage du tooltip si la souris quitte avant 300 ms', () => {

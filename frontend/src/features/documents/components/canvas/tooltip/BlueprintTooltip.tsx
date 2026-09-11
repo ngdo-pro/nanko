@@ -6,6 +6,8 @@ export interface BlueprintTooltipProps {
   title?: string
   desc?: string | null
   dataQa?: string
+  onMouseEnter?: () => void
+  onMouseLeave?: () => void
 }
 
 export const BlueprintTooltip: React.FC<BlueprintTooltipProps> = ({
@@ -14,9 +16,14 @@ export const BlueprintTooltip: React.FC<BlueprintTooltipProps> = ({
   title,
   desc,
   dataQa,
+  onMouseEnter,
+  onMouseLeave,
 }) => {
   const tooltipRef = useRef<HTMLDivElement>(null)
+  const descRef = useRef<HTMLDivElement>(null)
   const [isFlipped, setIsFlipped] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
+  const [isScrollable, setIsScrollable] = useState(false)
 
   useEffect(() => {
     if (tooltipRef.current) {
@@ -27,8 +34,27 @@ export const BlueprintTooltip: React.FC<BlueprintTooltipProps> = ({
     }
   }, [])
 
+  useEffect(() => {
+    if (descRef.current) {
+      const hasOverflow = descRef.current.scrollHeight > descRef.current.clientHeight
+      if (hasOverflow || (desc && desc.length > 120)) {
+        setIsScrollable(true)
+      }
+    }
+  }, [desc])
+
   if (!desc) {
     return null
+  }
+
+  const handleMouseEnter = () => {
+    setIsHovered(true)
+    onMouseEnter?.()
+  }
+
+  const handleMouseLeave = () => {
+    setIsHovered(false)
+    onMouseLeave?.()
   }
 
   return (
@@ -38,6 +64,8 @@ export const BlueprintTooltip: React.FC<BlueprintTooltipProps> = ({
       role="tooltip"
       data-qa={dataQa}
       data-testid={dataQa}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {(typeBadge || id) && (
         <div className="nanko-blueprint-tooltip-header">
@@ -46,7 +74,19 @@ export const BlueprintTooltip: React.FC<BlueprintTooltipProps> = ({
         </div>
       )}
       {title && <div className="nanko-blueprint-tooltip-title">{title}</div>}
-      <div className="nanko-blueprint-tooltip-desc">{desc}</div>
+      <div ref={descRef} className="nanko-blueprint-tooltip-desc">
+        {desc}
+      </div>
+      {isScrollable && (
+        <div className="nanko-blueprint-tooltip-footer" data-qa="tooltip-scroll-indicator">
+          <div className="nanko-blueprint-tooltip-lock-track">
+            <div className={`nanko-blueprint-tooltip-lock-bar ${isHovered ? 'is-active' : ''}`} />
+          </div>
+          <span className="nanko-blueprint-tooltip-hint">
+            {isHovered ? '↕ Défilement actif' : '↕ Survolez pour faire défiler'}
+          </span>
+        </div>
+      )}
     </div>
   )
 }

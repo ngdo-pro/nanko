@@ -36,7 +36,13 @@ export const NankoEdge: React.FC<EdgeProps> = ({
   const edgeData = data as { label?: string | null; desc?: string | null } | undefined
   const edgeLabel = (label as string) || (edgeData?.label as string) || ''
   const edgeDesc = edgeData?.desc || null
-  const { isVisible, handleMouseEnter, handleMouseLeave } = useHoverTooltip(300)
+  const {
+    isVisible,
+    handleMouseEnter,
+    handleMouseLeave,
+    handleTooltipMouseEnter,
+    handleTooltipMouseLeave,
+  } = useHoverTooltip(300)
 
   const hasBadge = Boolean(edgeLabel || edgeDesc)
 
@@ -92,6 +98,8 @@ export const NankoEdge: React.FC<EdgeProps> = ({
                 title={edgeLabel || undefined}
                 desc={edgeDesc}
                 dataQa={`edge-tooltip-${source}-${target}`}
+                onMouseEnter={handleTooltipMouseEnter}
+                onMouseLeave={handleTooltipMouseLeave}
               />
             )}
           </div>

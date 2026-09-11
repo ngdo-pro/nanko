@@ -108,6 +108,9 @@ describe('NankoEdge', () => {
     expect(tooltip).toHaveTextContent('api → db')
 
     fireEvent.mouseLeave(badgeContainer)
+    act(() => {
+      vi.advanceTimersByTime(250)
+    })
     expect(screen.queryByTestId('edge-tooltip-api-db')).not.toBeInTheDocument()
   })
 })

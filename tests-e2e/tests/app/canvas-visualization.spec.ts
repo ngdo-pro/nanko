@@ -102,7 +102,11 @@ test.describe('Visualisation Graphique en Canvas Interactif avec React Flow (015
     await expect(nodeTooltip).toBeVisible({ timeout: 2000 })
     await expect(nodeTooltip).toContainText('Frontend React SPA haute performance')
 
-    // Départ du curseur -> disparition du tooltip
+    // Transition interactive vers le tooltip pendant le délai de grâce (Warhammer pin)
+    await nodeTooltip.hover()
+    await expect(nodeTooltip).toBeVisible()
+
+    // Départ du curseur -> disparition du tooltip après délai de grâce
     await page.mouse.move(0, 0)
     await expect(nodeTooltip).not.toBeVisible()
 

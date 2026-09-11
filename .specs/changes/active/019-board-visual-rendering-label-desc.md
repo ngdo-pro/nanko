@@ -14,7 +14,7 @@
 * **Impact utilisateur :**
   * Sur le canvas, chaque forme (`RectangleNode`, `CircleNode`, `TextNode`) portant un attribut `desc` affiche un sous-titre textuel stylisé sous son libellé principal (`label`).
   * La description visible sur la forme est automatiquement tronquée à **2 lignes maximum** avec ellipse (`ellipsis`) pour préserver les dimensions compactes des nœuds et la clarté du graphe sans débordement.
-  * Au survol prolongé d'une shape (> 300 ms), une infobulle (*Tooltip*) Blueprint soignée apparaît au-dessus de l'élément, affichant son type, son identifiant, son `label` et l'intégralité de sa `desc` sans troncature (avec ascenseur discret si le texte dépasse 500 caractères).
+  * Au survol prolongé d'une shape (> 300 ms), une infobulle (*Tooltip*) Blueprint soignée apparaît au-dessus de l'élément, affichant son type, son identifiant, son `label` et l'intégralité de sa `desc`. Si la description est longue et nécessite un ascenseur, un indicateur d'ancrage visuel (inspiré de *Total War: Warhammer*) signale à l'utilisateur qu'il peut déplacer son curseur dans la tooltip pour faire défiler le texte. Un délai de grâce de 250 ms permet le survol interactif et fluide de l'infobulle sans fermeture intempestive lors du trajet du pointeur.
   * Sur chaque connecteur (`NankoEdge`), le badge central affiche exclusivement le `label` du flux lorsqu'il est renseigné (sans préfixe technique `source -> target`), pour un rendu visuel épuré. Si une `desc` est présente, un micro-indicateur discret s'affiche sur le badge, et le survol du badge révèle une infobulle Blueprint détaillant le flux technique.
   * Les shapes sans `desc` et les connecteurs sans `label` conservent leur rendu épuré sans zone vide ni espacement superflu.
 * **In Scope (Ce qui est ajouté/modifié) :**
@@ -281,8 +281,12 @@ export interface NankoNodeData {
 
 1. **Préservation des dimensions de layout :**
    * L'apparition de la description ne doit pas déformer de manière incontrôlée les formes. Pour `RectangleNode`, la hauteur s'adapte avec souplesse dans la limite des 2 lignes de troncature. Pour `CircleNode` (taille fixe 130px × 130px), le contenu textuel est centré dans `.nanko-circle-inner` et la description est bridée à 2 lignes avec typographie compacte (taille `0.7rem`).
-2. **Gestion du survol et délai anti-scintillement (*Hover Delay*) :**
-   * L'infobulle ne doit pas clignoter lors d'un survol accidentel rapide en traversant le canvas. Un délai d'activation de 300 ms est appliqué sur `mouseenter`. Le départ du curseur (`mouseleave`) ferme immédiatement l'infobulle.
+2. **Gestion du survol, délai anti-scintillement (*Hover Delay*) et ancrage interactif :**
+   * L'infobulle ne doit pas clignoter lors d'un survol accidentel rapide en traversant le canvas. Un délai d'activation de 300 ms est appliqué sur `mouseenter`.
+   * Si la description est longue et scrollable, un indicateur visuel de défilement (jauge animée et invite `↕ Défilement disponible`) apparaît.
+   * Un délai de grâce de 250 ms sur `mouseleave` permet au pointeur de transiter de la forme/arête vers l'infobulle sans fermeture intempestive.
+   * Une fois le curseur dans l'infobulle, celle-ci reste interactive (`pointer-events: auto`) et verrouillée tant que le pointeur y séjourne, permettant le défilement fluide du texte.
+   * La sortie complète du pointeur de la zone combinée referme l'infobulle après expiration du délai de grâce.
 3. **Protection contre le débordement d'écran :**
    * Le tooltip est positionné au-dessus de l'élément par défaut. Si l'élément est situé en haut extrême du canvas, le tooltip bascule élégamment sous l'élément ou s'adapte sans être coupé.
 4. **Indépendance des modes d'affichage :**

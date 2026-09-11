@@ -102,6 +102,9 @@ describe('RectangleNode', () => {
     expect(tooltip).toHaveTextContent('Architecture distribuée haute disponibilité')
 
     fireEvent.mouseLeave(nodeEl)
+    act(() => {
+      vi.advanceTimersByTime(250)
+    })
     expect(screen.queryByTestId('node-tooltip-arch')).not.toBeInTheDocument()
   })
 })
