@@ -77,7 +77,7 @@ export const NankoEdge: React.FC<EdgeProps> = ({
             <div className={clsx(styles.edgeLabel, 'nanko-edge-label')}>
               {edgeLabel ? (
                 <span
-                  className={clsx(styles.edgeLabelText, 'nanko-edge-label-text')}
+                  className="nanko-edge-label-text"
                   data-qa={`canvas-edge-label-${source}-${target}`}
                 >
                   {edgeLabel}

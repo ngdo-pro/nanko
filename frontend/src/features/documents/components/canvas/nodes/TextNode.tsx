@@ -32,7 +32,7 @@ export const TextNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       <Handle type="target" position={Position.Left} id="left" className="nanko-handle nanko-handle-left" />
       <Handle type="target" position={Position.Top} id="top" className="nanko-handle nanko-handle-top" />
 
-      <div className={styles.textInner}>
+      <div className="nanko-text-inner">
         <div className={styles.nodeHeader}>
           <span className={clsx(styles.nodeBadge, 'nanko-node-badge')} data-qa="node-text">text</span>
           <span className={clsx(styles.nodeId, 'nanko-node-id')}>{displayId}</span>

@@ -21,9 +21,6 @@
   pointer-events: auto;
 }
 
-.edgeLabelText {
-  /* Style spécifique au texte du label si besoin */
-}
 
 .edgeDescIndicator {
   color: var(--brand, #5EEAD4);
