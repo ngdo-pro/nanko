@@ -60,12 +60,15 @@ export const BlueprintTooltip: React.FC<BlueprintTooltipProps> = ({
   return (
     <div
       ref={tooltipRef}
-      className={`nanko-blueprint-tooltip ${isFlipped ? 'is-flipped' : ''}`}
+      className={`nanko-blueprint-tooltip nodrag nopan nowheel ${isFlipped ? 'is-flipped' : ''}`}
       role="tooltip"
       data-qa={dataQa}
       data-testid={dataQa}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onMouseDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+      onWheel={(e) => e.stopPropagation()}
     >
       {(typeBadge || id) && (
         <div className="nanko-blueprint-tooltip-header">
@@ -74,7 +77,11 @@ export const BlueprintTooltip: React.FC<BlueprintTooltipProps> = ({
         </div>
       )}
       {title && <div className="nanko-blueprint-tooltip-title">{title}</div>}
-      <div ref={descRef} className="nanko-blueprint-tooltip-desc">
+      <div
+        ref={descRef}
+        className="nanko-blueprint-tooltip-desc nodrag nowheel"
+        onWheel={(e) => e.stopPropagation()}
+      >
         {desc}
       </div>
       {isScrollable && (

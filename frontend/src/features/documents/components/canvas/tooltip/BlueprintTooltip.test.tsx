@@ -165,6 +165,38 @@ describe('BlueprintTooltip', () => {
     expect(screen.getByText('↕ Défilement actif')).toBeInTheDocument()
   })
 
+  it('isole l\'infobulle des événements de drag et de zoom du canvas (nodrag, nopan, nowheel, stopPropagation)', () => {
+    render(
+      <BlueprintTooltip
+        typeBadge="rectangle"
+        id="gateway"
+        title="API Gateway"
+        desc="Description avec défilement"
+        dataQa="node-tooltip-gateway"
+      />,
+    )
+
+    const tooltip = screen.getByRole('tooltip')
+    expect(tooltip).toHaveClass('nodrag')
+    expect(tooltip).toHaveClass('nopan')
+    expect(tooltip).toHaveClass('nowheel')
+
+    const descEl = screen.getByText('Description avec défilement')
+    expect(descEl).toHaveClass('nodrag')
+    expect(descEl).toHaveClass('nowheel')
+
+    // Test de non-propagation des événements
+    const wheelEvent = new Event('wheel', { bubbles: true })
+    const stopWheelSpy = vi.spyOn(wheelEvent, 'stopPropagation')
+    fireEvent(tooltip, wheelEvent)
+    expect(stopWheelSpy).toHaveBeenCalled()
+
+    const mouseDownEvent = new Event('mousedown', { bubbles: true })
+    const stopMousedownSpy = vi.spyOn(mouseDownEvent, 'stopPropagation')
+    fireEvent(tooltip, mouseDownEvent)
+    expect(stopMousedownSpy).toHaveBeenCalled()
+  })
+
   it('annule l\'affichage du tooltip si la souris quitte avant 300 ms', () => {
     render(<TestHoverComponent desc="Description courte" />)
 

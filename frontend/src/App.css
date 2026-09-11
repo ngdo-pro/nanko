@@ -1870,6 +1870,8 @@
   min-width: 180px;
   max-width: 320px;
   pointer-events: auto;
+  cursor: default;
+  user-select: text;
   backdrop-filter: blur(8px);
   animation: nanko-tooltip-fade-in 0.15s ease-out;
   text-align: left;
@@ -1939,6 +1941,7 @@
   word-break: break-word;
   max-height: 160px;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .nanko-blueprint-tooltip-desc::-webkit-scrollbar {
