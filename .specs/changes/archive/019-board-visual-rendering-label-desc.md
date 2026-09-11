@@ -322,11 +322,11 @@ export interface NankoNodeData {
     - Le déclenchement du tooltip Blueprint au survol du badge d'arête.
   - [x] 2. Valider la suite complète : `make test-e2e`.
 
-- [ ] **Phase 4 : Synchronisation documentaire (Automatisable via `/sync-current`)**
-  - [ ] 1. Mettre à jour `.specs/current/domains/workspace-management/behavior.md` (Parcours 7 décrivant les sous-titres et tooltips).
-  - [ ] 2. Mettre à jour `.specs/current/domains/workspace-management/tech.md` (composants de rendu de nœuds et tooltips).
-  - [ ] 3. Déplacer ce fichier dans `.specs/changes/archive/019-board-visual-rendering-label-desc.md`.
-  - [ ] 4. Mettre à jour la Target `.specs/targets/active/dsl-attributes-label-desc.md` pour cocher le Delta 2.
+- [x] **Phase 4 : Synchronisation documentaire (Automatisable via `/sync-current`)**
+  - [x] 1. Mettre à jour `.specs/current/domains/workspace-management/behavior.md` (Parcours 7 décrivant les sous-titres et tooltips).
+  - [x] 2. Mettre à jour `.specs/current/domains/workspace-management/tech.md` (composants de rendu de nœuds et tooltips).
+  - [x] 3. Déplacer ce fichier dans `.specs/changes/archive/019-board-visual-rendering-label-desc.md`.
+  - [x] 4. Mettre à jour la Target `.specs/targets/active/dsl-attributes-label-desc.md` pour cocher le Delta 2.
 
 ---
 
