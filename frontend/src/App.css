@@ -392,6 +392,7 @@
   border-radius: 50%;
 }
 
+/* Pastilles décoratives du bandeau code card (simulation des contrôles de fenêtre macOS) - couleurs fixes non thématiques */
 .dot-red { background-color: #ff5f56; }
 .dot-yellow { background-color: #ffbd2e; }
 .dot-green { background-color: #27c93f; }
@@ -807,9 +808,9 @@
 }
 
 .alert-error {
-  background-color: color-mix(in srgb, #ef4444 10%, transparent);
-  border: 1px solid #ef4444;
-  color: #ef4444;
+  background-color: color-mix(in srgb, var(--danger) 10%, transparent);
+  border: 1px solid var(--danger);
+  color: var(--danger);
   padding: 0.65rem 0.85rem;
   border-radius: 6px;
   font-size: 0.85rem;
@@ -1056,15 +1057,15 @@
 }
 
 .save-status-pill.saved {
-  background-color: color-mix(in srgb, #10b981 12%, transparent);
-  color: #10b981;
-  border: 1px solid color-mix(in srgb, #10b981 30%, transparent);
+  background-color: color-mix(in srgb, var(--success) 12%, transparent);
+  color: var(--success);
+  border: 1px solid color-mix(in srgb, var(--success) 30%, transparent);
 }
 
 .save-status-pill.unsaved {
-  background-color: color-mix(in srgb, #f59e0b 12%, transparent);
-  color: #f59e0b;
-  border: 1px solid color-mix(in srgb, #f59e0b 30%, transparent);
+  background-color: color-mix(in srgb, var(--warning) 12%, transparent);
+  color: var(--warning);
+  border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
 }
 
 .save-status-pill.saving {
@@ -1229,9 +1230,9 @@
 }
 
 .ast-syntax-pill.valid {
-  background-color: color-mix(in srgb, #10b981 12%, transparent);
-  color: #10b981;
-  border: 1px solid color-mix(in srgb, #10b981 30%, transparent);
+  background-color: color-mix(in srgb, var(--success) 12%, transparent);
+  color: var(--success);
+  border: 1px solid color-mix(in srgb, var(--success) 30%, transparent);
 }
 
 .ast-syntax-pill.invalid {
@@ -1529,13 +1530,16 @@
   border: none;
 }
 
+/* Conteneur React Flow : surcharge indispensable des dimensions et du fond injectés par @xyflow/react */
 .nanko-canvas-container .react-flow,
 .nanko-canvas-container .react-flow.dark,
 .nanko-canvas-container .react-flow.light {
+  /* Override styles inline et layout de @xyflow/react pour occuper 100% de la surface flex */
   width: 100% !important;
   height: 100% !important;
   flex: 1 1 auto;
   min-height: 0;
+  /* Override fond par défaut de @xyflow/react pour garantir le respect du token de thème */
   background-color: var(--canvas-bg) !important;
   --xy-background-color: var(--canvas-bg);
   --xy-background-color-default: var(--canvas-bg);
@@ -1629,97 +1633,6 @@
   cursor: grabbing;
 }
 
-.nanko-node-rectangle {
-  min-width: 190px;
-  max-width: 240px;
-  background-color: var(--surface);
-  border: 1.5px solid var(--border-strong);
-}
-
-.nanko-node-rectangle:hover {
-  border-color: var(--brand);
-}
-
-.nanko-node-rectangle.is-selected {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
-}
-
-.nanko-node-circle {
-  width: 130px;
-  height: 130px;
-  min-width: 130px;
-  min-height: 130px;
-  max-width: 130px;
-  max-height: 130px;
-  background-color: var(--surface);
-  border: 1.5px solid var(--border-strong);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.nanko-node-circle:hover {
-  border-color: var(--brand);
-}
-
-.nanko-node-circle.is-selected {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
-}
-
-.nanko-circle-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  padding: 0.75rem;
-  box-sizing: border-box;
-  text-align: center;
-  border-radius: 50%;
-}
-
-.nanko-node-circle .nanko-node-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
-  padding: 0 0 0.2rem 0;
-  border-bottom: none;
-  background-color: transparent;
-}
-
-.nanko-node-circle .nanko-node-body {
-  padding: 0.15rem 0.25rem 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-.nanko-node-circle .nanko-node-label {
-  font-size: 0.78rem;
-  line-height: 1.25;
-  text-align: center;
-}
-
-.nanko-node-text {
-  min-width: 140px;
-  background-color: color-mix(in srgb, var(--surface) 75%, transparent);
-  border: 1px dashed var(--border-soft);
-}
-
-.nanko-node-text:hover {
-  border-color: var(--brand);
-}
-
-.nanko-node-text.is-selected {
-  border-color: var(--accent);
-}
-
 .nanko-node-header {
   display: flex;
   align-items: center;
@@ -1774,73 +1687,53 @@
   pointer-events: none;
 }
 
-.nanko-node-circle .nanko-node-desc {
-  font-size: 0.7rem;
-  max-width: 95px;
-}
-
 /* Ports de connexion Handles (7px carrés avec débordement de 3.5px) */
+/* Surcharges indispensables face aux styles inline et par défaut du composant Handle de @xyflow/react */
 .nanko-handle {
+  /* Override width 6px par défaut du Handle React Flow */
   width: 7px !important;
+  /* Override height 6px par défaut du Handle React Flow */
   height: 7px !important;
+  /* Override border-radius 100% (cercle) de React Flow pour créer un handle carré Blueprint */
   border-radius: 0 !important;
+  /* Override background inline/défaut de React Flow pour appliquer la couleur de surface */
   background-color: var(--surface) !important;
+  /* Override bordure par défaut de React Flow pour appliquer le token brand */
   border: 1.5px solid var(--brand) !important;
   transition: transform 0.12s ease, background-color 0.12s ease;
 }
 
 .nanko-handle:hover {
+  /* Override background au survol pour garantir le remplissage brand */
   background-color: var(--brand) !important;
   transform: scale(1.4);
 }
 
+/* Surcharges indispensables des coordonnées inline calculées par @xyflow/react pour centrer les handles de 7px */
 .nanko-handle-left {
+  /* Override left inline React Flow */
   left: -4px !important;
 }
 
 .nanko-handle-right {
+  /* Override right inline React Flow */
   right: -4px !important;
 }
 
 .nanko-handle-top {
+  /* Override top inline React Flow */
   top: -4px !important;
 }
 
 .nanko-handle-bottom {
+  /* Override bottom inline React Flow */
   bottom: -4px !important;
 }
 
 /* Labels d'arêtes */
 .react-flow__edgelabel-renderer {
+  /* Override z-index de la couche EdgeLabelRenderer de React Flow pour garder les labels au-dessus des arêtes SVG */
   z-index: 10 !important;
-}
-
-.nanko-edge-label-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  pointer-events: auto !important;
-  z-index: 10;
-}
-
-.nanko-edge-label {
-  background-color: var(--surface);
-  border: 1px solid var(--border-strong);
-  color: var(--heading);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  padding: 0.15rem 0.45rem;
-  white-space: nowrap;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-  cursor: pointer;
-  pointer-events: auto;
-}
-
-.nanko-edge-desc-indicator {
-  color: var(--brand, #5EEAD4);
-  font-weight: 700;
-  margin-left: 2px;
 }
 
 /* Animation apparition du tooltip */
@@ -2050,8 +1943,11 @@
   margin: 0 2px;
 }
 
+/* MiniMap React Flow : surcharge du fond et de la bordure par défaut de la librairie */
 .nanko-minimap {
+  /* Override fond blanc/sombre par défaut de @xyflow/react MiniMap */
   background-color: var(--surface) !important;
+  /* Override bordure par défaut de @xyflow/react MiniMap */
   border: 1px solid var(--border) !important;
 }
 
@@ -2153,8 +2049,8 @@
 }
 
 .radial-center-button:hover .radial-center-circle {
-  fill: color-mix(in srgb, #EF4444 20%, var(--surface));
-  stroke: #EF4444;
+  fill: color-mix(in srgb, var(--danger) 20%, var(--surface));
+  stroke: var(--danger);
 }
 
 .radial-center-text {
@@ -2167,5 +2063,5 @@
 }
 
 .radial-center-button:hover .radial-center-text {
-  fill: #EF4444;
+  fill: var(--danger);
 }

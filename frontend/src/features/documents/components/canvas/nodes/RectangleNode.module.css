@@ -1,0 +1,78 @@
+.nodeRectangle {
+  min-width: 190px;
+  max-width: 240px;
+  background-color: var(--surface);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 0;
+  font-family: var(--font-mono);
+  position: relative;
+  box-sizing: border-box;
+  cursor: grab;
+  user-select: none;
+}
+
+.nodeRectangle:active {
+  cursor: grabbing;
+}
+
+.nodeRectangle:hover {
+  border-color: var(--brand);
+}
+
+.isSelected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.nodeHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.3rem 0.65rem;
+  border-bottom: 1px solid var(--border);
+  background-color: color-mix(in srgb, var(--bg) 60%, transparent);
+}
+
+.nodeBadge {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.nodeId {
+  font-size: 0.72rem;
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.nodeBody {
+  padding: 0.6rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.nodeLabel {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--heading);
+  word-break: break-word;
+}
+
+.nodeDesc {
+  font-size: 0.75rem;
+  line-height: 1.25;
+  color: var(--text-muted, #94A3B8);
+  margin-top: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  pointer-events: none;
+}

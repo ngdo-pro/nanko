@@ -199,33 +199,33 @@ export function CircleNode({ selected, ...props }: CircleNodeProps) {
 
 ## 9. Plan d'exécution séquentiel
 
-- [ ] **Phase 1 : Tokens sémantiques & Audit `!important` (`frontend/src/index.css`, `App.css`)**
-  - [ ] 1. Ajouter `--success` et `--warning` (light + dark) dans `index.css`, à côté de `--danger`.
-  - [ ] 2. Remplacer `#ef4444` → `var(--danger)`, `#10b981` → `var(--success)`, `#f59e0b` → `var(--warning)` dans `App.css` (`.alert-error`, `.save-status-pill.*`, `.ast-syntax-pill.*`).
-  - [ ] 3. Documenter en commentaire pourquoi les pastilles `#ff5f56`/`#ffbd2e`/`#27c93f` restent en dur (décoratives, non thématiques).
-  - [ ] 4. Auditer les 17 `!important` un par un : annoter chacun (conservé + justification, ou retiré + correctif de spécificité appliqué).
+- [x] **Phase 1 : Tokens sémantiques & Audit `!important` (`frontend/src/index.css`, `App.css`)**
+  - [x] 1. Ajouter `--success` et `--warning` (light + dark) dans `index.css`, à côté de `--danger`.
+  - [x] 2. Remplacer `#ef4444` → `var(--danger)`, `#10b981` → `var(--success)`, `#f59e0b` → `var(--warning)` dans `App.css` (`.alert-error`, `.save-status-pill.*`, `.ast-syntax-pill.*`).
+  - [x] 3. Documenter en commentaire pourquoi les pastilles `#ff5f56`/`#ffbd2e`/`#27c93f` restent en dur (décoratives, non thématiques).
+  - [x] 4. Auditer les 17 `!important` un par un : annoter chacun (conservé + justification, ou retiré + correctif de spécificité appliqué).
 
-- [ ] **Phase 2 : Migration pilote CSS Modules (canvas nodes/edges)**
-  - [ ] 1. Créer `CircleNode.module.css`, `RectangleNode.module.css`, `TextNode.module.css`, `NankoEdge.module.css` colocalisés, en migrant les classes correspondantes depuis `App.css`.
-  - [ ] 2. Adapter les imports et `className` dans `CircleNode.tsx`, `RectangleNode.tsx`, `TextNode.tsx`, `NankoEdge.tsx` (via `clsx` + `styles.xxx`).
-  - [ ] 3. Retirer de `App.css` les règles migrées (pas de duplication).
-  - [ ] **Tests & Types Frontend :** `pnpm --filter frontend typecheck`, `pnpm --filter frontend lint`, `pnpm --filter frontend test` (suites `CircleNode.test.tsx`, `RectangleNode.test.tsx`, `TextNode.test.tsx`, `NankoEdge.test.tsx` inchangées, doivent rester vertes).
+- [x] **Phase 2 : Migration pilote CSS Modules (canvas nodes/edges)**
+  - [x] 1. Créer `CircleNode.module.css`, `RectangleNode.module.css`, `TextNode.module.css`, `NankoEdge.module.css` colocalisés, en migrant les classes correspondantes depuis `App.css`.
+  - [x] 2. Adapter les imports et `className` dans `CircleNode.tsx`, `RectangleNode.tsx`, `TextNode.tsx`, `NankoEdge.tsx` (via `clsx` + `styles.xxx`).
+  - [x] 3. Retirer de `App.css` les règles migrées (pas de duplication).
+  - [x] **Tests & Types Frontend :** `pnpm --filter frontend typecheck`, `pnpm --filter frontend lint`, `pnpm --filter frontend test` (suites `CircleNode.test.tsx`, `RectangleNode.test.tsx`, `TextNode.test.tsx`, `NankoEdge.test.tsx` inchangées, doivent rester vertes).
 
-- [ ] **Phase 3 : Skill de conventions CSS (`.claude/skills/nanko-css/`)**
-  - [ ] 1. Créer `.claude/skills/nanko-css/SKILL.md` selon le contenu défini en §7.2.
-  - [ ] 2. Renseigner l'inventaire "déjà migré vs restant" pour guider les migrations futures au fil de l'eau.
+- [x] **Phase 3 : Skill de conventions CSS (`.claude/skills/nanko-css/`)**
+  - [x] 1. Créer `.claude/skills/nanko-css/SKILL.md` selon le contenu défini en §7.2.
+  - [x] 2. Renseigner l'inventaire "déjà migré vs restant" pour guider les migrations futures au fil de l'eau.
 
-- [ ] **Phase 4 : Correction documentaire & Synchronisation (`/sync-current`)**
-  - [ ] 1. Corriger `.specs/architecture.md` (stack frontend : retrait de "Tailwind CSS", ajout de "CSS Modules + Design tokens CSS Custom Properties").
-  - [ ] 2. Mettre à jour `.specs/current/domains/workspace-management/tech.md` pour mentionner le standard CSS Modules et les tokens sémantiques étendus.
-  - [ ] 3. Déplacer cette spec dans `.specs/changes/archive/020-css-modules-migration-and-conventions.md`.
+- [x] **Phase 4 : Correction documentaire & Synchronisation (`/sync-current`)**
+  - [x] 1. Corriger `.specs/architecture.md` (stack frontend : retrait de "Tailwind CSS", ajout de "CSS Modules + Design tokens CSS Custom Properties").
+  - [x] 2. Mettre à jour `.specs/current/domains/workspace-management/tech.md` pour mentionner le standard CSS Modules et les tokens sémantiques étendus.
+  - [x] 3. Déplacer cette spec dans `.specs/changes/archive/020-css-modules-migration-and-conventions.md`.
 
-- [ ] **Phase 5 : Validation des Quality Gates & Non-Régression**
-  - [ ] 1. `pnpm --filter frontend typecheck`
-  - [ ] 2. `pnpm --filter frontend lint`
-  - [ ] 3. `pnpm --filter frontend test`
-  - [ ] 4. `pnpm --filter frontend build`
-  - [ ] 5. `pnpm --filter tests-e2e exec playwright test canvas-visualization.spec.ts` (ciblé — aucun autre parcours e2e concerné).
+- [x] **Phase 5 : Validation des Quality Gates & Non-Régression**
+  - [x] 1. `pnpm --filter frontend typecheck`
+  - [x] 2. `pnpm --filter frontend lint`
+  - [x] 3. `pnpm --filter frontend test`
+  - [x] 4. `pnpm --filter frontend build`
+  - [x] 5. `pnpm --filter tests-e2e exec playwright test canvas-visualization.spec.ts` (ciblé — aucun autre parcours e2e concerné).
 
 ---
 

@@ -1,9 +1,11 @@
 import React from 'react'
 import { Handle, Position } from '@xyflow/react'
 import type { NodeProps } from '@xyflow/react'
+import clsx from 'clsx'
 import type { NankoNodeData } from './RectangleNode'
 import { BlueprintTooltip } from '../tooltip/BlueprintTooltip'
 import { useHoverTooltip } from '../tooltip/useHoverTooltip'
+import styles from './TextNode.module.css'
 
 export const TextNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const nodeData = data as unknown as NankoNodeData
@@ -20,7 +22,7 @@ export const TextNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
   return (
     <div
-      className={`nanko-node nanko-node-text ${selected ? 'is-selected' : ''}`}
+      className={clsx(styles.nodeText, selected && styles.isSelected)}
       data-qa={`canvas-node-${id}`}
       data-testid={`canvas-node-${id}`}
       data-node-id={id}
@@ -30,15 +32,15 @@ export const TextNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       <Handle type="target" position={Position.Left} id="left" className="nanko-handle nanko-handle-left" />
       <Handle type="target" position={Position.Top} id="top" className="nanko-handle nanko-handle-top" />
 
-      <div className="nanko-text-inner">
-        <div className="nanko-node-header">
-          <span className="nanko-node-badge" data-qa="node-text">text</span>
-          <span className="nanko-node-id">{displayId}</span>
+      <div className={styles.textInner}>
+        <div className={styles.nodeHeader}>
+          <span className={clsx(styles.nodeBadge, 'nanko-node-badge')} data-qa="node-text">text</span>
+          <span className={clsx(styles.nodeId, 'nanko-node-id')}>{displayId}</span>
         </div>
-        <div className="nanko-node-body" data-qa={`ast-shape-${id}`}>
-          <span className="nanko-node-label" data-qa="node-label">{label}</span>
+        <div className={styles.nodeBody} data-qa={`ast-shape-${id}`}>
+          <span className={styles.nodeLabel} data-qa="node-label">{label}</span>
           {desc ? (
-            <span className="nanko-node-desc" data-qa="node-desc">{desc}</span>
+            <span className={clsx(styles.nodeDesc, 'nanko-node-desc')} data-qa="node-desc">{desc}</span>
           ) : null}
         </div>
       </div>

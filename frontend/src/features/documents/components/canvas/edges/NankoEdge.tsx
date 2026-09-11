@@ -5,8 +5,10 @@ import {
   EdgeLabelRenderer,
   type EdgeProps,
 } from '@xyflow/react'
+import clsx from 'clsx'
 import { BlueprintTooltip } from '../tooltip/BlueprintTooltip'
 import { useHoverTooltip } from '../tooltip/useHoverTooltip'
+import styles from './NankoEdge.module.css'
 
 export const NankoEdge: React.FC<EdgeProps> = ({
   id,
@@ -61,7 +63,7 @@ export const NankoEdge: React.FC<EdgeProps> = ({
       {hasBadge && (
         <EdgeLabelRenderer>
           <div
-            className={`nanko-edge-label-container ${edgeLabel ? 'has-label' : ''}`}
+            className={clsx(styles.edgeLabelContainer, edgeLabel && styles.hasLabel, 'nanko-edge-label-container')}
             style={{
               position: 'absolute',
               transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
@@ -72,10 +74,10 @@ export const NankoEdge: React.FC<EdgeProps> = ({
             onMouseEnter={edgeDesc ? handleMouseEnter : undefined}
             onMouseLeave={edgeDesc ? handleMouseLeave : undefined}
           >
-            <div className="nanko-edge-label">
+            <div className={clsx(styles.edgeLabel, 'nanko-edge-label')}>
               {edgeLabel ? (
                 <span
-                  className="nanko-edge-label-text"
+                  className={clsx(styles.edgeLabelText, 'nanko-edge-label-text')}
                   data-qa={`canvas-edge-label-${source}-${target}`}
                 >
                   {edgeLabel}
@@ -83,7 +85,7 @@ export const NankoEdge: React.FC<EdgeProps> = ({
               ) : null}
               {edgeDesc ? (
                 <span
-                  className="nanko-edge-desc-indicator"
+                  className={clsx(styles.edgeDescIndicator, 'nanko-edge-desc-indicator')}
                   data-qa={`edge-desc-indicator-${source}-${target}`}
                 >
                   {' '}•
