@@ -50,10 +50,11 @@
 
 ## 6. Implementation Spec(s)
 
-<!-- State 1: When initially framed (no specs derived yet): -->
+*Choose/adapt based on lifecycle state:*
+
+**State 1 (When initially framed — no specs derived yet):**
 *No execution specs linked yet.*
 
-<!-- State 2: When specs are derived via /spec, replace the line above with the linked spec(s):
+**State 2 (When specs are derived via `/spec` — replace State 1 with active spec deltas):**
 - [ ] **`[XXX-[slug]]`** : [Spec Title]  
   ↳ *File:* `.specs/changes/active/XXX-[slug].md`
--->
