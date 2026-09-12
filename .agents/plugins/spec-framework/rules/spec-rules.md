@@ -4,9 +4,10 @@ These rules apply universally to all agents operating within the **Spec Framewor
 
 ---
 
-## 1. Absolute Path Portability Rule
-* **All file paths in specs, initiatives, and features must be strictly workspace-relative** (relative to repository root, e.g., `src/...`, `tests/...`, `config/...`).
-* Never include machine-specific absolute paths (`/Users/...`, `file://`, `/tmp/...`).
+## 1. Path Portability & Relative Markdown Links Rule
+* **Strictly Portable Paths:** Never include machine-specific absolute paths (`/Users/...`, `file:///...`, `C:\...`, `/tmp/...`) in any specification, initiative, feature, decision record (ADR/PDR), template, or living knowledge file.
+* **Document-to-Document Markdown Links:** All Markdown hyperlinks (`[label](path)`) between files within the repository MUST use document-relative paths (e.g., `[ADR-0002](../../../decisions/architecture/ADR-0002.md)`, `[Contracts](./contracts.md)`). This guarantees that links resolve seamlessly across git platforms (GitHub, GitLab), IDE markdown previewers, and documentation generators.
+* **Workspace-Relative Text References:** Mentions of source code files in text, lists, or trees are written relative to the workspace root without leading slashes (e.g., `src/core/user.ts`, `.specs/specs/active/...`).
 
 ---
 

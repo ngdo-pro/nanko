@@ -18,7 +18,7 @@ Use this skill to update the technical architecture and patterns documentation o
 2. **Extract Technical Deltas:**
    * **Target Stack & Components:** Add new backend services, UseCases, Ports, Adapters, or frontend query hooks, state stores, and layout components.
    * **Technical & Security Invariants:** Document caching policies, rate limiting, encryption, PII sanitization, and capability rules.
-   * **Associated ADRs:** Link newly introduced or referenced Architecture Decision Records (`ADR-XXX`).
+   * **Associated ADRs:** Link newly introduced or referenced Architecture Decision Records (`ADR-XXX`) using document-relative markdown links (e.g. `[`ADR-XXX`](../../../decisions/architecture/ADR-XXX.md)`).
 
 3. **Save & Report:**
    * Write updated content to `.specs/knowledge/domains/[domain]/tech.md`.
