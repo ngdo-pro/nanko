@@ -54,7 +54,7 @@ flowchart LR
 
 | Référence | Décision Structurante | Impact Technique |
 |---|---|---|
-| [`ADR-0002`](../../../decisions/architecture/ADR-0002-modular-monolith-and-bounded-contexts.md) | Monolithe Modulaire | Isolation stricte des Bounded Contexts en modules autonomes |
-| [`ADR-0007`](../../../decisions/architecture/ADR-0007-postgresql-unique-runtime-source-of-truth.md) | Runtime PostgreSQL unique | Stockage relationnel unique sans dispersion de datastores |
-| [`ADR-0011`](../../../decisions/architecture/ADR-0011-hexagonal-architecture-and-dbal-without-orm.md) | Hexagone & DBAL sans ORM | Requêtes SQL explicites et entités pures découplées de l'ORM |
-| [`PDR-0002`](../../../decisions/product/PDR-0002-access-model-and-personal-workspace.md) | Espace personnel implicite | Auto-provisioning transparent sans friction au premier login |
+| [`ADR-0002`](../../../decisions/architecture/ADR-002-bounded-contexts-structure.md) | Monolithe Modulaire | Isolation stricte des Bounded Contexts en modules autonomes |
+| [`ADR-0007`](../../../decisions/architecture/ADR-007-postgres-only-for-mvp.md) | Runtime PostgreSQL unique | Stockage relationnel unique sans dispersion de datastores |
+| [`ADR-0011`](../../../decisions/architecture/ADR-011-hexagonal-architecture-backend.md) | Hexagone & DBAL sans ORM | Requêtes SQL explicites et entités pures découplées de l'ORM |
+| [`PDR-0002`](../../../decisions/product/PDR-002-organisation-personnelle-implicite.md) | Espace personnel implicite | Auto-provisioning transparent sans friction au premier login |

@@ -55,6 +55,6 @@ flowchart LR
 
 | Référence | Décision Structurante | Impact Technique |
 |---|---|---|
-| [`ADR-0002`](../../../decisions/architecture/ADR-0002-modular-monolith-and-bounded-contexts.md) | Monolithe Modulaire | Regroupement des services dans un runtime unifié tout en isolant les Bounded Contexts |
-| [`ADR-0007`](../../../decisions/architecture/ADR-0007-postgresql-unique-runtime-source-of-truth.md) | PostgreSQL Source Unique & Datastores Dédiés | PostgreSQL unique pour le métier, ClickHouse dédié à la télémétrie volumique |
-| [`ADR-0010`](../../../decisions/architecture/ADR-0010-preprod-e2e-semver-pull-request-pipeline.md) | Pipeline PR Préproduction & SemVer | Validation systématique en préproduction réelle avant tout merge sur main |
+| [`ADR-0002`](../../../decisions/architecture/ADR-002-bounded-contexts-structure.md) | Monolithe Modulaire | Regroupement des services dans un runtime unifié tout en isolant les Bounded Contexts |
+| [`ADR-0007`](../../../decisions/architecture/ADR-007-postgres-only-for-mvp.md) | PostgreSQL Source Unique & Datastores Dédiés | PostgreSQL unique pour le métier, ClickHouse dédié à la télémétrie volumique |
+| [`ADR-0010`](../../../decisions/architecture/ADR-010-watchtower-polling-deployment.md) | Pipeline PR Préproduction & SemVer | Validation systématique en préproduction réelle avant tout merge sur main |

@@ -160,16 +160,16 @@ sequenceDiagram
 
 ### 7.1. Composants Frontend Modifiés
 
-1. **[AppLayout.tsx](file:///Users/ngdo/dev/nanko/frontend/src/components/layout/AppLayout.tsx)** :
+1. **[AppLayout.tsx](../../../frontend/src/components/layout/AppLayout.tsx)** :
    * Détection de la vue active : si la route correspond à `/projects/:projectId/documents/:documentId`, la classe `.app-main-fullscreen` est appliquée sur l'élément `<main>`, désactivant la contrainte `max-width: 1200px` et les marges restrictives.
-2. **[DocumentEditorView.tsx](file:///Users/ngdo/dev/nanko/frontend/src/views/DocumentEditorView.tsx)** :
+2. **[DocumentEditorView.tsx](../../../frontend/src/views/DocumentEditorView.tsx)** :
    * En mode `canvas` :
      * Le conteneur englobant passe en `position: relative; width: 100%; height: 100%;`.
      * La barre `editor-topbar` reçoit la classe `.is-floating`.
      * Le canvas `NankoCanvas` occupe 100% de la surface sous la barre flottante.
    * En mode `split` et `code` :
      * La barre `editor-topbar` reste dans le flux normal statique `.is-static`.
-3. **[App.css](file:///Users/ngdo/dev/nanko/frontend/src/App.css)** :
+3. **[App.css](../../../frontend/src/App.css)** :
    * Définition de `.app-main-fullscreen` : `max-width: 100%; padding: 0.75rem 1rem; width: 100%; height: calc(100vh - var(--navbar-height, 60px) - 45px); overflow: hidden;`.
    * Règles CSS pour `.editor-topbar.is-floating` : position absolue, centrage supérieur, élévation `z-index: 20`, fond `backdrop-filter: blur(12px)`, padding compact.
    * Ajustement de `.editor-workspace-canvas-only` pour couvrir toute la hauteur disponible sans barres de défilement externes.

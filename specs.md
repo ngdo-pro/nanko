@@ -2,94 +2,87 @@
 
 ```markdown
 monorepo/
-├── .claude/
-│   └── commands/                      # Les skills exécutables par Claude Code
-│       ├── target.md                  # /target : Cadre une cible fonctionnelle en profondeur
-│       ├── spec.md                    # /spec : Rédige une demande d'évolution (Delta)
-│       ├── build-spec.md              # /build-spec : Exécute le code et les tests
-│       ├── sync-baseline.md           # /sync-baseline : Met à jour la baseline et archive
-│       ├── new-pdr.md                 # /new-pdr : Documente un arbitrage produit
-│       └── new-adr.md                 # /new-adr : Documente un arbitrage technique
+├── .agents/
+│   ├── plugins.json                   # Enregistrement du plugin universel spec-framework
+│   ├── skills/
+│   │   └── nanko-css/                 # Conventions de styles CSS spécifiques à Nanko
+│   └── rules/                         # spec-workflow.md
 │
 ├── .specs/
-│   ├── TARGET_TEMPLATE.md             # Template Markdown pour les cibles fonctionnelles
-│   ├── CHANGE_TEMPLATE.md             # Template Markdown structuré en diff/delta
-│   ├── vision.md                      # Invariants produit & UX globaux
+│   ├── vision.md                      # Invariants produit & UX globaux (North Star)
 │   ├── architecture.md                # Invariants techniques globaux (monorepo, CI/CD)
 │   │
-│   ├── targets/                       # CIBLES FONCTIONNELLES (« WHAT WE BUILD »)
-│   │   ├── active/                    # Cibles en cours de cadrage ou de réalisation
-│   │   │   └── studio-board.md
-│   │   └── achieved/                  # Cibles atteintes et livrées (historique des visions)
-│   │       └── 000-core-domain.md
+│   ├── initiatives/                   # JALONS STRATÉGIQUES (« WHAT WE BUILD »)
+│   │   ├── active/                    # Initiatives en cours de réalisation
+│   │   │   └── studio-modeling/
+│   │   │       ├── README.md          # Cadrage macro et roadmap des features
+│   │   │       ├── planned/           # Features prêtes à être spécifiées
+│   │   │       └── archive/           # Features livrées
+│   │   ├── planned/                   # Prochaines initiatives planifiées
+│   │   └── archive/                   # Initiatives entièrement livrées
 │   │
-│   ├── current/                       # ÉTAT COURANT DU SYSTÈME (Source de vérité vivante)
+│   ├── specs/                         # SPÉCIFICATIONS TECHNIQUES DÉTAILLÉES (Deltas)
+│   │   ├── planned/                   # Specs cadrées en attente d'implémentation
+│   │   ├── active/                    # Spec en cours d'implémentation (/build-spec)
+│   │   └── archive/                   # Specs livrées et vérifiées
+│   │
+│   ├── knowledge/                     # BASE DE CONNAISSANCES VIVANTE (Source de vérité)
 │   │   └── domains/
 │   │       ├── auth-and-identity/
-│   │       │   ├── behavior.md        # Parcours UX et règles métier actuellement en prod
-│   │       │   ├── tech.md            # Patterns, services et stack du domaine
-│   │       │   ├── contracts.md       # Endpoints REST/OAuth et schémas Zod actifs
-│   │       │   └── models.md          # Entités Doctrine et schéma DB actif
-│   │       │
+│   │       ├── platform/
+│   │       ├── studio-modeling/
 │   │       └── workspace-management/
-│   │           ├── behavior.md
-│   │           ├── tech.md
-│   │           ├── contracts.md
-│   │           └── models.md
-│   │
-│   ├── changes/                       # DEMANDES D'ÉVOLUTION (Deltas temporaires)
-│   │   ├── active/                    # Évolutions en cours de cadrage ou d'implémentation
-│   │   │   ├── 001-init-auth.md
-│   │   │   └── 002-add-magic-link.md
-│   │   └── archive/                   # Évolutions livrées en prod (historique immuable)
-│   │       └── 000-bootstrap-repo.md
+│   │           ├── behavior.md        # Parcours UX et règles métier
+│   │           ├── contracts.md       # Synthèse des endpoints & schémas Zod
+│   │           ├── openapi.yaml       # Spécification formelle OpenAPI 3.1
+│   │           ├── models.md          # Schéma relationnel & agrégats Core
+│   │           └── tech.md            # Architecture, composants & sécurité
 │   │
 │   └── decisions/                     # REGISTRE DES DÉCISIONS STRUCTURANTES (« LE WHY »)
 │       ├── product/                   # PDRs (Product Decision Records)
-│       │   └── PDR-001-auto-login.md
 │       └── architecture/              # ADRs (Architecture Decision Records)
-│           └── ADR-001-league-oauth2.md
 ```
 
 ## Templates
 
-- Vision
-- Architecture
-- TARGET_TEMPLATE.md
-- CHANGE_TEMPLATE.md
-- Product Decision Record (PRD)
-- Architecture Decision Record (ADR)
-- Comportement (Domain Behavior)
-- Technique (Domain Tech)
+- `VISION_TEMPLATE.md`
+- `INITIATIVE_TEMPLATE.md`
+- `FEATURE_TEMPLATE.md`
+- `SPEC_TEMPLATE.md`
+- `ADR_TEMPLATE.md`
+- `PDR_TEMPLATE.md`
+- `DOMAIN_BEHAVIOR_TEMPLATE.md`
+- `DOMAIN_CONTRACTS_TEMPLATE.md`
+- `DOMAIN_MODELS_TEMPLATE.md`
+- `DOMAIN_TECH_TEMPLATE.md`
 
 # Rôle des skills Claude Code & Antigravity
 
 | **Commande** | **Rôle** | **Entrées lues** | **Sorties produites** |
 | --- | --- | --- | --- |
-| `/target [domaine] [sujet]` | Mène un interrogatoire poussé pour cadrer une cible fonctionnelle majeure. | `.specs/vision.md`, `.specs/targets/achieved/*`, `.specs/knowledge/*` | `.specs/targets/active/[sujet].md` |
-| `/spec [domaine] [besoin]` | Compare le besoin avec la base de connaissances et la cible, et génère la spec delta. | `.specs/targets/active/*`, `.specs/knowledge/domains/[domaine]/*` | `.specs/specs/planned/XXX-[nom].md` |
+| `/vision` | Cadre ou met à jour la vision produit et les tenets directeurs. | Contexte utilisateur | `.specs/vision.md` |
+| `/initiative [slug]` | Cadre un jalon stratégique et sa roadmap de features. | `.specs/vision.md`, `.specs/knowledge/*` | `.specs/initiatives/active/[slug]/README.md` |
+| `/feature [init] [slug]` | Cadre une feature discrète prête pour spécification. | `[initiative]/README.md`, `.specs/knowledge/*` | `[initiative]/planned/[slug].md` |
+| `/spec [domaine] [besoin]` | Génère une spécification technique exécutable et testable. | Feature brief, `.specs/knowledge/domains/[domaine]/*` | `.specs/specs/planned/XXX-[nom].md` |
+| `/build-spec [id]` | Implémente le code, joue les migrations et valide la DoD. | `.specs/specs/active/XXX.md`, `.specs/knowledge/*` | Code source, suites de tests au vert |
+| `/test-spec [id]` | Audite et complète les scénarios de tests unitaires, d'intégration et E2E. | `.specs/specs/active/XXX.md`, code source | Scénarios Gherkin, tests automatisés |
+| `/sync-knowledge [id]` | Répercute le delta livré dans les 4 piliers de connaissances et archive la spec. | `.specs/specs/active/XXX.md` | `.specs/knowledge/domains/[domaine]/*` mis à jour, déplacement vers `specs/archive/` |
 | `/new-pdr [sujet]` | Formalise un arbitrage fonctionnel ou d'ergonomie structurant. | Contexte de discussion | `.specs/decisions/product/PDR-XXX.md` |
 | `/new-adr [sujet]` | Formalise un choix technique (bundle, protocole, stockage). | Contexte de discussion | `.specs/decisions/architecture/ADR-XXX.md` |
-| `/build-spec [id]` | Implémente le code (Symfony/React), joue les migrations et valide la DoD. | `.specs/specs/active/XXX.md`, `.specs/knowledge/domains/[domaine]/*` | Code source, suites de tests au vert |
-| `/sync-knowledge [id]` | Répercute le delta livré dans les fichiers de connaissances et archive la spec. | `.specs/specs/active/XXX.md` | `.specs/knowledge/domains/[domaine]/*` mis à jour, déplacement vers `specs/archive/` |
 
 # Le workflow pas à pas
 
 - **Schema**
-    
+
     ```mermaid
     flowchart TD
-        A[Idée / Besoin d'évolution] --> B["1. /spec [domaine] [besoin]"]
-        B --> C["Lecture de la base de connaissances (.specs/knowledge) & Génération du Delta"]
-        C --> D["2. Relecture & Validation humaine du fichier Markdown"]
-        D -->|Ajustements nécessaires| D
-        D -->|Spec validée| E["3. /build-spec [id]"]
-        E --> F["Implémentation Backend (Symfony) & Frontend (React)"]
-        F --> G["Exécution des tests (Unit, Integration, E2E Préprod)"]
-        G -->|Échec tests| F
-        G -->|Tous tests OK| H["4. /sync-knowledge [id]"]
-        H --> I["Mise à jour de .specs/knowledge/ (behavior, contracts, models, tech)"]
-        I --> J["Archivage de la spec dans specs/archive/"]
+        V[Vision Produit] --> I["1. /initiative [slug]"]
+        I --> F["2. /feature [init] [slug]"]
+        F --> S["3. /spec [domaine] [besoin]"]
+        S --> B["4. /build-spec [id]"]
+        B --> T["5. /test-spec [id]"]
+        T --> K["6. /sync-knowledge [id]"]
+        K --> Arch["Archivage spec & mise à jour feature"]
     ```
     
 
@@ -200,9 +193,9 @@ monorepo/
 * **Migrations :** Toute évolution de schéma passe obligatoirement par une migration Doctrine versionnée sous `apps/api/migrations/`.
 * **Rétrocompatibilité :** Interdiction d'ajouter une colonne `NOT NULL` sans valeur par défaut sur des tables existantes en production.
 ```
-CHANGE_TEMPLATE.md
+SPEC_TEMPLATE.md (.agents/plugins/spec-framework/templates/SPEC_TEMPLATE.md)
 ```markdown
-# Change : [XXX] - [Nom de l'évolution]
+# Spec : [XXX] - [Nom de l'évolution]
 
 ## Métadonnées
 * **Domaine concerné :** `.specs/knowledge/domains/[nom-du-domaine]/`
