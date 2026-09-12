@@ -48,7 +48,7 @@
 
 ## 5. Strategic Initiatives Roadmap
 
-### Active Initiatives
+### 🚀 Active Initiatives
 *Immediate focus — currently being framed or delivered (Strict WIP limit: 1-2 concurrent initiatives):*
 
 - [ ] **`[initiative-slug]`**: [Initiative Title]  
@@ -56,7 +56,7 @@
 
 ---
 
-### Planned Initiatives (Ready)
+### 🎯 Planned Initiatives (Ready)
 *Prioritized next initiatives ready to launch once capacity is unlocked:*
 
 - [ ] **`[initiative-slug]`**: [Initiative Title]  
@@ -64,7 +64,7 @@
 
 ---
 
-### Backlog & Future Opportunities
+### 💡 Backlog & Future Opportunities
 *Strategic candidate themes to explore later (simple intentions at this stage, no directory needed):*
 
 * **`[opportunity-slug]`**: [1-sentence description of intent and potential user value].

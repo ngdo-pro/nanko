@@ -44,7 +44,7 @@
 
 ## 5. Roadmap des Initiatives Stratégiques
 
-### En Cours (Actives)
+### 🚀 En Cours (Actives)
 *Chantiers prioritaires en cours de cadrage ou de livraison (WIP limité : 1 à 2 initiatives max) :*
 
 - [ ] **`studio-modeling`** : Modélisation Visuelle Directe & Fluide sur le Canvas (Shapes, Connecteurs, In-place)  
@@ -52,7 +52,7 @@
 
 ---
 
-### Planifiées (Prêtes)
+### 🎯 Planifiées (Prêtes)
 *Prochains chantiers priorisés, prêts à démarrer dès libération de bande passante :*
 
 - [ ] **`workspace-management`** : Gestion des Espaces Personnels & Hiérarchie de Projets  
@@ -60,7 +60,7 @@
 
 ---
 
-### Backlog & Opportunités Futures
+### 💡 Backlog & Opportunités Futures
 *Pistes stratégiques à instruire ultérieurement (simples intentions à ce stade) :*
 
 * **`multiplayer-collaboration`** : Édition synchrone à plusieurs et présence de curseurs en temps réel sur le canvas.
