@@ -1,23 +1,23 @@
 ---
 name: spec
-description: Frame an evolution requirement and generate a structured delta engineering specification in .specs/changes/active/.
+description: Frame an evolution requirement and generate a structured delta engineering specification in .specs/specs/planned/.
 ---
 
 # Skill: spec
 
 Use this skill when the user requests designing, specifying, or framing an engineering evolution for a domain (`/spec [domain] [requirement]`).
 
-All generated specification documents (`.specs/changes/active/XXX-[slug].md`) must be authored in the user's language.
+All generated specification documents (`.specs/specs/planned/XXX-[slug].md`) must be authored in the user's language.
 
 ---
 
 ## Procedure
 
 1. **Domain Context & Greenfield Check:**
-   * Check if `.specs/current/domains/[domain]/` exists:
-     - **If present (Brownfield):** Read ground truth files (`behavior.md`, `tech.md`, `contracts.md`, `models.md`) to build strictly upon existing foundations.
-     - **If absent (Greenfield / Initial Bootstrap):** Do not block. Treat as a foundational spec establishing the initial architecture for this domain (ground truth will be seeded upon `/sync-current`).
-   * If derived from an initiative feature, read the Feature file in `.specs/initiatives/active/[initiative]/[feature].md` to extract wireframes, invariants, and out-of-scope bounds.
+   * Check if `.specs/baseline/domains/[domain]/` exists:
+     - **If present (Brownfield):** Read baseline files (`behavior.md`, `tech.md`, `contracts.md`, `models.md`) to build strictly upon existing foundations.
+     - **If absent (Greenfield / Initial Bootstrap):** Do not block. Treat as a foundational spec establishing the initial architecture for this domain (baseline will be seeded upon `/sync-baseline`).
+   * If derived from an initiative feature, read the Feature file in `.specs/initiatives/(active|planned)/[initiative]/(active|planned)/[feature].md` to extract wireframes, invariants, and out-of-scope bounds.
    * Read `.specs/vision.md` and `.specs/architecture.md`.
 
 2. **Exhaustive Technical Interview:**
@@ -25,10 +25,10 @@ All generated specification documents (`.specs/changes/active/XXX-[slug].md`) mu
    * **Proactive Slicing:** If resolving technical edge cases reveals cross-cutting complexity across multiple tiers (e.g., heavy backend contracts + complex UI canvas), proactively recommend splitting into sequential specs (e.g., Backend/Contracts first, then Frontend/UI).
 
 3. **Sequential Identifier:**
-   * Determine the next sequential 3-digit ID (`XXX`) by scanning `.specs/changes/planned/`, `.specs/changes/active/`, and `.specs/changes/archive/`.
+   * Determine the next sequential 3-digit ID (`XXX`) by scanning `.specs/specs/planned/`, `.specs/specs/active/`, and `.specs/specs/archive/`.
 
-4. **Generate Engineering Delta (`.specs/changes/planned/XXX-[slug].md`):**
-   * Instantiate `templates/SPEC_TEMPLATE.md` into `.specs/changes/planned/XXX-[slug].md` adhering strictly to conciseness and structure rules:
+4. **Generate Engineering Delta (`.specs/specs/planned/XXX-[slug].md`):**
+   * Instantiate `templates/SPEC_TEMPLATE.md` into `.specs/specs/planned/XXX-[slug].md` adhering strictly to conciseness and structure rules:
      - **Absolute Path Portability:** All paths must be workspace-relative (relative to repository root, e.g., `src/...`, `tests/...`, `config/...`). Never include absolute machine paths.
      - **Section 1 (Intent & Context):** Why, impact, In Scope, Out of Scope. Include clean omission lines for irrelevant tiers (e.g., if UI-only, condense Data/Infra tiers into an omission note).
      - **Section 2 (Flow & Architecture):** Concise Mermaid diagram (nominal + error cases).
@@ -61,7 +61,7 @@ All generated specification documents (`.specs/changes/active/XXX-[slug].md`) mu
        * In initiative `README.md`, update link to `active/[feature].md` with state indicator `*(Active 🛠️)*`.
      - In the feature document, set `Status: Active`.
      - Add the new spec under `## 6. Implementation Spec(s)`:
-       `- [ ] **`[XXX-[slug]]`** : [Spec Title] (File: `.specs/changes/planned/XXX-[slug].md`)`
+       `- [ ] **`[XXX-[slug]]`** : [Spec Title] (File: `.specs/specs/planned/XXX-[slug].md`)`
 
 6. **Validation:**
    * Invite the user to review the spec before launching implementation (`/build-spec XXX`).

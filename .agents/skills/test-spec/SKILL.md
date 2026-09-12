@@ -5,7 +5,7 @@ description: Auditer, concevoir et synchroniser les tests unitaires, d'intégrat
 
 # Skill : test-spec
 
-Utilisez ce skill pour auditer, concevoir et synchroniser les tests (unitaires, intégration, E2E) et garantir que tout comportement ou cas limite dispose de son test automatisé ET de son scénario Gherkin correspondant dans la spécification active (`.specs/changes/active/[id]*.md`).
+Utilisez ce skill pour auditer, concevoir et synchroniser les tests (unitaires, intégration, E2E) et garantir que tout comportement ou cas limite dispose de son test automatisé ET de son scénario Gherkin correspondant dans la spécification active (`.specs/specs/active/[id]*.md`).
 
 ## Quand l'utiliser ?
 
@@ -18,7 +18,7 @@ Utilisez ce skill pour auditer, concevoir et synchroniser les tests (unitaires, 
 ## Procédure
 
 ### 1. Audit croisé Spec $\leftrightarrow$ Code de Test
-* Charger la spécification active sous `.specs/changes/active/[id]*.md`.
+* Charger la spécification active sous `.specs/specs/active/[id]*.md`.
 * Analyser la **Section 5 (Invariants Métier & Traçabilité)** et la **Section 8.1 (Scénarios Gherkin Exhaustifs)**.
 * Examiner les suites de tests existantes :
   * Backend : `backend/tests/Unit/`, `backend/tests/Integration/`.

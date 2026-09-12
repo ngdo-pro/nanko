@@ -1,7 +1,7 @@
 # Spec: [XXX] - [Specification Title]
 
 ## Metadata
-* **Domain:** `.specs/current/domains/[domain-name]/`
+* **Domain:** `.specs/baseline/domains/[domain-name]/`
 * **Change Type:** `New Domain Bootstrap` | `New Capability` | `Enhancement` | `Refactor` | `Bugfix`
 * **Target Tier:** `Fullstack` | `Backend / Service` | `Frontend / UI` | `Infra / DevOps` | `Tests / Tooling`
 * **Complexity:** `Low` | `Medium` | `High`

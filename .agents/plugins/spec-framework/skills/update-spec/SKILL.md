@@ -12,7 +12,7 @@ Use this skill whenever the user requests modifying, trimming, or enriching the 
 ## Procedure
 
 1. **Load Active Specification:**
-   * Locate and read `.specs/changes/active/[id]*.md`.
+   * Locate and read `.specs/specs/active/[id]*.md`.
    * If missing from `active/`, return an explicit error prompting to verify the ID.
 
 2. **Exhaustive Impact Analysis:**
@@ -28,7 +28,7 @@ Use this skill whenever the user requests modifying, trimming, or enriching the 
      * **Appendix (File Index):** Keep path resolutions in sync.
 
 3. **Apply Specification Changes:**
-   * Modify `.specs/changes/active/[id]*.md` directly in the user's language.
+   * Modify `.specs/specs/active/[id]*.md` directly in the user's language.
    * Thoroughly remove obsolete mentions or removed options.
 
 4. **Summary & Hand-off:**

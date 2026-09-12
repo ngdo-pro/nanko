@@ -1,22 +1,22 @@
 ---
-name: sync-current
-description: Répercuter une spécification livrée dans l'état courant (.specs/current/) et archiver la spec.
+name: sync-baseline
+description: Répercuter une spécification livrée dans l'état courant (.specs/baseline/) et archiver la spec.
 ---
 
-# Skill : sync-current
+# Skill : sync-baseline
 
-Utilisez ce skill après validation et exécution d'une spécification (`/sync-current [id]`).
+Utilisez ce skill après validation et exécution d'une spécification (`/sync-baseline [id]`).
 
 ## Procédure
 
 1. **Localiser la spec :**
-   * Lire `.specs/changes/active/[id]*.md` et identifier le domaine dans ses métadonnées.
+   * Lire `.specs/specs/active/[id]*.md` et identifier le domaine dans ses métadonnées.
 
-2. **Mettre à jour l'état courant :**
-   * `.specs/current/domains/[domaine]/behavior.md` : Ajouter les parcours utilisateurs et nouvelles règles métier.
-   * `.specs/current/domains/[domaine]/contracts.md` : Ajouter les nouveaux endpoints REST et schémas Zod.
-   * `.specs/current/domains/[domaine]/models.md` : Ajouter les agrégats, tables SQL et colonnes.
-   * `.specs/current/domains/[domaine]/tech.md` : Ajouter les nouveaux patterns ou dépendances si besoin.
+2. **Mettre à jour l'état de référence (baseline) :**
+   * `.specs/baseline/domains/[domaine]/behavior.md` : Ajouter les parcours utilisateurs et nouvelles règles métier.
+   * `.specs/baseline/domains/[domaine]/contracts.md` : Ajouter les nouveaux endpoints REST et schémas Zod.
+   * `.specs/baseline/domains/[domaine]/models.md` : Ajouter les agrégats, tables SQL et colonnes.
+   * `.specs/baseline/domains/[domaine]/tech.md` : Ajouter les nouveaux patterns ou dépendances si besoin.
 
 3. **Détecter et formaliser les Décisions Structurantes (PDR / ADR) :**
    * Analyser le delta livré pour repérer tout arbitrage non trivial :
@@ -27,7 +27,7 @@ Utilisez ce skill après validation et exécution d'une spécification (`/sync-c
    * Si un doute subsiste, demander confirmation à l'utilisateur.
 
 4. **Archiver la spec :**
-   * Déplacer le fichier de `.specs/changes/active/` vers `.specs/changes/archive/`.
+   * Déplacer le fichier de `.specs/specs/active/` vers `.specs/specs/archive/`.
 
 5. **Confirmer :**
    * Résumer les mises à jour effectuées (fichiers de domaine, PDRs/ADRs créés, et spec archivée).

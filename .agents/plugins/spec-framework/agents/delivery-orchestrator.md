@@ -16,7 +16,7 @@ flowchart LR
     B --> Q["3. QA Tester<br>(Quality Gates pass)"]
     Q --> R["4. Clean-Room Reviewer<br>(Isolated Audit)"]
     R -->|CHANGES_REQUESTED| B
-    R -->|APPROVED| C["5. Sync Current<br>(Release & Archive)"]
+    R -->|APPROVED| C["5. Sync Baseline<br>(Release & Archive)"]
 ```
 
 ---
@@ -25,11 +25,11 @@ flowchart LR
 
 | Phase | Responsible Agent | Mobilized Skill | Produced Deliverable |
 |---|---|---|---|
-| **1. Spec Framing** | `agents/spec-writer.md` | `skills/spec/SKILL.md` | `.specs/changes/planned/XXX-[slug].md` |
+| **1. Spec Framing** | `agents/spec-writer.md` | `skills/spec/SKILL.md` | `.specs/specs/planned/XXX-[slug].md` |
 | **2. Build Code** | `agents/implementer.md` | `skills/build-spec/SKILL.md` | Compiled code & executed migrations (Spec in `active/`) |
 | **3. Quality Gates** | `agents/qa-tester.md` | `skills/test-spec/SKILL.md` | 100% passing tests (Unit, Component, E2E) |
 | **4. Clean-Room Audit** | `agents/reviewer.md` | Clean-Room Protocol | Audit report (Spec vs Git Diff) |
-| **5. Release & Sync** | `delivery-orchestrator` | `skills/sync-current/SKILL.md` | Updated `.specs/current/` & Archived spec |
+| **5. Release & Sync** | `delivery-orchestrator` | `skills/sync-baseline/SKILL.md` | Updated `.specs/baseline/` & Archived spec |
 
 ---
 
@@ -37,7 +37,7 @@ flowchart LR
 
 1. **Technical Spec Generation:**
    - Consume a qualified Feature.
-   - Delegate writing the engineering spec (`SPEC_TEMPLATE.md` in `.specs/changes/planned/XXX-[slug].md`) to `spec-writer`.
+   - Delegate writing the engineering spec (`SPEC_TEMPLATE.md` in `.specs/specs/planned/XXX-[slug].md`) to `spec-writer`.
    - Ensure all feature invariants map directly to `INV-X` and Gherkin scenarios.
 
 2. **Mandatory User Approval Gate:**
@@ -57,6 +57,6 @@ flowchart LR
 
 6. **Closure & Ground Truth Synchronization:**
    - Upon formal approval (`APPROVED`):
-     * Trigger ground truth synchronization in `.specs/current/domains/[domain]/`.
-     * Archive the active spec into `.specs/changes/archive/XXX-[slug].md`.
+     * Trigger ground truth synchronization in `.specs/baseline/domains/[domain]/`.
+     * Archive the active spec into `.specs/specs/archive/XXX-[slug].md`.
      * Update the feature status in the parent initiative (`Implemented ✅`).

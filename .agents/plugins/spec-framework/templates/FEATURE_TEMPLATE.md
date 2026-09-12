@@ -57,4 +57,4 @@
 
 **State 2 (When specs are derived via `/spec` — replace State 1 with spec deltas):**
 - [ ] **`[XXX-[slug]]`** : [Spec Title]  
-  ↳ *File:* `.specs/changes/planned/XXX-[slug].md` *(or `active/` once `/build-spec` starts)*
+  ↳ *File:* `.specs/specs/planned/XXX-[slug].md` *(or `active/` once `/build-spec` starts)*

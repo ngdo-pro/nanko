@@ -1,6 +1,6 @@
 ---
 name: spec
-description: Cadrer un besoin d'évolution et générer une spécification delta structurée dans .specs/changes/active/.
+description: Cadrer un besoin d'évolution et générer une spécification delta structurée dans .specs/specs/planned/ ou active/.
 ---
 
 # Skill : spec
@@ -10,17 +10,17 @@ Utilisez ce skill lorsque l'utilisateur demande de concevoir, spécifier ou cadr
 ## Procédure
 
 1. **Isolation du domaine :**
-   * Vérifier que `.specs/current/domains/[domaine]/` existe.
-   * Lire les fichiers de l'état courant : `behavior.md`, `tech.md`, `contracts.md`, `models.md`.
+   * Vérifier que `.specs/baseline/domains/[domaine]/` existe.
+   * Lire les fichiers de l'état de référence (baseline) : `behavior.md`, `tech.md`, `contracts.md`, `models.md`.
    * Lire `.specs/vision.md` et `.specs/architecture.md`.
 
-2. **Interview (2 questions max) :**
-   * Si des zones d'ombre subsistent (notamment sur l'exposition réseau, la sécurité des endpoints ou le périmètre), poser au maximum 2 questions précises à l'utilisateur.
+2. **Interview :**
+   * Si des zones d'ombre subsistent (notamment sur l'exposition réseau, la sécurité des endpoints ou le périmètre), poser des questions précises à l'utilisateur (sans cap artificiel, en suggérant de découper si le scope est trop lourd).
 
 3. **Numéro de séquence :**
-   * Déterminer le prochain ID sur 3 chiffres (`XXX`) d'après `.specs/changes/active/` et `.specs/changes/archive/`.
+   * Déterminer le prochain ID sur 3 chiffres (`XXX`) d'après `.specs/specs/planned/`, `.specs/specs/active/` et `.specs/specs/archive/`.
 
-4. **Génération du Delta (`.specs/changes/active/XXX-[slug].md`) :**
+4. **Génération du Delta (`.specs/specs/planned/XXX-[slug].md`) :**
    * Instancier le modèle `.specs/CHANGE_TEMPLATE.md` en respectant scrupuleusement les règles de concision et de structure suivantes :
      - **Règle absolue de portabilité :** Tous les chemins de fichiers doivent impérativement être relatifs à la racine du projet (`frontend/...`, `backend/...`, `tests-e2e/...`). Aucun chemin absolu machine (`/Users/...`, `file://`) n'est toléré dans les specs versionnées.
      - **Section 1 (Intention & Contexte) :** Pourquoi, impact, In Scope, Out of Scope. Mentionner une ligne d'omission propre pour les pans sans objet (ex: si 100% frontend, condenser DBAL/API/Réseau en une note d'omission).

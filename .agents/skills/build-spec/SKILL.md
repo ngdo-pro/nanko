@@ -10,7 +10,7 @@ Utilisez ce skill lorsque l'utilisateur demande d'implémenter une spécificatio
 ## Procédure
 
 1. **Chargement & Analyse de la Spec :**
-   * Lire `.specs/changes/active/[id]*.md`, `.specs/architecture.md` et l'état courant du domaine.
+   * Lire `.specs/specs/active/[id]*.md` (ou basculer depuis `planned/` vers `active/`), `.specs/architecture.md` et l'état de référence (baseline) du domaine.
    * **Inventaire & Signatures :** Analyser l'arborescence `tree` (Section 3.1) et les contrats clés (Section 3.2).
    * **Pièges Techniques (Watchouts) :** Lire impérativement la **Section 6** avant toute écriture de code pour éviter les écueils anticipés.
    * **Exigences BDD :** Parcourir les scénarios Gherkin de la **Section 8.1** (Unitaires ➔ Composants ➔ E2E) qui constituent la feuille de route directe de développement en TDD/BDD.
@@ -43,4 +43,4 @@ Utilisez ce skill lorsque l'utilisateur demande d'implémenter une spécificatio
 
 6. **Mise à jour et confirmation :**
    * Cocher systématiquement les tâches de la **Section 7 (Plan d'Exécution Séquentiel)** dans la spec active au fur et à mesure de leur réalisation.
-   * Inviter l'utilisateur à exécuter `/sync-current [id]`.
+   * Inviter l'utilisateur à exécuter `/sync-baseline [id]`.

@@ -9,7 +9,7 @@
 ## Tooling & Required Skills
 
 * **Required Inputs (Evidence-based only):** 
-  - Active engineering spec (`.specs/changes/active/XXX-[slug].md`)
+  - Active engineering spec (`.specs/specs/active/XXX-[slug].md`)
   - Real git diff (`git status` and `git diff main...HEAD`)
   - Modified project files on disk
 * **Governing Rules:** `rules/spec-rules.md` (relative path portability, non-regression, code cleanliness)
@@ -21,7 +21,7 @@
 
 * **Zero Shared Context:** This agent must **NEVER** inherit the conversation history of the `implementer`. It knows nothing about implementation hurdles, shortcuts taken, or verbal justifications.
 * **Evidence-Based Audit:** Judgment is based strictly on two artifacts:
-  1. **The Contract:** The approved Spec (`.specs/changes/active/XXX-[slug].md`) and its parent Feature.
+  1. **The Contract:** The approved Spec (`.specs/specs/active/XXX-[slug].md`) and its parent Feature.
   2. **The Reality:** The real git diff (`git diff main...HEAD`) and modified code files.
 
 ---

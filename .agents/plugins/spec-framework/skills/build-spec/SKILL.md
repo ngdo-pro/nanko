@@ -12,10 +12,10 @@ Use this skill when the user requests implementing an approved engineering speci
 ## Procedure
 
 1. **Activate Specification (Planned ➔ Active):**
-   * Check if the spec is located in `.specs/changes/planned/[id]*.md`:
-     - If yes: move the file to `.specs/changes/active/[id]*.md` (the spec is now officially active in development).
-     - If already in `.specs/changes/active/[id]*.md`: proceed directly.
-   * Read `.specs/changes/active/[id]*.md`, `.specs/architecture.md`, and the target domain ground truth.
+   * Check if the spec is located in `.specs/specs/planned/[id]*.md`:
+     - If yes: move the file to `.specs/specs/active/[id]*.md` (the spec is now officially active in development).
+     - If already in `.specs/specs/active/[id]*.md`: proceed directly.
+   * Read `.specs/specs/active/[id]*.md`, `.specs/architecture.md`, and the target domain baseline (`.specs/baseline/domains/[domain]/`).
    * **Inventory & Signatures:** Analyze the factorized `tree` (Section 3.1) and key contracts (Section 3.2).
    * **Technical Watchouts:** Read **Section 6** before writing any code to prevent documented pitfalls.
    * **BDD Requirements:** Follow the Gherkin scenarios in **Section 8.1** (Unit ➔ Component/Integration ➔ E2E) as the direct implementation roadmap.

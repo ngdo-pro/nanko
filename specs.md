@@ -7,7 +7,7 @@ monorepo/
 │       ├── target.md                  # /target : Cadre une cible fonctionnelle en profondeur
 │       ├── spec.md                    # /spec : Rédige une demande d'évolution (Delta)
 │       ├── build-spec.md              # /build-spec : Exécute le code et les tests
-│       ├── sync-current.md            # /sync-current : Met à jour l'état courant et archive
+│       ├── sync-baseline.md           # /sync-baseline : Met à jour la baseline et archive
 │       ├── new-pdr.md                 # /new-pdr : Documente un arbitrage produit
 │       └── new-adr.md                 # /new-adr : Documente un arbitrage technique
 │
@@ -66,12 +66,12 @@ monorepo/
 
 | **Commande** | **Rôle** | **Entrées lues** | **Sorties produites** |
 | --- | --- | --- | --- |
-| `/target [domaine] [sujet]` | Mène un interrogatoire poussé pour cadrer une cible fonctionnelle majeure. | `.specs/vision.md`, `.specs/targets/achieved/*`, `.specs/current/*` | `.specs/targets/active/[sujet].md` |
-| `/spec [domaine] [besoin]` | Compare le besoin avec l'état courant et la cible, et génère la spec delta. | `.specs/targets/active/*`, `.specs/current/domains/[domaine]/*` | `.specs/changes/active/XXX-[nom].md` |
+| `/target [domaine] [sujet]` | Mène un interrogatoire poussé pour cadrer une cible fonctionnelle majeure. | `.specs/vision.md`, `.specs/targets/achieved/*`, `.specs/baseline/*` | `.specs/targets/active/[sujet].md` |
+| `/spec [domaine] [besoin]` | Compare le besoin avec la baseline et la cible, et génère la spec delta. | `.specs/targets/active/*`, `.specs/baseline/domains/[domaine]/*` | `.specs/specs/planned/XXX-[nom].md` |
 | `/new-pdr [sujet]` | Formalise un arbitrage fonctionnel ou d'ergonomie structurant. | Contexte de discussion | `.specs/decisions/product/PDR-XXX.md` |
 | `/new-adr [sujet]` | Formalise un choix technique (bundle, protocole, stockage). | Contexte de discussion | `.specs/decisions/architecture/ADR-XXX.md` |
-| `/build-spec [id]` | Implémente le code (Symfony/React), joue les migrations et valide la DoD. | `.specs/changes/active/XXX.md`, `.specs/current/domains/[domaine]/*` | Code source, suites de tests au vert |
-| `/sync-current [id]` | Répercute le delta livré dans les fichiers de l'état courant et archive la spec. | `.specs/changes/active/XXX.md` | `.specs/current/domains/[domaine]/*` mis à jour, déplacement vers `changes/archive/` |
+| `/build-spec [id]` | Implémente le code (Symfony/React), joue les migrations et valide la DoD. | `.specs/specs/active/XXX.md`, `.specs/baseline/domains/[domaine]/*` | Code source, suites de tests au vert |
+| `/sync-baseline [id]` | Répercute le delta livré dans les fichiers de la baseline et archive la spec. | `.specs/specs/active/XXX.md` | `.specs/baseline/domains/[domaine]/*` mis à jour, déplacement vers `specs/archive/` |
 
 # Le workflow pas à pas
 
@@ -80,30 +80,30 @@ monorepo/
     ```mermaid
     flowchart TD
         A[Idée / Besoin d'évolution] --> B["1. /spec [domaine] [besoin]"]
-        B --> C["Lecture de l'état courant (.specs/current) & Génération du Delta"]
+        B --> C["Lecture de la baseline (.specs/baseline) & Génération du Delta"]
         C --> D["2. Relecture & Validation humaine du fichier Markdown"]
         D -->|Ajustements nécessaires| D
         D -->|Spec validée| E["3. /build-spec [id]"]
         E --> F["Implémentation Backend (Symfony) & Frontend (React)"]
         F --> G["Exécution des tests (Unit, Integration, E2E Préprod)"]
         G -->|Échec tests| F
-        G -->|Tous tests OK| H["4. /sync-current [id]"]
-        H --> I["Mise à jour de .specs/current/ (behavior, contracts, models)"]
-        I --> J["Archivage de la spec dans changes/archive/"]
+        G -->|Tous tests OK| H["4. /sync-baseline [id]"]
+        H --> I["Mise à jour de .specs/baseline/ (behavior, contracts, models)"]
+        I --> J["Archivage de la spec dans specs/archive/"]
     ```
     
 
 **Étape 1 : Cadrage assisté par IA (`/spec`)**
-Tu décris le besoin brut. L'agent charge uniquement le dossier `current/domains/[domaine]/` pour comprendre ce qui existe déjà, te pose au maximum 2 questions de cadrage si nécessaire, puis génère le fichier `changes/active/XXX-[nom].md`.
+Tu décris le besoin brut. L'agent charge uniquement le dossier `baseline/domains/[domaine]/` pour comprendre ce qui existe déjà, te pose des questions de cadrage si nécessaire, puis génère le fichier `specs/planned/XXX-[nom].md`.
 
 **Étape 2 : Relecture et validation humaine**
 Tu relis le delta : wireframes ASCII, DTOs, modifications DB et scénarios Gherkin. Tu affines le fichier en quelques secondes directement dans ton éditeur.
 
 **Étape 3 : Implémentation autonome (`/build-spec`)**
-L'agent lit le delta et l'état courant, écrit les migrations Doctrine, le code Symfony/React, et implémente les tests correspondant aux scénarios Gherkin. Il boucle jusqu'à ce que `phpstan`, `phpunit`, `typecheck` et `playwright` soient 100 % au vert.
+L'agent lit le delta et la baseline, écrit les migrations Doctrine, le code Symfony/React, et implémente les tests correspondant aux scénarios Gherkin. Il boucle jusqu'à ce que `phpstan`, `phpunit`, `typecheck` et `playwright` soient 100 % au vert.
 
-**Étape 4 : Synchronisation et archivage (`/sync-current`)**
-Une fois la fonctionnalité validée, l'agent extrait les ajouts du delta pour mettre à jour `behavior.md`, `contracts.md` et `models.md` du domaine concerné, puis déplace le fichier de spec active dans `changes/archive/`.
+**Étape 4 : Synchronisation et archivage (`/sync-baseline`)**
+Une fois la fonctionnalité validée, l'agent extrait les ajouts du delta pour mettre à jour `behavior.md`, `contracts.md` et `models.md` du domaine concerné, puis déplace le fichier de spec active dans `specs/archive/`.
 
 # Documents
 
@@ -205,7 +205,7 @@ CHANGE_TEMPLATE.md
 # Change : [XXX] - [Nom de l'évolution]
 
 ## Métadonnées
-* **Domaine concerné :** `.specs/current/domains/[nom-du-domaine]/`
+* **Domaine concerné :** `.specs/baseline/domains/[nom-du-domaine]/`
 * **Type de changement :** `Nouveau module` | `Évolution` | `Refonte` | `Fix`
 * **Cible :** `Fullstack` | `apps/api` | `apps/web` | `apps/e2e`
 
@@ -460,11 +460,11 @@ export type [FeatureInput] = z.infer<typeof [featureSchema]>;
   - [ ] 1. Implémenter le parcours utilisateur complet dans Playwright (`tests/[feature].spec.ts`).
   - [ ] **Tests E2E Préprod :** Exécuter la suite de tests contre l'environnement de préprod.
 
-- [ ] **Phase 4 : Synchronisation documentaire (Automatisable via `/sync-current`)**
-  - [ ] 1. Répercuter les modifications dans `.specs/current/domains/[domaine]/behavior.md`.
-  - [ ] 2. Répercuter les nouveaux contrats dans `.specs/current/domains/[domaine]/contracts.md`.
-  - [ ] 3. Répercuter les schémas de données dans `.specs/current/domains/[domaine]/models.md`.
-  - [ ] 4. Déplacer ce fichier dans `.specs/changes/archive/[XXX]-[nom].md`.
+- [ ] **Phase 4 : Synchronisation documentaire (Automatisable via `/sync-baseline`)**
+  - [ ] 1. Répercuter les modifications dans `.specs/baseline/domains/[domaine]/behavior.md`.
+  - [ ] 2. Répercuter les nouveaux contrats dans `.specs/baseline/domains/[domaine]/contracts.md`.
+  - [ ] 3. Répercuter les schémas de données dans `.specs/baseline/domains/[domaine]/models.md`.
+  - [ ] 4. Déplacer ce fichier dans `.specs/specs/archive/[XXX]-[nom].md`.
 
 ---
 

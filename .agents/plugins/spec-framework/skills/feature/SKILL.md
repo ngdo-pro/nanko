@@ -19,7 +19,7 @@ The document must remain concise (**1 page maximum**), visual, and behavior-orie
 
 ### 1. Immersion
 1. Read the parent initiative's overview in `.specs/initiatives/active/[initiative]/README.md` (or `.specs/initiatives/planned/[initiative]/README.md`).
-2. Inspect active domain ground truth in `.specs/current/domains/[domain]/` to understand current baseline behavior.
+2. Inspect active domain baseline architecture in `.specs/baseline/domains/[domain]/` to understand current behavior.
 
 ### 2. Exhaustive Interaction & Invariants Interview (via `ask_question`)
 Clarify all interaction specifics, edge cases, and constraints without artificial question caps:

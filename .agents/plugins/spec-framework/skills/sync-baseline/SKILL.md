@@ -1,27 +1,27 @@
 ---
-name: sync-current
-description: Propagate a delivered specification into the ground truth documentation (.specs/current/) and archive the spec.
+name: sync-baseline
+description: Propagate a delivered specification into the baseline architecture documentation (.specs/baseline/) and archive the spec.
 ---
 
-# Skill: sync-current
+# Skill: sync-baseline
 
-Use this skill after an engineering specification has passed all quality gates and review audits (`/sync-current [id]`).
+Use this skill after an engineering specification has passed all quality gates and review audits (`/sync-baseline [id]`).
 
-All updated ground truth documents must be maintained in the user's language.
+All updated baseline documents must be maintained in the user's language.
 
 ---
 
 ## Procedure
 
 1. **Locate Specification:**
-   * Read `.specs/changes/active/[id]*.md` and identify the target domain from its metadata.
+   * Read `.specs/specs/active/[id]*.md` and identify the target domain from its metadata.
 
-2. **Update Domain Ground Truth:**
-   * Create directory `.specs/current/domains/[domain]/` if it does not exist yet (Greenfield bootstrap).
-   * `.specs/current/domains/[domain]/behavior.md`: Document user flows and business rules.
-   * `.specs/current/domains/[domain]/contracts.md`: Document endpoints, contracts, schemas, and events.
-   * `.specs/current/domains/[domain]/models.md`: Document aggregates, database tables, models, and columns.
-   * `.specs/current/domains/[domain]/tech.md`: Document patterns, libraries, and architecture choices.
+2. **Update Domain Baseline Architecture:**
+   * Create directory `.specs/baseline/domains/[domain]/` if it does not exist yet (Greenfield bootstrap).
+   * `.specs/baseline/domains/[domain]/behavior.md`: Document user flows and business rules.
+   * `.specs/baseline/domains/[domain]/contracts.md`: Document endpoints, contracts, schemas, and events.
+   * `.specs/baseline/domains/[domain]/models.md`: Document aggregates, database tables, models, and columns.
+   * `.specs/baseline/domains/[domain]/tech.md`: Document patterns, libraries, and architecture choices.
 
 3. **Identify & Formalize Structural Decisions (PDR / ADR):**
    * Scan the delivered delta for non-trivial trade-offs:
@@ -32,7 +32,7 @@ All updated ground truth documents must be maintained in the user's language.
    * Ask the user if any ambiguity remains regarding a potential decision.
 
 4. **Archive Specification & Cascading Roadmap Completion:**
-   * Move the specification file from `.specs/changes/active/` to `.specs/changes/archive/`.
+   * Move the specification file from `.specs/specs/active/` to `.specs/specs/archive/`.
    * **Level 1 (Feature):** If derived from an initiative feature:
      - Check off this spec under `## 6. Implementation Spec(s)`: `- [x] **`[XXX-[slug]]`**`.
      - **Cascade Check:** Are all specs in Section 6 now marked `[x]`?

@@ -10,7 +10,7 @@ Utilisez ce skill lorsque l'utilisateur demande de modifier, ajuster, réduire o
 ## Procédure
 
 1. **Chargement de la spec active :**
-   * Localiser et lire `.specs/changes/active/[id]*.md`.
+   * Localiser et lire `.specs/specs/active/[id]*.md`.
    * Si le fichier n'existe pas dans `active/`, renvoyer une erreur explicite invitant à vérifier l'identifiant.
 2. **Analyse d'impact exhaustive :**
    * Identifier avec rigueur toutes les sections impactées par la demande :
@@ -23,7 +23,7 @@ Utilisez ce skill lorsque l'utilisateur demande de modifier, ajuster, réduire o
      * **Section 9 (Plan d'exécution séquentiel) :** Réajuster les tâches (cochées `[x]` ou `[ ]`) selon le nouvel état réel.
      * **Section 10 (DoD & Scénarios Gherkin) :** Adapter les scénarios de test pour refléter fidèlement le nouveau comportement attendu.
 3. **Mise à jour du fichier :**
-   * Appliquer les modifications directement dans `.specs/changes/active/[id]*.md`.
+   * Appliquer les modifications directement dans `.specs/specs/active/[id]*.md`.
    * Veiller à purger toute mention devenue obsolète (anciennes options retirées, anciens raccourcis).
 4. **Restitution synthétique :**
    * Résumer les ajustements apportés au contrat documentaire.

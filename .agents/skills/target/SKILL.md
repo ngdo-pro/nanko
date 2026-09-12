@@ -16,7 +16,7 @@ Contrairement au skill `/spec` (qui produit rapidement un delta d'implémentatio
 ### 1. Immersion & État des Lieux
 1. Lire `.specs/vision.md` (invariants et principes directeurs globaux).
 2. Lire les targets déjà atteintes dans `.specs/targets/achieved/` (ex: `000-core-domain.md`).
-3. Si le domaine existe déjà, lire `.specs/current/domains/[domaine]/` (`behavior.md`, `tech.md`, `contracts.md`, `models.md`) pour connaître exactement le point de départ actuel.
+3. Si le domaine existe déjà, lire `.specs/baseline/domains/[domaine]/` (`behavior.md`, `tech.md`, `contracts.md`, `models.md`) pour connaître exactement le point de départ actuel.
 4. Vérifier si un document cible existe déjà dans `.specs/targets/active/` pour l'enrichir ou en créer un nouveau (`.specs/targets/active/[slug].md`).
 
 ### 2. L'Interrogatoire de Cadrage Poussé
