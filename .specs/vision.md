@@ -1,26 +1,52 @@
-# Vision Produit & Invariants Globaux
+# Vision Produit Nanko
 
-## 1. Raison d'être & Cible
-* **Mission :** Nanko aide à concevoir des schémas d'architecture selon une approche "diagrams-as-code" : le contenu est piloté par un format texte versionné (`.nanko`), la base de données étant la source de vérité runtime.
-* **Cible prioritaire :** Développeurs, architectes logiciels et équipes d'ingénierie concevant et maintenant des architectures logicielles modulaires.
-* **Proposition de valeur :** Schémas d'architecture vivants, versionnés et navigables inter-couches (Layers), sans dérive entre la documentation et la réalité du code.
-* **North Star Metric :** Nombre de documents d'architecture `.nanko` créés et maintenus activement à travers les versions.
+> **Produit :** Nanko  
+> **Dernière révision :** 2026-09-12  
+> **Statut :** Vivant (Amendable uniquement lors d'un pivot stratégique)
 
 ---
 
-## 2. Principes directeurs de l'expérience (UX & Product Tenets)
-Ces principes guident les arbitrages fonctionnels et d'interface en cas d'ambiguïté :
-* **Accès « Zéro Confiance » (*Zero Trust*) :** Toute surface applicative est verrouillée par défaut ; aucune donnée privée n'est accessible sans session authentifiée active.
-* **Feedback immédiat & Transparence :** Aucune action silencieuse. Chaque mutation déclenche un état de chargement visible, un retour de succès ou un message d'erreur actionnable.
-* **Simplicité & Zéro friction :** Moins de 3 clics pour accomplir l'action principale. L'interface guide l'utilisateur vers l'étape suivante sans surcharge cognitive.
-* **Non-destructivité par défaut :** Toute suppression d'élément structurant exige une confirmation explicite ; privilégier l'archivage réversible (*soft delete*).
+## 1. Raison d'Être
+
+* **Mission :** Rendre les schémas d'architecture vivants, versionnés et navigables, en combinant la rigueur du *Diagrams-as-Code* et la fluidité d'un outil visuel moderne.
+* **Le Problème :** Les schémas d'architecture classiques (PNG, Confluence, Miro) deviennent obsolètes dès le lendemain de leur création et n'ont aucun lien avec le code réel. À l'inverse, les outils code-only (PlantUML, Mermaid) sont rigides, laids et pénibles à manipuler en réunion.
+* **La Cible :** Développeurs, Tech Leads et Architectes logiciels concevant des systèmes modulaires et désireux de maintenir une documentation d'architecture synchronisée sans effort.
+* **North Star Metric :** Nombre de documents d'architecture `.nanko` maintenus et modifiés activement à travers les versions.
 
 ---
 
-## 3. Cartographie des Domaines Métier (*Bounded Contexts*)
+## 2. Les 3 Piliers de l'Expérience
 
-| Domaine | Répertoire | Responsabilité & Périmètre |
-|---|---|---|
-| **Identité & Accès** | `domains/auth-and-identity/` | Inscription, sessions OAuth 2.0, sécurité des comptes et profils. |
-| **Espaces de travail** | `domains/workspace-management/` | Organisation des équipes (Organisation, Project, Document), invitations, contextes collaboratifs et droits (Capabilities). |
-| **Facturation & Quotas** | `domains/billing/` | Abonnements, intégration PSP (Stripe), gestion des plans et limites d'usage. |
+1. **Diagrams-as-Code Vivant :** Tout schéma est piloté par un format déclaratif textuel (`.nanko`) versionnable sous Git, tout en offrant une manipulation visuelle bidirectionnelle en temps réel.
+2. **Modélisation Visuelle sans Friction :** L'architecte peut concevoir son schéma directement sur le canvas (souris, raccourcis, radial menu) sans jamais être forcé d'ouvrir l'éditeur de texte.
+3. **Exploration Multi-Niveaux (Layers) :** Naviguer dans l'architecture par niveaux de zoom et de profondeur (du composant macro à son implémentation micro) avec validation de compatibilité.
+
+---
+
+## 3. Nos Partis-Pris (*Product Tenets*)
+
+*Ces règles d'or tranchent automatiquement les arbitrages en cas d'hésitation :*
+
+* **Le DSL fait foi :** Le canvas ne propose aucune manipulation que le format `.nanko` ne sait pas sérialiser. Le code texte et l'image restent éternellement isomorphes.
+* **Architecture rigoureuse + Annotations libres :** Le schéma combine des blocs d'architecture formels et une couche d'annotation vivante (notes libres, post-its, flèches volantes d'attention) pour faciliter les revues techniques et le partage de contexte.
+* **Fluidité d'interaction locale :** Déposer une forme ou tracer un flux magnétique doit prendre moins de 2 secondes. L'outil s'adapte à la vitesse de pensée du concepteur.
+* **Non-destructivité par défaut :** Toute suppression en cascade est explicite, les états antérieurs sont récupérables, rien n'est perdu par mégarde.
+
+---
+
+## 4. Garde-Fous (*Ce que Nanko refuse d'être*)
+
+* **Ce n'est PAS un tableau blanc jetable (Miro sans structure) :** Les annotations et notes libres sont bienvenues, mais elles restent versionnées, sérialisées et ancrées dans le document `.nanko` plutôt que disséminées dans un canvas infini ingérable.
+* **Ce n'est PAS un outil d'ingénierie UML académique (Enterprise Architect) :** Zéro lourdeur bureaucratique, pas de formation de 3 semaines requise pour poser un bloc.
+* **Ce n'est PAS un gestionnaire de projet ou de tickets (Jira, Linear) :** Nanko documente l'architecture du système, pas le calendrier des équipes.
+
+---
+
+## 5. Roadmap des Initiatives Stratégiques
+
+*Grands jalons structurants dérivant de cette vision produit :*
+
+- [ ] **`workspace-management`** : Gestion des Espaces Personnels & Hiérarchie de Projets  
+  ↳ *Initiative :* [`.specs/initiatives/active/workspace-management/README.md`](./initiatives/active/workspace-management/README.md) *(Prête à démarrer)*
+- [ ] **`studio-modeling`** : Modélisation Visuelle Directe & Fluide sur le Canvas (Shapes, Connecteurs, In-place)  
+  ↳ *Initiative :* [`.specs/initiatives/active/studio-modeling/README.md`](./initiatives/active/studio-modeling/README.md) *(En cours)*
