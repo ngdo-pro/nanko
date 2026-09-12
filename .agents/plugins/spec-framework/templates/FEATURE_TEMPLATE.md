@@ -50,7 +50,6 @@
 
 ## 6. Implementation Spec(s)
 
-*Engineering delta specs deriving from this feature (populated upon `/spec`):*
+*Engineering delta specs deriving from this feature (populated dynamically upon `/spec`):*
 
-- [ ] **`[XXX-[slug]]`** : [Spec Title]  
-  ↳ *File:* `.specs/changes/active/XXX-[slug].md` *(Added upon `/spec`)*
+*(No specs linked yet. Run `/spec [domain] [topic]` to derive an engineering spec).*
