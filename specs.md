@@ -3,12 +3,9 @@
 ```markdown
 monorepo/
 ├── .agents/
-│   ├── plugins/
-│   │   └── spec-framework/            # Plugin SDD universel 3-Tracks
-│   │       ├── agents/                # 9 rôles d'agents spécialisés
-│   │       ├── skills/                # 14 skills agentiques
-│   │       ├── templates/             # 10 templates Markdown standardisés
-│   │       └── rules/                 # spec-rules.md (portabilité, BDD)
+│   ├── plugins.json                   # Enregistrement du plugin universel spec-framework
+│   ├── skills/
+│   │   └── nanko-css/                 # Conventions de styles CSS spécifiques à Nanko
 │   └── rules/                         # spec-workflow.md
 │
 ├── .specs/
