@@ -19,9 +19,14 @@ It must not exceed **1 to 2 pages** and aims primarily to align the overarching 
 
 ## Procedure
 
-### 1. Immersion
-1. Read `.specs/vision.md` to ensure alignment with foundational tenets and guardrails.
-2. Inspect active initiatives in `.specs/initiatives/active/` to avoid scope collisions.
+### 1. Immersion & Duplicate Prevention
+1. Read `.specs/vision.md` to ensure alignment with foundational tenets and check Section 5 (*Roadmap*).
+2. **Existence & Duplicate Check:**
+   * Inspect `.specs/initiatives/active/` and `.specs/initiatives/archive/`:
+     - **If already active in `.specs/initiatives/active/[slug]/`:** Stop immediately. Inform the user that the initiative already exists, present its current roadmap, and suggest contributing via `/feature [slug] [feature-slug]` or updating its scope.
+     - **If already archived in `.specs/initiatives/archive/[slug]/`:** Warn the user that this milestone has been delivered. Suggest an explicit follow-up slug (e.g., `[slug]-phase2`) or direct maintenance specs.
+     - **Scope Overlap:** Verify that the proposed scope does not duplicate an existing active theme under an alternate naming.
+3. **WIP Limit Check:** If 2 or more initiatives are currently active in `.specs/initiatives/active/`, alert the user about WIP saturation before creating a new one.
 
 ### 2. Exhaustive Framing Interview (via `ask_question`)
 Clarify all strategic axes with the user without artificial question caps:

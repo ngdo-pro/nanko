@@ -61,9 +61,14 @@ flowchart TD
 ## 4. Product Cycle Execution Walkthrough
 
 ### Scenario 1: Launching a New Initiative (`/initiative [slug]`)
-1. **Vision Alignment:** Verify the strategic initiative adheres to pillars and avoids documented anti-patterns.
-2. **Macro Framing with Product Designer:** Delegate writing `.specs/initiatives/active/[slug]/README.md` (1 page max, ASCII diagram, roadmap of 3 to 5 target features) to the `product-designer`.
-3. **Immediate Progression:** Prompt to frame the first roadmap Feature.
+1. **Existence & Duplicate Check:**
+   - Inspect `.specs/initiatives/active/` and `.specs/initiatives/archive/` for the requested slug or overlapping topics.
+   - **If already active:** Abort duplicate creation, present the existing initiative's roadmap, and prompt the user to contribute via `/feature [slug] [feature-slug]` or update its scope.
+   - **If archived:** Inform the user that this milestone was already delivered; suggest an explicit follow-up slug (e.g., `[slug]-phase2`) or direct maintenance specs.
+   - **WIP Guardrail:** Check active concurrent initiatives. If 2 or more are already active, alert the user about WIP saturation and recommend parking or finishing one first.
+2. **Vision Alignment:** Verify the strategic initiative adheres to tenets in `.specs/vision.md` and promote it to Section 5 (*🚀 Active Initiatives*).
+3. **Macro Framing with Product Designer:** Delegate writing `.specs/initiatives/active/[slug]/README.md` (1-2 pages max, ASCII mental model, ordered roadmap of features) to the `product-designer`.
+4. **Immediate Progression:** Prompt to frame the first roadmap Feature via `/feature [slug] [feature-slug]`.
 
 ### Scenario 2: Contributing to an Existing Initiative (`/feature [initiative] [slug]`)
 1. **Context Immersion:** Read the parent initiative's `README.md` to establish global context.
