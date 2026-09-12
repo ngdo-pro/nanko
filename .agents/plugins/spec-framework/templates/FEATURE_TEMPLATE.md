@@ -50,6 +50,4 @@
 
 ## 6. Implementation Spec(s)
 
-*Engineering delta specs deriving from this feature (populated dynamically upon `/spec`):*
-
-*(No specs linked yet. Run `/spec [domain] [topic]` to derive an engineering spec).*
+*No execution specs linked yet.*
