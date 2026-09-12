@@ -1,7 +1,7 @@
 # Feature : Handles Contextuels & Tracé Magnétique Libre (04-smart-handles-magnetic-connectors)
 
 > **Parent Initiative :** `studio-modeling`  
-> **Status :** Active  
+> **Status :** Implemented ✅  
 > **Author(s) :** Nicolas & Nanko Core Team  
 > **Last Updated :** 2026-09-12  
 

@@ -55,6 +55,7 @@ flowchart TD
 | `JRN-04` | Repositionnement spatial (Drag & Drop) | Utilisateur | Glisser-déposer un nœud | Coordonnées `(x, y)` synchronisées dans le bloc `!LAYOUT` |
 | `JRN-05` | Réorganisation automatique (Auto-Layout) | Utilisateur | Clic « Réorganiser » | Disposition ordonnée sans chevauchement via Dagre |
 | `JRN-06` | Insertion rapide via Menu Radial | Utilisateur | Clic contextuel | Roue radiale d'actions immédiates (rect, circle, flux) |
+| `JRN-07` | Tracé de Connecteur par Glisser & Magnétisme | Utilisateur | Glisser depuis une poignée révélée | Fil élastique, aimantation cible (< 32px), injection `source -> target` |
 
 ---
 
@@ -99,6 +100,16 @@ flowchart TD
   2. L'algorithme Dagre calcule un placement hiérarchique optimal tenant compte des rayons circulaires réels et des largeurs rectangulaires.
   3. Toutes les coordonnées du bloc `!LAYOUT` sont mises à jour sans aucun croisement évitable.
 
+### `JRN-07` : Tracé de Connecteur par Glisser & Magnétisme Automatique
+* **Contexte :** Liaison visuelle de deux formes sur le canvas sans basculer dans l'éditeur de code.
+* **Flux Nominal :**
+  1. Au repos, les poignées d'ancrage sont masquées pour garantir la pureté visuelle du schéma.
+  2. Le survol (`:hover`) ou la sélection (`.selected`) d'une forme révèle immédiatement ses 4 poignées d'ancrage Blueprint.
+  3. L'utilisateur glisse directement depuis une poignée ; un fil élastique suit le pointeur tandis que les formes distantes restent nettes.
+  4. À l'approche de la forme cible (< 32px), la poignée candidate la plus proche s'aimante avec surbrillance distinctive (`scale(1.5)`, `--brand`).
+  5. Au relâchement, l'arête `source -> target` est insérée de façon déterministe dans le code source `.nanko` après les shapes et avant `!LAYOUT`, activant l'état non sauvegardé.
+* **Variantes & Erreurs :** En cas d'auto-connexion (`source === target`) ou de doublon d'arête dans le même sens, la tentative est silencieusement annulée sans modifier le code source.
+
 ---
 
 ## 5. Invariants Fonctionnels & Règles Métier
@@ -106,6 +117,7 @@ flowchart TD
 * **`INV-BUS-01` (Invariance Sémantique Code $\leftrightarrow$ Canvas) :** Le code source `.nanko` est l'unique source de vérité. Toute manipulation sur le canvas (déplacement, ajout) modifie le texte `.nanko` de façon déterministe.
 * **`INV-BUS-02` (Préservation de l'Édition Non Sauvegardée) :** Une tentative de quitter la vue avec des modifications non sauvegardées déclenche obligatoirement un avertissement de confirmation de navigation (`beforeunload`).
 * **`INV-BUS-03` (Isolement des Événements Canvas) :** Les interactions au sein des modales, menus radiaux et infobulles scrollables sont totalement étanches des événements de zoom et de pan de React Flow.
+* **`INV-BUS-04` (Intégrité des Connexions & Rejet des Doublons) :** Les auto-connexions (`source === target`) et les arêtes dupliquées dans le même sens sont strictement neutralisées au niveau du canvas et du moteur de sérialisation.
 
 ---
 
@@ -116,3 +128,4 @@ flowchart TD
 | **Erreur de Syntaxe DSL** | Caractère invalide ou balise non fermée | Le parser lève une exception ciblée (ligne, colonne) ; le canvas reste dans son dernier état valide | L'utilisateur corrige la ligne signalée dans l'éditeur |
 | **Boucle Circulaire de Dépendance** | Références croisées complexes | Dagre applique une inversion temporaire d'arête pour garantir un layout acyclique sans crash | Visualisation de l'arête avec flèche bi-directionnelle |
 | **Texte de Description Très Long** | Contenu documentaire dense | La troncature à 2 lignes évite la déformation du nœud ; le tooltip prend le relais | Lecture fluide avec ascenseur dans l'infobulle Blueprint |
+| **Connexion Invalide ou Doublon** | Tentative d'auto-boucle ou lien identique | `isValidConnection` retourne `false` ; le fil est annulé sans altération du code source | Relâcher sur une forme ou poignée valide |

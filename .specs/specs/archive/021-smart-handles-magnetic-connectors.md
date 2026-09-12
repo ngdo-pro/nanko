@@ -4,7 +4,7 @@
 * **Domaine concerné :** `.specs/knowledge/domains/studio-modeling/`
 * **Type de changement :** `Évolution`
 * **Cible :** `frontend` (React Flow, Handles, Nœuds, Canvas) + `tests-e2e` (Playwright)
-* **Feature parente :** [04-smart-handles-magnetic-connectors](../../initiatives/active/studio-modeling/active/04-smart-handles-magnetic-connectors.md)
+* **Feature parente :** [04-smart-handles-magnetic-connectors](../../initiatives/active/studio-modeling/archive/04-smart-handles-magnetic-connectors.md)
 * **Complexité :** `Medium`
 
 ---
