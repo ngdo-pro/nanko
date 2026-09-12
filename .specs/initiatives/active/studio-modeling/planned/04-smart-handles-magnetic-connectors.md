@@ -70,5 +70,4 @@ POST-CRÉATION : QUALIFICATION IMMÉDIATE (ElementPopover ancrée sur le nouveau
 
 ## 6. Implementation Spec(s)
 
-- [ ] **`022-magnetic-connector-drawing`** : Tracé de Connecteur par Glisser & Magnétisme Automatique  
-  ↳ *Spec :* [`../../../specs/planned/022-magnetic-connector-drawing.md`](../../../specs/planned/022-magnetic-connector-drawing.md)
+*Aucune spec technique dérivée pour le moment (prête pour `/spec studio-modeling`).*
