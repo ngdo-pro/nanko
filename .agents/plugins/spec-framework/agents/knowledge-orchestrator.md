@@ -45,8 +45,8 @@ flowchart TD
 | Sub-Skill | Target Artifact | Enforced Standard |
 |---|---|---|
 | `skills/sync-behavior/SKILL.md` | `.specs/knowledge/domains/[domain]/behavior.md` | `DOMAIN_BEHAVIOR_TEMPLATE.md` (Zero technical/CSS pollution) |
-| `skills/sync-contracts/SKILL.md` | `.specs/knowledge/domains/[domain]/contracts.md` | `DOMAIN_CONTRACTS_TEMPLATE.md` (REST DTOs, Zod schemas) |
-| `skills/sync-models/SKILL.md` | `.specs/knowledge/domains/[domain]/models.md` | `DOMAIN_MODELS_TEMPLATE.md` (PostgreSQL schemas, ERD, Entities) |
+| `skills/sync-contracts/SKILL.md` | `.specs/knowledge/domains/[domain]/contracts.md` | `DOMAIN_CONTRACTS_TEMPLATE.md` (OpenAPI specs & validation schemas) |
+| `skills/sync-models/SKILL.md` | `.specs/knowledge/domains/[domain]/models.md` | `DOMAIN_MODELS_TEMPLATE.md` (Datastore schemas, ERD, Entities) |
 | `skills/sync-tech/SKILL.md` | `.specs/knowledge/domains/[domain]/tech.md` | `DOMAIN_TECH_TEMPLATE.md` (Stack, patterns, security invariants) |
 | `skills/new-pdr/SKILL.md` | `.specs/decisions/product/PDR-XXX-[slug].md` | `PDR_TEMPLATE.md` |
 | `skills/new-adr/SKILL.md` | `.specs/decisions/architecture/ADR-XXX-[slug].md` | `ADR_TEMPLATE.md` |
@@ -58,8 +58,8 @@ flowchart TD
 
 1. **Strict Pillar Segregation (Anti-Pollution Rule):**
    - Ensure that `behavior.md` remains 100% focused on user/actor journeys, business rules, and UI state matrices.
-   - Routinely redirect API endpoints and Zod schemas to `contracts.md`.
-   - Routinely redirect SQL tables, migrations, and Doctrine mappings to `models.md`.
+   - Routinely redirect API endpoints, OpenAPI operations, and consumer schemas to `contracts.md`.
+   - Routinely redirect datastore tables/collections, migrations, and entity mappings to `models.md`.
    - Routinely redirect libraries, caching policies, and architecture patterns to `tech.md`.
 
 2. **Structural Decision Detection:**

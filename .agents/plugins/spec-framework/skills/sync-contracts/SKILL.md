@@ -16,10 +16,9 @@ Use this skill to update the living API contracts documentation of a domain (`/s
    * Read `.specs/knowledge/domains/[domain]/contracts.md` (or initialize from `templates/DOMAIN_CONTRACTS_TEMPLATE.md`).
 
 2. **Extract Interface Deltas:**
-   * **REST Endpoints:** Add or update route definitions (`[METHOD] /api/v1/...`), required headers, authentication requirements, and permissions/capabilities.
-   * **Request / Response DTOs:** Add PHP DTO definitions with validation assertions (`#[Assert\...]`).
-   * **Response Payloads & HTTP Statuses:** Document standard success responses (`200 OK`, `201 Created`) and error formats (`422`, `401`, `403`, `404`, `409`).
-   * **Frontend Schemas:** Add or update TypeScript Zod validation schemas (`z.object({...})`) and inferred types.
+   * **Formal OpenAPI Spec (`openapi.yaml`):** Add or update route definitions (`[METHOD] /...`), operationIds, parameters, request body schemas, response payloads, and HTTP error statuses according to OpenAPI 3.1.
+   * **Endpoint Mapping Table:** Update the summary table in `contracts.md` with new routes and links to `openapi.yaml`.
+   * **Consumer Validation Models:** Document client-side or consumer validation schemas in the project's consumer language (e.g. Zod, Pydantic, JSON Schema, protobuf, or typed structs).
 
 3. **Save & Report:**
    * Write updated content to `.specs/knowledge/domains/[domain]/contracts.md`.

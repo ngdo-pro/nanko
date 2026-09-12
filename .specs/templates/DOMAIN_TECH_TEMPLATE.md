@@ -1,14 +1,25 @@
-# Domaine : [Nom du Domaine] - Architecture Technique
+# Domaine : [Nom du Domaine] ([slug]) — Architecture Technique
 
-## 1. Stack & Composants Cibles
-* **Backend (`backend/`) :** [Services Symfony, UseCases, Ports, Adapters, Voters]
-* **Frontend (`frontend/`) :** [Hooks TanStack Query, state management, layouts, composants]
-* **Base de données :** [Tables principales, types de clés UUIDv7, repositories DBAL]
+> **Mission du Domaine :** [Rappel de la mission]
+
+---
+
+## 1. Composants Cibles & Organisation des Couches
+
+* **Couche Serveur / Backend :** [Services, contrôleurs, use cases, modules métier du projet]
+* **Couche Client / Frontend :** [Composants UI, gestion d'état, routage, requêtage]
+* **Couche Persistance :** [Bases de données relationnelles ou documentaires, caches, brokers d'événements]
+
+---
 
 ## 2. Invariants Techniques & Sécurité
-* [Politique de chiffrement / masquage des logs]
-* [Règles de cache et d'invalidation]
-* [Règles de contrôle d'accès / Capabilities]
 
-## 3. ADRs de Référence
-* `ADR-XXX` : [Lien vers la décision technique liée]
+* [Politiques de cache, d'invalidation et de rate-limiting]
+* [Règles de sécurité, authentification et contrôle d'accès]
+* [Traitement des erreurs, tolérance aux pannes et résilience]
+
+---
+
+## 3. Décisions d'Architecture Liées (ADRs)
+
+* `ADR-XXX` : [Titre et lien vers l'arbitrage technique associé]

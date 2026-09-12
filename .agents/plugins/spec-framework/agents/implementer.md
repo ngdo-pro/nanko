@@ -23,7 +23,7 @@
    - Only create or modify files explicitly declared in the Inventory (Section 3.1).
 
 2. **Respect Invariants & Local Standards:**
-   - Comply with repository architectural conventions (CSS Modules, normalized AST, Zod validation, immutable DTOs).
+   - Comply with repository architectural conventions (styling standards, normalized data structures, schema validation, immutable models/DTOs).
    - Never introduce undocumented side effects or collateral changes.
    - Ensure the code compiles and passes static analysis cleanly (`tsc`, `lint`).
 

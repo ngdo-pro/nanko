@@ -1,27 +1,31 @@
-# Domaine : [Nom du Domaine] - Modèles & Schéma de Données
+# Domaine : [Nom du Domaine] ([slug]) — Modèles & Schéma de Données
 
-## 1. Modèle Domaine (Core)
-
-### Agrégat : `[Nom de l'Agrégat]`
-* **Entité racine :** `backend/src/Core/Domain/[Aggregate]/[Aggregate].php`
-* **Identifiant :** `backend/src/Core/Domain/[Aggregate]/Id.php` (UUIDv7)
-* **Value Objects :**
-  * `[VO 1]` : Description
+> **Mission du Domaine :** [Rappel de la mission]
 
 ---
 
-## 2. Schéma de Base de Données Actif
+## 1. Modèle Domaine (Core / Entités Métier)
 
-### Table : `[nom_de_la_table]`
-* **Migration initiale :** `backend/migrations/Version[...].php`
-* **Repository DBAL :** `backend/src/Adapter/Driven/Persistence/[Aggregate]/DoctrineRepository.php`
-* **Type DBAL :** `backend/src/Adapter/Driven/Persistence/[Aggregate]/DoctrineId.php`
+### Agrégat / Entité : `[Nom de l'Entité]`
+* **Fichier de définition :** `[Chemin relatif vers l'entité ou la structure de données]`
+* **Type d'identifiant :** `[ex: UUIDv7, Auto-incrément, ULID, CUID, etc.]`
+* **Attributs & Value Objects :**
+  * `[Propriété 1]` : Type et signification métier
+  * `[Propriété 2]` : Type et signification métier
 
-| Colonne | Type SQL | Nullable | Contraintes / Index | Description |
+---
+
+## 2. Schéma de Persistance & Stockage
+
+### Table / Collection : `[nom_de_la_table]`
+* **Fichier de migration / DDL :** `[Chemin relatif vers le fichier de migration ou schema DDL]`
+* **Composant d'accès aux données :** `[Repository / Data Access Layer]`
+
+| Champ / Colonne | Type | Nullable | Contraintes / Index | Description Métier |
 |---|---|---|---|---|
-| `id` | `uuid` | Non | `PRIMARY KEY` | UUIDv7 de l'entité |
-| `created_at` | `timestamp with time zone` | Non | `DEFAULT NOW()` | Date de création |
-| `[champ]` | `varchar(255)` | Non | `INDEX` | Description métier |
+| `id` | `[Type]` | Non | `PRIMARY KEY` | Identifiant unique de l'entité |
+| `created_at` | `[Timestamp]` | Non | `DEFAULT NOW()` | Date de création |
+| `[champ]` | `[Type]` | Non / Oui | `INDEX / UNIQUE` | Description |
 
 ---
 
@@ -29,5 +33,5 @@
 
 ```mermaid
 erDiagram
-    TABLE_A ||--o{ TABLE_B : "possède"
+    ENTITY_A ||--o{ ENTITY_B : "possède"
 ```

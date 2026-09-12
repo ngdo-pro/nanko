@@ -1,49 +1,50 @@
 # Domaine : [Nom du Domaine] ([slug]) — Contrats d'API & Schémas
 
-> **Mission du Domaine :** [Rappel de la mission]  
-> **Base URL :** `/api/v1/[domaine]`
+> **Spécification Formelle :** [`./openapi.yaml`](./openapi.yaml) (OpenAPI 3.1)  
+> **Base URL :** `[Base URL, ex: /api/v1/[domaine]]`  
+> **Format d'échange :** `application/json`
 
 ---
 
-## 1. Endpoints REST Actifs
+## 1. Périmètre & Frontières des Contrats
 
-### `[METHOD] /api/v1/[resource]`
-* **Authentification :** `PUBLIC_ACCESS` | `ROLE_USER` | `Capability:[capability_name]`
-* **Headers :** `Content-Type: application/json`, `Authorization: Bearer <token>`
-* **Description :** [Rôle de l'endpoint]
-
-#### Request DTO (`[InputDtoName]`)
-```php
-final readonly class [InputDtoName]
-{
-    public function __construct(
-        #[Assert\NotBlank]
-        public string $field,
-    ) {}
-}
-```
-
-#### Réponses
-* `200 OK` / `201 Created` :
-  ```json
-  {
-    "id": "01918a24-7b3b-7c99-b1d5-2a1d2f34e567",
-    "field": "value"
-  }
-  ```
-* `422 Unprocessable Entity` : Violations Symfony
-* `401 / 403 / 404 / 409` : `{ "code": "ERROR_CODE", "message": "..." }`
+* **Ressources & Endpoints gérés dans ce domaine :**
+  * `[Ressource 1, ex: /api/v1/organisations]`
+  * `[Ressource 2, ex: /api/v1/projects]`
+* **Contrats délégués à d'autres domaines :**
+  * *[Ressource déléguée] :* Délégué à `[autre-domaine]`.
 
 ---
 
-## 2. Schémas de Validation Frontend (Zod)
+## 2. Cartographie des Endpoints REST
+
+| Méthode | Endpoint | OperationId | Auth | Description |
+|---|---|---|:---:|---|
+| `GET` | `[Path]` | `[operationId]` | `[Auth]` | [Description succincte du rôle de l'endpoint] |
+| `POST` | `[Path]` | `[operationId]` | `[Auth]` | [Description succincte du rôle de l'endpoint] |
+
+> ℹ️ **Spécification Formelle des Requêtes & Réponses :**  
+> Les corps de requêtes, paramètres, modèles de données, codes de statut HTTP et schémas d'erreurs sont intégralement spécifiés dans [`./openapi.yaml`](./openapi.yaml).
+
+---
+
+## 3. Schémas de Validation Client / Consommateurs
+
+*Schémas de validation et types contractuels dans le langage du client (ex: Zod / TypeScript, Pydantic / Python, JSON Schema, etc.) :*
 
 ```typescript
-import { z } from 'zod';
-
-export const [featureSchema] = z.object({
-  field: z.string().min(1, 'Champ requis')
-});
-
-export type [FeatureInput] = z.infer<typeof [featureSchema]>;
+// Exemple de schémas de validation et types déduits
 ```
+
+---
+
+## 4. Modèle Standard d'Erreur
+
+| Code HTTP | Format du Payload | Signification / Usage |
+|---|---|---|
+| `400 Bad Request` | `{ "code": "INVALID_INPUT", "message": "..." }` | Paramètres ou corps de requête invalide |
+| `401 Unauthorized` | `{ "code": "UNAUTHORIZED", "message": "..." }` | Authentification requise ou jeton expiré |
+| `403 Forbidden` | `{ "code": "FORBIDDEN", "message": "..." }` | Droits insuffisants pour accéder à la ressource |
+| `404 Not Found` | `{ "code": "NOT_FOUND", "message": "..." }` | Ressource introuvable |
+| `409 Conflict` | `{ "code": "CONFLICT", "message": "..." }` | Conflit d'état ou violation d'unicité |
+| `422 Unprocessable` | `{ "code": "VALIDATION_FAILED", "violations": [...] }` | Échec des règles de validation métier |
