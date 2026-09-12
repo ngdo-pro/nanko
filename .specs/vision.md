@@ -49,14 +49,15 @@
 
 - [ ] **`studio-modeling`** : Modélisation Visuelle Directe & Fluide sur le Canvas (Shapes, Connecteurs, In-place)  
   ↳ *Initiative :* [`.specs/initiatives/active/studio-modeling/README.md`](./initiatives/active/studio-modeling/README.md)
+- [ ] **`workspace-management`** : Gestion des Espaces Personnels, Organisations & Collaboration  
+  ↳ *Initiative :* [`.specs/initiatives/active/workspace-management/README.md`](./initiatives/active/workspace-management/README.md)
 
 ---
 
 ### 🎯 Planifiées (Prêtes)
 *Prochains chantiers priorisés, prêts à démarrer dès libération de bande passante :*
 
-- [ ] **`workspace-management`** : Gestion des Espaces Personnels & Hiérarchie de Projets  
-  ↳ *Initiative :* [`.specs/initiatives/planned/workspace-management/README.md`](./initiatives/planned/workspace-management/README.md)
+*(Aucune initiative planifiée en attente — capacité active allouée sur `studio-modeling` et `workspace-management`)*
 
 ---
 

@@ -3,7 +3,7 @@
 > **Type :** Product / UX & Architecture  
 > **Initiative Slug :** `workspace-management`  
 > **Owner :** Nicolas & Nanko Core Team  
-> **Status :** Planned 🎯  
+> **Status :** Active 🚀  
 > **Started :** 2026-09-01  
 
 ---
