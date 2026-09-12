@@ -11,11 +11,14 @@ import {
   applyNodeChanges,
   applyEdgeChanges,
   useReactFlow,
+  ConnectionMode,
   type Node,
   type Edge,
   type OnNodesChange,
   type OnEdgesChange,
   type OnNodeDrag,
+  type Connection,
+  type IsValidConnection,
 } from '@xyflow/react'
 
 import { RectangleNode } from './nodes/RectangleNode'
@@ -26,6 +29,7 @@ import { CanvasControls } from './CanvasControls'
 import { RadialMenu } from './radial/RadialMenu'
 import styles from './NankoCanvas.module.css'
 import { calculateDagreLayout } from './utils/dagreLayout'
+import { isValidNankoConnection } from './utils/isValidConnection'
 import type { ShapePrimitiveType } from './utils/insertShapeToSource'
 import type { NankoAst } from '@/features/documents'
 
@@ -45,6 +49,7 @@ export interface NankoCanvasProps {
   onNodePositionChange?: (nodeId: string, position: { x: number; y: number }) => void
   onAutoLayoutApplied?: (layout: Record<string, { x: number; y: number }>) => void
   onCreateShape?: (shapeType: ShapePrimitiveType, position: { x: number; y: number }) => void
+  onConnectorCreated?: (source: string, target: string) => void
 }
 
 function buildNodesFromAst(ast: NankoAst): Node[] {
@@ -124,6 +129,7 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
   onNodePositionChange,
   onAutoLayoutApplied,
   onCreateShape,
+  onConnectorCreated,
 }) => {
   const [showMiniMap, setShowMiniMap] = useState<boolean>(false)
   const [colorMode, setColorMode] = useState<'dark' | 'light'>('dark')
@@ -189,6 +195,21 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
   const onEdgesChange: OnEdgesChange = useCallback(
     (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
     [],
+  )
+
+  // Validation d'un nouveau connecteur : rejet auto-connexion et doublons dans le même sens
+  const isValidConnection: IsValidConnection = useCallback(
+    (connection) => isValidNankoConnection(connection, edges),
+    [edges],
+  )
+
+  // Création terminée d'une connexion
+  const handleConnect = useCallback(
+    (connection: Connection) => {
+      if (!isValidNankoConnection(connection, edges)) return
+      onConnectorCreated?.(connection.source, connection.target)
+    },
+    [edges, onConnectorCreated],
   )
 
   // Déplacement terminé : synchroniser la position vers le code source
@@ -392,6 +413,11 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeDragStop={handleNodeDragStop}
+        onConnect={handleConnect}
+        isValidConnection={isValidConnection}
+        connectionRadius={32}
+        connectionMode={ConnectionMode.Loose}
+        nodesConnectable={!syntaxError}
         colorMode={colorMode}
         fitView
         fitViewOptions={{ padding: 0.3, maxZoom: 1.2 }}

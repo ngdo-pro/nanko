@@ -61,7 +61,7 @@
 - [x] **`03-radial-menu-insertion`** : Roue d'outils radiale sous le curseur (`A`/`Tab` maintenu) pour dépôt instantané  
   ↳ *Fichier :* [`archive/03-radial-menu-insertion.md`](./archive/03-radial-menu-insertion.md) *(Livré & Archivé ✅ — Spec 017)*
 - [ ] **`04-smart-handles-magnetic-connectors`** : Handles contextuels visibles à la sélection et tracé magnétique libre  
-  ↳ *Fichier :* [`planned/04-smart-handles-magnetic-connectors.md`](./planned/04-smart-handles-magnetic-connectors.md) *(Cadré ✅ — Prêt pour `/spec`)*
+  ↳ *Fichier :* [`active/04-smart-handles-magnetic-connectors.md`](./active/04-smart-handles-magnetic-connectors.md) *(Active 🛠️ — Spec 021 planifiée)*
 - [ ] **`05-in-place-editing-popover`** : Édition in-place au double-clic et micro-popover contextuelle rapide  
   ↳ *Fichier :* `planned/05-in-place-editing-popover.md` *(À cadrer via `/feature`)*
 - [ ] **`06-shortcuts-cheatsheet-modal`** : Modale d'aide interactive des raccourcis clavier (`?` / `Cmd+/`)  
