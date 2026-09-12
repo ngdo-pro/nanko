@@ -1,7 +1,7 @@
-# Change : 025 - Gabarits d'Architecture Pré-Typés (Database, Service, Gateway, Queue) & Extension de la Roue Radiale
+# Spec : 025 - Gabarits d'Architecture Pré-Typés (Database, Service, Gateway, Queue) & Extension de la Roue Radiale
 
 ## Métadonnées
-* **Domaine concerné :** `.specs/current/domains/workspace-management/`
+* **Domaine concerné :** `.specs/knowledge/domains/studio-modeling/`
 * **Type de changement :** `Évolution`
 * **Cible :** `Fullstack` (`backend` : parseur DSL · `frontend` : rendu Canvas, roue radiale) + `tests-e2e`
 * **Ordre de livraison recommandé :** Après le Delta 024 (3ᵉ secteur roue radiale « Text ») pour ne retoucher `radialMenuConfig.ts` qu'une seule fois — non bloquant techniquement si l'ordre réel diffère.
@@ -273,10 +273,10 @@ const SHAPE_DIMENSIONS: Record<string, { width: number; height: number }> = {
   - [ ] 2. Valider la suite complète : `pnpm --filter tests-e2e exec playwright test`.
 
 - [ ] **Phase 4 : Synchronisation documentaire (Automatisable via `/sync-current`)**
-  - [ ] 1. Mettre à jour `.specs/current/domains/workspace-management/behavior.md` (nouveau Parcours décrivant les 4 gabarits).
-  - [ ] 2. Mettre à jour `.specs/current/domains/workspace-management/tech.md` (`CylinderNode`, `ServiceNode`, `GatewayNode`, icônes).
-  - [ ] 3. Mettre à jour `.specs/current/domains/workspace-management/models.md` (types de Shape supportés par le parseur).
-  - [ ] 4. Déplacer ce fichier dans `.specs/changes/archive/025-architecture-templates-and-radial-menu-extension.md`.
+  - [ ] 1. Mettre à jour `.specs/knowledge/domains/studio-modeling/behavior.md` (nouveau Parcours décrivant les 4 gabarits).
+  - [ ] 2. Mettre à jour `.specs/knowledge/domains/studio-modeling/tech.md` (`CylinderNode`, `ServiceNode`, `GatewayNode`, icônes).
+  - [ ] 3. Mettre à jour `.specs/knowledge/domains/studio-modeling/models.md` (types de Shape supportés par le parseur).
+  - [ ] 4. Déplacer ce fichier dans `.specs/specs/archive/025-architecture-templates-and-radial-menu-extension.md`.
   - [ ] 5. Mettre à jour la Target `.specs/targets/active/studio-board.md` (§2.1) pour cocher les gabarits livrés.
 
 ---

@@ -54,6 +54,6 @@ flowchart LR
 
 | Référence | Décision Structurante | Impact Technique |
 |---|---|---|
-| [`ADR-0002`](../../../decisions/architecture/ADR-0002-modular-monolith-and-bounded-contexts.md) | Monolithe Modulaire | Découplage strict entre le conteneur documentaire et le moteur de studio |
-| [`ADR-0007`](../../../decisions/architecture/ADR-0007-postgresql-unique-runtime-source-of-truth.md) | Runtime PostgreSQL unique | Stockage hybride relationnel et JSONB dénormalisé sur un seul moteur SQL |
-| [`ADR-0011`](../../../decisions/architecture/ADR-0011-hexagonal-architecture-and-dbal-without-orm.md) | Hexagone & DBAL sans ORM | Parser DSL pur sans adhérence à Doctrine ORM ni au framework Symfony |
+| [`ADR-0002`](../../../decisions/architecture/ADR-002-bounded-contexts-structure.md) | Monolithe Modulaire | Découplage strict entre le conteneur documentaire et le moteur de studio |
+| [`ADR-0007`](../../../decisions/architecture/ADR-007-postgres-only-for-mvp.md) | Runtime PostgreSQL unique | Stockage hybride relationnel et JSONB dénormalisé sur un seul moteur SQL |
+| [`ADR-0011`](../../../decisions/architecture/ADR-011-hexagonal-architecture-backend.md) | Hexagone & DBAL sans ORM | Parser DSL pur sans adhérence à Doctrine ORM ni au framework Symfony |

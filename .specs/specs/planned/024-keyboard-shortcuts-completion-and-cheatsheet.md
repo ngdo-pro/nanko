@@ -1,7 +1,7 @@
-# Change : 024 - Complétion des Raccourcis Clavier, Secteur Texte & Cheatsheet Modal
+# Spec : 024 - Complétion des Raccourcis Clavier, Secteur Texte & Cheatsheet Modal
 
 ## Métadonnées
-* **Domaine concerné :** `.specs/current/domains/workspace-management/`
+* **Domaine concerné :** `.specs/knowledge/domains/studio-modeling/`
 * **Type de changement :** `Évolution`
 * **Cible :** `frontend` (Canvas, Raccourcis clavier, Modale) + `tests-e2e` (Playwright)
 * **Ordre de livraison recommandé :** Après les Deltas 021, 022 et 023, pour que la Cheatsheet documente un jeu de raccourcis déjà complet et fonctionnel (dépendance **documentaire uniquement** — le composant modal lui-même n'appelle aucun code de ces deltas).
@@ -28,7 +28,7 @@
   * **Tests unitaires & E2E** de chaque nouveau raccourci et de l'ouverture/fermeture/recherche de la Cheatsheet.
 * **Out of Scope (Exclusions strictes) :**
   * **Raccourcis d'actions non encore implémentées** dans le Studio : `L` (outil Connecteur dédié — écarté du périmètre du Delta 022, le tracé démarre uniquement par glisser depuis un Handle), `G` (Grouper en Conteneur — feature non livrée), `Cmd+D` (Dupliquer), `Cmd+Z`/`Cmd+Shift+Z` (Undo/Redo unifié, cf. Target `studio-board.md` §5.3, non livrée). Ces lignes **n'apparaissent pas** dans la Cheatsheet tant que les fonctionnalités correspondantes ne sont pas livrées, pour ne jamais documenter un raccourci qui ne fait rien.
-  * **Raccourci `Suppr`/`Retour`** (suppression) : documenté dans la Cheatsheet uniquement une fois le Delta 023 livré ; ce delta-ci n'implémente pas la suppression elle-même (cf. `.specs/changes/active/023-shape-connector-deletion-cascade.md`).
+  * **Raccourci `Suppr`/`Retour`** (suppression) : documenté dans la Cheatsheet uniquement une fois le Delta 023 livré ; ce delta-ci n'implémente pas la suppression elle-même (cf. `.specs/specs/planned/023-shape-connector-deletion-cascade.md`).
   * **Personnalisation des raccourcis** (rebind utilisateur) : non prévue, raccourcis fixes.
   * **Modification du backend, du schéma SQL ou d'un quelconque contrat d'API** : delta strictement frontend, aucune interaction serveur.
 
@@ -230,9 +230,9 @@ export const SHORTCUTS_REGISTRY: ShortcutEntry[] = [
   - [ ] 2. Valider la suite complète : `make test-e2e`.
 
 - [ ] **Phase 4 : Synchronisation documentaire (Automatisable via `/sync-current`)**
-  - [ ] 1. Mettre à jour `.specs/current/domains/workspace-management/behavior.md` (raccourcis complets, Cheatsheet).
-  - [ ] 2. Mettre à jour `.specs/current/domains/workspace-management/tech.md` (`shortcutsRegistry.ts`, `ShortcutsCheatsheetModal`).
-  - [ ] 3. Déplacer ce fichier dans `.specs/changes/archive/024-keyboard-shortcuts-completion-and-cheatsheet.md`.
+  - [ ] 1. Mettre à jour `.specs/knowledge/domains/studio-modeling/behavior.md` (raccourcis complets, Cheatsheet).
+  - [ ] 2. Mettre à jour `.specs/knowledge/domains/studio-modeling/tech.md` (`shortcutsRegistry.ts`, `ShortcutsCheatsheetModal`).
+  - [ ] 3. Déplacer ce fichier dans `.specs/specs/archive/024-keyboard-shortcuts-completion-and-cheatsheet.md`.
   - [ ] 4. Mettre à jour la Target `.specs/targets/active/studio-board.md` (§6) pour cocher les raccourcis livrés.
 
 ---

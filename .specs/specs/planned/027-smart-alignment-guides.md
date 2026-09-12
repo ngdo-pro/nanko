@@ -1,7 +1,7 @@
-# Change : 027 - Guides d'Alignement Dynamiques (Smart Guides) & Magnétisme de Positionnement
+# Spec : 027 - Guides d'Alignement Dynamiques (Smart Guides) & Magnétisme de Positionnement
 
 ## Métadonnées
-* **Domaine concerné :** `.specs/current/domains/workspace-management/`
+* **Domaine concerné :** `.specs/knowledge/domains/studio-modeling/`
 * **Type de changement :** `Évolution`
 * **Cible :** `frontend` (Canvas React Flow, calcul géométrique, overlay SVG) + `tests-e2e` (Playwright)
 
@@ -230,9 +230,9 @@ const handleNodeDragStop: OnNodeDrag = useCallback((_event, node) => {
   - [ ] 2. Valider la suite complète : `make test-e2e`.
 
 - [ ] **Phase 4 : Synchronisation documentaire (Automatisable via `/sync-current`)**
-  - [ ] 1. Mettre à jour `.specs/current/domains/workspace-management/behavior.md` (nouveau Parcours décrivant les guides d'alignement).
-  - [ ] 2. Mettre à jour `.specs/current/domains/workspace-management/tech.md` (`computeAlignmentGuides.ts`, `AlignmentGuidesOverlay`).
-  - [ ] 3. Déplacer ce fichier dans `.specs/changes/archive/027-smart-alignment-guides.md`.
+  - [ ] 1. Mettre à jour `.specs/knowledge/domains/studio-modeling/behavior.md` (nouveau Parcours décrivant les guides d'alignement).
+  - [ ] 2. Mettre à jour `.specs/knowledge/domains/studio-modeling/tech.md` (`computeAlignmentGuides.ts`, `AlignmentGuidesOverlay`).
+  - [ ] 3. Déplacer ce fichier dans `.specs/specs/archive/027-smart-alignment-guides.md`.
   - [ ] 4. Mettre à jour la Target `.specs/targets/active/studio-board.md` (§2.3) pour cocher les Smart Guides livrés.
 
 ---

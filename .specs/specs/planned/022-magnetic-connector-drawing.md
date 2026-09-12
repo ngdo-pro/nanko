@@ -1,10 +1,10 @@
-# Change : 022 - Tracé de Connecteur par Glisser & Magnétisme Automatique
+# Spec : 022 - Tracé de Connecteur par Glisser & Magnétisme Automatique
 
 ## Métadonnées
-* **Domaine concerné :** `.specs/current/domains/workspace-management/`
+* **Domaine concerné :** `.specs/knowledge/domains/studio-modeling/`
 * **Type de changement :** `Évolution`
 * **Cible :** `frontend` (React Flow, Handles, Canvas) + `tests-e2e` (Playwright)
-* **Dépendance :** Requiert la livraison préalable (ou simultanée) du **Delta 021** (`.specs/changes/active/021-studio-inplace-and-popover-editing.md`), dont le composant `ElementPopover` est réutilisé ici en mode « qualification immédiate » post-création.
+* **Dépendance :** Requiert la livraison préalable (ou simultanée) du **Delta 021** (`.specs/specs/active/021-studio-inplace-and-popover-editing.md`), dont le composant `ElementPopover` est réutilisé ici en mode « qualification immédiate » post-création.
 
 ---
 
@@ -79,7 +79,7 @@ Aucune modification du schéma relationnel, de la persistance ni de l'AST dénor
 
 ## 4. Delta Contrats d'API (Symfony)
 
-Aucun nouvel endpoint ni modification de contrat. La création visuelle de connecteur mute uniquement l'état local `sourceCode` (`DocumentEditorView.tsx`) ; la persistance continue de transiter par `PUT /api/v1/documents/{documentId}` déjà documenté dans `.specs/current/domains/workspace-management/contracts.md`, déclenchée par le raccourci `Cmd+S` / `Ctrl+S` existant.
+Aucun nouvel endpoint ni modification de contrat. La création visuelle de connecteur mute uniquement l'état local `sourceCode` (`DocumentEditorView.tsx`) ; la persistance continue de transiter par `PUT /api/v1/documents/{documentId}` déjà documenté dans `.specs/knowledge/domains/studio-modeling/contracts.md`, déclenchée par le raccourci `Cmd+S` / `Ctrl+S` existant.
 
 ---
 
@@ -267,9 +267,9 @@ const handleConnect: OnConnect = useCallback((connection) => {
   - [ ] 2. Valider la suite complète : `make test-e2e`.
 
 - [ ] **Phase 4 : Synchronisation documentaire (Automatisable via `/sync-current`)**
-  - [ ] 1. Mettre à jour `.specs/current/domains/workspace-management/behavior.md` (nouveau Parcours décrivant le tracé magnétique).
-  - [ ] 2. Mettre à jour `.specs/current/domains/workspace-management/tech.md` (`insertConnectorToSource.ts`, `useConnection`, règles CSS de Handles).
-  - [ ] 3. Déplacer ce fichier dans `.specs/changes/archive/022-magnetic-connector-drawing.md`.
+  - [ ] 1. Mettre à jour `.specs/knowledge/domains/studio-modeling/behavior.md` (nouveau Parcours décrivant le tracé magnétique).
+  - [ ] 2. Mettre à jour `.specs/knowledge/domains/studio-modeling/tech.md` (`insertConnectorToSource.ts`, `useConnection`, règles CSS de Handles).
+  - [ ] 3. Déplacer ce fichier dans `.specs/specs/archive/022-magnetic-connector-drawing.md`.
   - [ ] 4. Mettre à jour la Target `.specs/targets/active/studio-board.md` (§3.1) pour refléter la livraison du tracé magnétique.
 
 ---

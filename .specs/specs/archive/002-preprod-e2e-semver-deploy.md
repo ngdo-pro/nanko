@@ -114,7 +114,7 @@ sequenceDiagram
 
 ## 6. Delta Spécifications UI & Logique Client
 * Aucune modification des formulaires ni des flux React client.
-* Les tests E2E existants ([tests-e2e/tests/app/auth.spec.ts](file:///Users/ngdo/dev/nanko/tests-e2e/tests/app/auth.spec.ts)) sont exécutés sans altération contre l'URL `https://app.preprod.nanko.dev`.
+* Les tests E2E existants ([tests-e2e/tests/app/auth.spec.ts](../../../tests-e2e/tests/app/auth.spec.ts)) sont exécutés sans altération contre l'URL `https://app.preprod.nanko.dev`.
 
 ---
 

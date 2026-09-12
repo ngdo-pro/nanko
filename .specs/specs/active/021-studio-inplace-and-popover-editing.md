@@ -1,7 +1,7 @@
-# Change : 021 - Édition In-Place (Double-clic) et Popover Contextuelle pour Label & Desc
+# Spec : 021 - Édition In-Place (Double-clic) et Popover Contextuelle pour Label & Desc
 
 ## Métadonnées
-* **Domaine concerné :** `.specs/current/domains/workspace-management/`
+* **Domaine concerné :** `.specs/knowledge/domains/studio-modeling/`
 * **Type de changement :** `Évolution`
 * **Cible :** `frontend` (Canvas React Flow, composants Nœuds/Arêtes, CSS Blueprint) + `tests-e2e` (Playwright)
 
@@ -78,7 +78,7 @@ Aucune modification du schéma relationnel, de la persistance ni de l'AST dénor
 
 ## 4. Delta Contrats d'API (Symfony)
 
-Aucun nouvel endpoint ni modification de contrat. Le formulaire popover et l'édition in-place mutent uniquement l'état local `sourceCode` (`DocumentEditorView.tsx`) ; la persistance continue de transiter par `PUT /api/v1/documents/{documentId}` déjà documenté dans `.specs/current/domains/workspace-management/contracts.md`, déclenché par le raccourci `Cmd+S` / `Ctrl+S` existant.
+Aucun nouvel endpoint ni modification de contrat. Le formulaire popover et l'édition in-place mutent uniquement l'état local `sourceCode` (`DocumentEditorView.tsx`) ; la persistance continue de transiter par `PUT /api/v1/documents/{documentId}` déjà documenté dans `.specs/knowledge/domains/studio-modeling/contracts.md`, déclenché par le raccourci `Cmd+S` / `Ctrl+S` existant.
 
 ---
 
@@ -252,9 +252,9 @@ export function updateConnectorAttributeInSource(
   - [ ] 2. Valider la suite complète : `make test-e2e`.
 
 - [ ] **Phase 4 : Synchronisation documentaire (Automatisable via `/sync-current`)**
-  - [ ] 1. Mettre à jour `.specs/current/domains/workspace-management/behavior.md` (nouveau Parcours décrivant l'édition in-place et la popover).
-  - [ ] 2. Mettre à jour `.specs/current/domains/workspace-management/tech.md` (composants `ElementPopover`, `updateAttributeInSource.ts`).
-  - [ ] 3. Déplacer ce fichier dans `.specs/changes/archive/021-studio-inplace-and-popover-editing.md`.
+  - [ ] 1. Mettre à jour `.specs/knowledge/domains/studio-modeling/behavior.md` (nouveau Parcours décrivant l'édition in-place et la popover).
+  - [ ] 2. Mettre à jour `.specs/knowledge/domains/studio-modeling/tech.md` (composants `ElementPopover`, `updateAttributeInSource.ts`).
+  - [ ] 3. Déplacer ce fichier dans `.specs/specs/archive/021-studio-inplace-and-popover-editing.md`.
   - [ ] 4. Mettre à jour la Target `.specs/targets/active/dsl-attributes-label-desc.md` pour cocher le Delta 3 (et renommer sa référence de `020-studio-inplace-and-popover-editing` vers `021-studio-inplace-and-popover-editing`, le numéro 020 ayant été pris entre-temps par la migration CSS Modules).
 
 ---

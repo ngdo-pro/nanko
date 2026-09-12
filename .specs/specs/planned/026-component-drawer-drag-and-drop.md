@@ -1,10 +1,10 @@
-# Change : 026 - Volet Latéral Escamotable (Component Drawer) & Drag & Drop de Shapes
+# Spec : 026 - Volet Latéral Escamotable (Component Drawer) & Drag & Drop de Shapes
 
 ## Métadonnées
-* **Domaine concerné :** `.specs/current/domains/workspace-management/`
+* **Domaine concerné :** `.specs/knowledge/domains/studio-modeling/`
 * **Type de changement :** `Évolution`
 * **Cible :** `frontend` (Canvas, Drag & Drop natif) + `tests-e2e` (Playwright)
-* **Dépendance :** Requiert la livraison préalable (ou simultanée) du **Delta 025** (`.specs/changes/active/025-architecture-templates-and-radial-menu-extension.md`), dont le catalogue de types (`ShapePrimitiveType` étendu, préfixes/labels) est directement réutilisé.
+* **Dépendance :** Requiert la livraison préalable (ou simultanée) du **Delta 025** (`.specs/specs/planned/025-architecture-templates-and-radial-menu-extension.md`), dont le catalogue de types (`ShapePrimitiveType` étendu, préfixes/labels) est directement réutilisé.
 
 ---
 
@@ -239,9 +239,9 @@ const STORAGE_DRAWER_OPEN_KEY = 'nanko_component_drawer_open'
   - [ ] 2. Valider la suite complète : `make test-e2e`.
 
 - [ ] **Phase 4 : Synchronisation documentaire (Automatisable via `/sync-current`)**
-  - [ ] 1. Mettre à jour `.specs/current/domains/workspace-management/behavior.md` (nouveau Parcours décrivant le volet et le drag & drop).
-  - [ ] 2. Mettre à jour `.specs/current/domains/workspace-management/tech.md` (`ComponentDrawer`, `drawerCatalog.ts`).
-  - [ ] 3. Déplacer ce fichier dans `.specs/changes/archive/026-component-drawer-drag-and-drop.md`.
+  - [ ] 1. Mettre à jour `.specs/knowledge/domains/studio-modeling/behavior.md` (nouveau Parcours décrivant le volet et le drag & drop).
+  - [ ] 2. Mettre à jour `.specs/knowledge/domains/studio-modeling/tech.md` (`ComponentDrawer`, `drawerCatalog.ts`).
+  - [ ] 3. Déplacer ce fichier dans `.specs/specs/archive/026-component-drawer-drag-and-drop.md`.
   - [ ] 4. Mettre à jour la Target `.specs/targets/active/studio-board.md` (§2.2) pour cocher le volet latéral livré.
 
 ---

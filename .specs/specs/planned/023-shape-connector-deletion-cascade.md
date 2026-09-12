@@ -1,7 +1,7 @@
-# Change : 023 - Suppression Visuelle de Shapes & Connecteurs avec Cascade d'Intégrité
+# Spec : 023 - Suppression Visuelle de Shapes & Connecteurs avec Cascade d'Intégrité
 
 ## Métadonnées
-* **Domaine concerné :** `.specs/current/domains/workspace-management/`
+* **Domaine concerné :** `.specs/knowledge/domains/studio-modeling/`
 * **Type de changement :** `Évolution`
 * **Cible :** `frontend` (React Flow, Canvas) + `tests-e2e` (Playwright)
 
@@ -76,7 +76,7 @@ Aucune modification du schéma relationnel, de la persistance ni de l'AST dénor
 
 ## 4. Delta Contrats d'API (Symfony)
 
-Aucun nouvel endpoint ni modification de contrat. La suppression visuelle mute uniquement l'état local `sourceCode` (`DocumentEditorView.tsx`) ; la persistance continue de transiter par `PUT /api/v1/documents/{documentId}` déjà documenté dans `.specs/current/domains/workspace-management/contracts.md`, déclenchée par `Cmd+S` / `Ctrl+S`.
+Aucun nouvel endpoint ni modification de contrat. La suppression visuelle mute uniquement l'état local `sourceCode` (`DocumentEditorView.tsx`) ; la persistance continue de transiter par `PUT /api/v1/documents/{documentId}` déjà documenté dans `.specs/knowledge/domains/studio-modeling/contracts.md`, déclenchée par `Cmd+S` / `Ctrl+S`.
 
 ---
 
@@ -221,9 +221,9 @@ export function removeConnectorFromSource(sourceCode: string, source: string, ta
   - [ ] 2. Valider la suite complète : `make test-e2e`.
 
 - [ ] **Phase 4 : Synchronisation documentaire (Automatisable via `/sync-current`)**
-  - [ ] 1. Mettre à jour `.specs/current/domains/workspace-management/behavior.md` (nouveau Parcours décrivant la suppression et le toast d'annulation).
-  - [ ] 2. Mettre à jour `.specs/current/domains/workspace-management/tech.md` (`removeShapeFromSource.ts`, `removeConnectorFromSource.ts`, `DeletionUndoToast`).
-  - [ ] 3. Déplacer ce fichier dans `.specs/changes/archive/023-shape-connector-deletion-cascade.md`.
+  - [ ] 1. Mettre à jour `.specs/knowledge/domains/studio-modeling/behavior.md` (nouveau Parcours décrivant la suppression et le toast d'annulation).
+  - [ ] 2. Mettre à jour `.specs/knowledge/domains/studio-modeling/tech.md` (`removeShapeFromSource.ts`, `removeConnectorFromSource.ts`, `DeletionUndoToast`).
+  - [ ] 3. Déplacer ce fichier dans `.specs/specs/archive/023-shape-connector-deletion-cascade.md`.
   - [ ] 4. Mettre à jour la Target `.specs/targets/active/studio-board.md` (§3.3) pour refléter la livraison de la suppression en cascade.
 
 ---

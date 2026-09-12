@@ -12,7 +12,6 @@ monorepo/
 │   └── rules/                         # spec-workflow.md
 │
 ├── .specs/
-│   ├── templates/                     # Templates de spécification, initiatives, ADRs, etc.
 │   ├── vision.md                      # Invariants produit & UX globaux (North Star)
 │   ├── architecture.md                # Invariants techniques globaux (monorepo, CI/CD)
 │   │
@@ -197,9 +196,9 @@ monorepo/
 * **Migrations :** Toute évolution de schéma passe obligatoirement par une migration Doctrine versionnée sous `apps/api/migrations/`.
 * **Rétrocompatibilité :** Interdiction d'ajouter une colonne `NOT NULL` sans valeur par défaut sur des tables existantes en production.
 ```
-CHANGE_TEMPLATE.md
+SPEC_TEMPLATE.md (.agents/plugins/spec-framework/templates/SPEC_TEMPLATE.md)
 ```markdown
-# Change : [XXX] - [Nom de l'évolution]
+# Spec : [XXX] - [Nom de l'évolution]
 
 ## Métadonnées
 * **Domaine concerné :** `.specs/knowledge/domains/[nom-du-domaine]/`

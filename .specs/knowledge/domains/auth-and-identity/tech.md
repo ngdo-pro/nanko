@@ -53,6 +53,6 @@ flowchart LR
 
 | Référence | Décision Structurante | Impact Technique |
 |---|---|---|
-| [`ADR-0002`](../../../decisions/architecture/ADR-0002-modular-monolith-and-bounded-contexts.md) | Monolithe Modulaire | Isolation stricte du module AuthAndIdentity sans couplage fort |
-| [`ADR-0007`](../../../decisions/architecture/ADR-0007-postgresql-unique-runtime-source-of-truth.md) | Runtime PostgreSQL unique | Stockage de la table `app_user` et du schéma `keycloak` sur le même PostgreSQL |
-| [`ADR-0011`](../../../decisions/architecture/ADR-0011-hexagonal-architecture-and-dbal-without-orm.md) | Hexagone & DBAL sans ORM | Entités pures et requêtes d'hydratation manuelles |
+| [`ADR-0002`](../../../decisions/architecture/ADR-002-bounded-contexts-structure.md) | Monolithe Modulaire | Isolation stricte du module AuthAndIdentity sans couplage fort |
+| [`ADR-0007`](../../../decisions/architecture/ADR-007-postgres-only-for-mvp.md) | Runtime PostgreSQL unique | Stockage de la table `app_user` et du schéma `keycloak` sur le même PostgreSQL |
+| [`ADR-0011`](../../../decisions/architecture/ADR-011-hexagonal-architecture-backend.md) | Hexagone & DBAL sans ORM | Entités pures et requêtes d'hydratation manuelles |
