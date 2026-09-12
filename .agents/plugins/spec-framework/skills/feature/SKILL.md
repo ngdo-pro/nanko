@@ -21,11 +21,12 @@ The document must remain concise (**1 page maximum**), visual, and behavior-orie
 1. Read the parent initiative's overview in `.specs/initiatives/active/[initiative]/README.md`.
 2. Inspect active domain ground truth in `.specs/current/domains/[domain]/` to understand current baseline behavior.
 
-### 2. Interaction & Invariants Interview (Max 2 questions via `ask_question`)
-Clarify interaction specifics:
+### 2. Exhaustive Interaction & Invariants Interview (via `ask_question`)
+Clarify all interaction specifics, edge cases, and constraints without artificial question caps:
 * **Trigger & Wireframe:** How does the user/system initiate the action? What does the interaction look like visually (inline editing, popover, canvas connector)?
-* **Functional Invariants:** What are the non-negotiable integrity rules (`INV-1`, `INV-2`...)? What happens on edge cases or invalid inputs?
+* **Functional Invariants:** What are the non-negotiable integrity rules (`INV-1`, `INV-2`...)? What happens on edge cases, empty states, or invalid inputs?
 * **Out of Scope:** What elements are deliberately deferred to ensure rapid, focused delivery?
+* **Scope Slicing:** If the interaction complexity reveals multiple distinct user workflows, sub-states, or conflicting goals, proactively propose splitting into multiple smaller features.
 
 ### 3. Generate Feature Document
 1. Instantiate `templates/FEATURE_TEMPLATE.md` in `.specs/initiatives/active/[initiative]/[feature-slug].md`.

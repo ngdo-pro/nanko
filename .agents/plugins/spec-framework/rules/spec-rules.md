@@ -34,3 +34,9 @@ These rules apply universally to all agents operating within the **Spec Framewor
 ## 5. Language Consistency Rule
 * Agent definitions, skills instructions, rules, and tooling files are maintained in **English**.
 * All generated deliverables (Vision, Initiatives, Features, Specs, Decisions, and user communications) must be authored in the **user's language**.
+
+---
+
+## 6. Exhaustiveness & Scope Slicing Rule
+* **Never artificially cap questions, edge cases, invariants, or pitfalls.** Be thorough and resolve all ambiguities, failure modes, security boundaries, and architectural trade-offs upfront.
+* **Proactive Scope Slicing:** If addressing all edge cases or pitfalls reveals that a feature or spec is becoming too dense, spans too many user journeys, or carries excessive risk, **never hide or omit requirements**. Instead, explicitly recommend slicing the scope into smaller, atomic, sequential features or specs.

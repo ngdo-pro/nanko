@@ -61,6 +61,6 @@ The Challenger outputs a structured, actionable evaluation in the user's languag
 ---
 
 #### Verdict: [ REVISION_REQUIRED | READY_FOR_SPEC ✅ ]
-* **If REVISION_REQUIRED:** 1-2 mandatory arbitration questions for the user to settle.
+* **If REVISION_REQUIRED:** Exhaustive list of mandatory arbitration questions for the user to settle (proactively recommending to split the feature into multiple smaller units if scope creep or high complexity is detected).
 * **If READY_FOR_SPEC:** "All edge cases are documented, Out-of-Scope boundaries are sealed. Green light for technical spec."
 ```

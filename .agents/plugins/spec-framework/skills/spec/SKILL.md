@@ -20,8 +20,9 @@ All generated specification documents (`.specs/changes/active/XXX-[slug].md`) mu
    * If derived from an initiative feature, read the Feature file in `.specs/initiatives/active/[initiative]/[feature].md` to extract wireframes, invariants, and out-of-scope bounds.
    * Read `.specs/vision.md` and `.specs/architecture.md`.
 
-2. **Targeted Interview (Max 2 questions):**
-   * If ambiguities remain (e.g., network exposure, endpoint security, or boundary conditions), ask at most 2 targeted questions via `ask_question`.
+2. **Exhaustive Technical Interview:**
+   * Clarify all technical ambiguities (security boundaries, data migrations, failure modes, concurrency, backward compatibility) via `ask_question`. Never artificially cap questions.
+   * **Proactive Slicing:** If resolving technical edge cases reveals cross-cutting complexity across multiple tiers (e.g., heavy backend contracts + complex UI canvas), proactively recommend splitting into sequential specs (e.g., Backend/Contracts first, then Frontend/UI).
 
 3. **Sequential Identifier:**
    * Determine the next sequential 3-digit ID (`XXX`) from `.specs/changes/active/` and `.specs/changes/archive/`.
@@ -39,7 +40,7 @@ All generated specification documents (`.specs/changes/active/XXX-[slug].md`) mu
        * `4.2 UI & Interaction Specifications`: ASCII wireframes, state matrices, CLI options.
        * `4.3 Infrastructure, Configuration & Runtime`: Env vars, container definitions, CI/CD pipelines, queues, workers.
      - **Section 5 (Business Invariants & Traceability):** Numbered binary invariants (`INV-1`, `INV-2`...) with short rule text and `↳ Covered by: [short files](#appendix-file-index)`.
-     - **Section 6 (Technical Watchouts):** 3-4 anticipated technical pitfalls relevant to the project's stack (concurrency, state mutations, cache invalidation, network latency, boundary validation).
+     - **Section 6 (Technical Watchouts):** Exhaustive list of anticipated technical pitfalls and failure modes relevant to the project's stack (concurrency, race conditions, state mutations, cache invalidation, network latency, boundary validation).
      - **Section 7 (Sequential Execution Plan):** Phased checklist with atomic tasks linking to the file index.
      - **Section 8 (BDD Validation & Commands):**
        * `8.1 Exhaustive Gherkin Scenarios`: Mandatory 100% invariant coverage grouped into:

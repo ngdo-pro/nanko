@@ -70,7 +70,7 @@ flowchart TD
 2. **Feature Framing with Product Designer:** Delegate drafting `[feature-slug].md` (1 page max, precise ASCII wireframe, 3-step happy path, functional invariants, strict out-of-scope) to the `product-designer`.
 3. **Product Challenger Filter:**
    - Instantiate `product-challenger` to test edge cases, empty states, and scope limits.
-   - Present up to 2 arbitration questions to the user.
+   - Present necessary arbitration questions to the user (proposing to split the feature if scope proves too broad).
    - Lock answers into numbered invariants (`INV-X`) or the out-of-scope section.
 4. **Final Qualification:**
    - Mark the feature: `Status: Ready for Spec`.

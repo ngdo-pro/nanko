@@ -23,11 +23,12 @@ It must not exceed **1 to 2 pages** and aims primarily to align the overarching 
 1. Read `.specs/vision.md` to ensure alignment with foundational tenets and guardrails.
 2. Inspect active initiatives in `.specs/initiatives/active/` to avoid scope collisions.
 
-### 2. Macro Framing Interview (Max 3 questions via `ask_question`)
-Clarify the 3 key strategic axes with the user:
+### 2. Exhaustive Framing Interview (via `ask_question`)
+Clarify all strategic axes with the user without artificial question caps:
 * **The Gap / Leap:** What is the current bottleneck and what is the desired future state?
-* **Global Architecture / Tenets:** What 2-3 non-negotiable rules govern this initiative?
-* **Preliminary Roadmap:** What 3 to 5 logical Features comprise this initiative?
+* **Global Architecture / Tenets:** What non-negotiable rules govern this initiative?
+* **Preliminary Roadmap:** What logical Features comprise this initiative?
+* **Scope Slicing:** If the strategic leap reveals too many disparate subsystems or conflicting milestones, proactively recommend slicing into separate, sequential initiatives.
 
 ### 3. Generate Initiative Document
 1. Create directory `.specs/initiatives/active/[slug]/`.
