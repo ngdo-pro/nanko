@@ -14,9 +14,9 @@ All generated specification documents (`.specs/specs/planned/XXX-[slug].md`) mus
 ## Procedure
 
 1. **Domain Context & Greenfield Check:**
-   * Check if `.specs/baseline/domains/[domain]/` exists:
-     - **If present (Brownfield):** Read baseline files (`behavior.md`, `tech.md`, `contracts.md`, `models.md`) to build strictly upon existing foundations.
-     - **If absent (Greenfield / Initial Bootstrap):** Do not block. Treat as a foundational spec establishing the initial architecture for this domain (baseline will be seeded upon `/sync-baseline`).
+   * Check if `.specs/knowledge/domains/[domain]/` exists:
+     - **If present (Brownfield):** Read domain knowledge files (`behavior.md`, `tech.md`, `contracts.md`, `models.md`) to build strictly upon existing foundations.
+     - **If absent (Greenfield / Initial Bootstrap):** Do not block. Treat as a foundational spec establishing the initial architecture for this domain (knowledge base will be seeded upon `/sync-knowledge`).
    * If derived from an initiative feature, read the Feature file in `.specs/initiatives/(active|planned)/[initiative]/(active|planned)/[feature].md` to extract wireframes, invariants, and out-of-scope bounds.
    * Read `.specs/vision.md` and `.specs/architecture.md`.
 

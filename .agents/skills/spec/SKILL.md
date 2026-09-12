@@ -10,8 +10,8 @@ Utilisez ce skill lorsque l'utilisateur demande de concevoir, spécifier ou cadr
 ## Procédure
 
 1. **Isolation du domaine :**
-   * Vérifier que `.specs/baseline/domains/[domaine]/` existe.
-   * Lire les fichiers de l'état de référence (baseline) : `behavior.md`, `tech.md`, `contracts.md`, `models.md`.
+   * Vérifier que `.specs/knowledge/domains/[domaine]/` existe.
+   * Lire les fichiers de la base de connaissances (knowledge) : `behavior.md`, `tech.md`, `contracts.md`, `models.md`.
    * Lire `.specs/vision.md` et `.specs/architecture.md`.
 
 2. **Interview :**

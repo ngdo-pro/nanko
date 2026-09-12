@@ -16,7 +16,7 @@ flowchart LR
     B --> Q["3. QA Tester<br>(Quality Gates pass)"]
     Q --> R["4. Clean-Room Reviewer<br>(Isolated Audit)"]
     R -->|CHANGES_REQUESTED| B
-    R -->|APPROVED| C["5. Sync Baseline<br>(Release & Archive)"]
+    R -->|APPROVED| K["5. Knowledge Orchestrator<br>(Sync & Capitalize)"]
 ```
 
 ---
@@ -29,7 +29,7 @@ flowchart LR
 | **2. Build Code** | `agents/implementer.md` | `skills/build-spec/SKILL.md` | Compiled code & executed migrations (Spec in `active/`) |
 | **3. Quality Gates** | `agents/qa-tester.md` | `skills/test-spec/SKILL.md` | 100% passing tests (Unit, Component, E2E) |
 | **4. Clean-Room Audit** | `agents/reviewer.md` | Clean-Room Protocol | Audit report (Spec vs Git Diff) |
-| **5. Release & Sync** | `delivery-orchestrator` | `skills/sync-baseline/SKILL.md` | Updated `.specs/baseline/` & Archived spec |
+| **5. Capitalize & Sync** | `agents/knowledge-orchestrator.md` | `skills/sync-knowledge/SKILL.md` | Updated `.specs/knowledge/` & Archived spec |
 
 ---
 
@@ -55,8 +55,7 @@ flowchart LR
    - Once all quality gates pass, instantiate `reviewer` in an **isolated session with zero prior conversational context**.
    - If changes are requested: route the audit report back to `implementer`.
 
-6. **Closure & Ground Truth Synchronization:**
+6. **Closure & Hand-off to Knowledge Track:**
    - Upon formal approval (`APPROVED`):
-     * Trigger ground truth synchronization in `.specs/baseline/domains/[domain]/`.
-     * Archive the active spec into `.specs/specs/archive/XXX-[slug].md`.
-     * Update the feature status in the parent initiative (`Implemented ✅`).
+     * Hand off execution to `knowledge-orchestrator` (`/sync-knowledge [id]`).
+     * The `knowledge-orchestrator` updates `.specs/knowledge/domains/[domain]/`, detects ADR/PDRs, and archives the spec.

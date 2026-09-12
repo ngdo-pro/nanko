@@ -1,34 +1,34 @@
 ---
-name: sync-baseline
-description: Propagate a delivered specification into the baseline architecture documentation (.specs/baseline/) and archive the spec.
+name: sync-knowledge
+description: Propagate a delivered specification into the living knowledge documentation (.specs/knowledge/) via specialized sub-skills and archive the spec.
 ---
 
-# Skill: sync-baseline
+# Skill: sync-knowledge
 
-Use this skill after an engineering specification has passed all quality gates and review audits (`/sync-baseline [id]`).
+Use this skill after an engineering specification has passed all quality gates and review audits (`/sync-knowledge [id]`).
 
-All updated baseline documents must be maintained in the user's language.
+All updated knowledge documents must be maintained in the user's language.
 
 ---
 
 ## Procedure
 
 1. **Locate Specification:**
-   * Read `.specs/specs/active/[id]*.md` and identify the target domain from its metadata.
+   * Read `.specs/specs/active/[id]*.md` and identify the target domain from its metadata (`[domain]`).
+   * Ensure directory `.specs/knowledge/domains/[domain]/` exists (initialize if greenfield).
 
-2. **Update Domain Baseline Architecture:**
-   * Create directory `.specs/baseline/domains/[domain]/` if it does not exist yet (Greenfield bootstrap).
-   * `.specs/baseline/domains/[domain]/behavior.md`: Document user flows and business rules.
-   * `.specs/baseline/domains/[domain]/contracts.md`: Document endpoints, contracts, schemas, and events.
-   * `.specs/baseline/domains/[domain]/models.md`: Document aggregates, database tables, models, and columns.
-   * `.specs/baseline/domains/[domain]/tech.md`: Document patterns, libraries, and architecture choices.
+2. **Execute Pillar Synchronizations:**
+   * **Behavior (`/sync-behavior [id]`):** Update `.specs/knowledge/domains/[domain]/behavior.md` (User journeys, Mermaid flowchart, business rules, failure matrix). Enforce zero technical pollution.
+   * **Contracts (`/sync-contracts [id]`):** Update `.specs/knowledge/domains/[domain]/contracts.md` (REST endpoints, DTOs, Zod validation schemas).
+   * **Models (`/sync-models [id]`):** Update `.specs/knowledge/domains/[domain]/models.md` (Aggregates, SQL tables, columns, migrations, ERD).
+   * **Tech (`/sync-tech [id]`):** Update `.specs/knowledge/domains/[domain]/tech.md` (Architectural patterns, services, security invariants).
 
 3. **Identify & Formalize Structural Decisions (PDR / ADR):**
    * Scan the delivered delta for non-trivial trade-offs:
      - **Product / Ergonomic Decision (PDR):** Access models, disruptive UX choices, simplified workflows.  
-       $\rightarrow$ Generate PDR in `.specs/decisions/pdr/PDR-XXX-[slug].md` using `templates/PDR_TEMPLATE.md`.
+       $\rightarrow$ Generate PDR in `.specs/decisions/product/PDR-XXX-[slug].md` using `templates/PDR_TEMPLATE.md`.
      - **Technical / Architectural Decision (ADR):** New dependencies, rendering engines, persistence patterns, protocols.  
-       $\rightarrow$ Generate ADR in `.specs/decisions/adr/ADR-XXX-[slug].md` using `templates/ADR_TEMPLATE.md`.
+       $\rightarrow$ Generate ADR in `.specs/decisions/architecture/ADR-XXX-[slug].md` using `templates/ADR_TEMPLATE.md`.
    * Ask the user if any ambiguity remains regarding a potential decision.
 
 4. **Archive Specification & Cascading Roadmap Completion:**
@@ -47,4 +47,4 @@ All updated baseline documents must be maintained in the user's language.
      - In `.specs/vision.md` under Section 5 (*Strategic Initiatives Roadmap*), check off the initiative: `- [x] **`[initiative-slug]`**: ...`.
 
 5. **Confirmation:**
-   * Summarize all performed updates (updated domain files, created PDRs/ADRs, archived spec, and cascaded completion milestones).
+   * Summarize all performed updates (updated domain knowledge files, created PDRs/ADRs, archived spec, and cascaded completion milestones).
