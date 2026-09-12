@@ -1,38 +1,58 @@
-# Domaine : Identité & Accès (auth-and-identity) - Architecture Technique
+# Domaine : Identité & Accès (auth-and-identity) — Architecture Technique
 
-## 1. Stack & Composants Cibles
-* **Identity Provider (Keycloak 26.1) :**
-  * Conteneur Docker officiel Quay (`quay.io/keycloak/keycloak:26.1`).
-  * Configuration déclarative versionnée dans `infra/keycloak/realm-nanko.json` (import automatique `--import-realm`).
-  * Persistance dans PostgreSQL sous le schéma dédié `keycloak` (`KC_DB_SCHEMA: keycloak`).
-  * Inscription publique et direct access grants désactivés (`registrationAllowed: false`, `directAccessGrantsEnabled: false`).
-* **Backend (`backend/`) :**
-  * Rôle de **Resource Server** OIDC sans stockage ni manipulation de mots de passe.
-  * Authenticator Symfony custom `JwtKeycloakAuthenticator` interceptant `Authorization: Bearer <token>`.
-  * `JwtKeycloakValidator` validant les signatures RS256 contre les clés publiques JWKS de Keycloak (`KEYCLOAK_JWKS_URL`) avec cache et invalidation sur rotation (`kid`).
-  * Architecture hexagonale stricte (`backend/src/AuthAndIdentity/Core/` et `Adapter/`) validée par Deptrac.
-* **Frontend (`frontend/`) :**
-  * Bibliothèque officielle `keycloak-js` configurée dans `src/lib/keycloak.ts`.
-  * **Feature Auth (`src/features/auth/`) :** Module étanche respectant Bulletproof React avec barrel export strict (`index.ts`) :
-    * `components/KeycloakProvider.tsx` : contexte React gérant l'initialisation PKCE (S256), la synchronisation de session et le renouvellement silencieux de token.
-    * `components/ProtectedRoute.tsx` : garde de navigation redirigeant vers Keycloak si non authentifié.
-    * `components/UserMenu.tsx` : menu utilisateur (avatar initial, email, bouton déconnexion) avec sélecteurs normalisés `data-qa`.
-    * `api/getUser.ts` : requête API typée `/api/v1/me` et hook TanStack Query `useUserProfile()`.
-    * `hooks/useAuth.ts` : hook d'accès au contexte d'authentification.
-    * `types/index.ts` : schéma Zod `userProfileSchema` et types TypeScript `UserProfile`, `AuthContextType`.
-  * `src/lib/api-client.ts` : injection transparente du bearer token JWT et refresh automatique sur 401.
-  * **Design System & Identité Nanko :** Typographies officielles (`Archivo`, `IBM Plex Sans`, `IBM Plex Mono`, `Poppins`), tokens CSS clair (`#F7F4EF`) / sombre (`#04141A`), et logo officiel vectoriel SVG (`BrandLogo`).
-  * **Composants d'Interface :** `ThemeSwitch` (gestion et persistance du thème `nanko-theme`), layouts partagés dans `src/components/layout/` (`Navbar`, `AppLayout`, `Footer`).
-  * **Vues :** `UnauthenticatedView` (portail visiteur avec aperçu `.nanko` et CTA Keycloak) et `DashboardView` (accueil connecté avec état vide incitatif).
-  * **Outillage de Tests Unitaires & Intégration :** Vitest, React Testing Library, `@testing-library/jest-dom`, `@testing-library/user-event`, jsdom, harnais `renderWithProviders` (`pnpm --filter frontend test`).
-* **Tests E2E (`tests-e2e/`) :**
-  * Helper `tests-e2e/tests/helpers/keycloak.ts` provisionnant les utilisateurs de test en local via l'API Admin Keycloak (`admin-cli`).
-  * Suite de tests Playwright couvrant le flux d'authentification (`auth.spec.ts`) et le portail d'accueil (`portal.spec.ts`).
+> [!NOTE]
+> **Mission :** Sécuriser la plateforme Nanko via Keycloak OIDC, valider cryptographiquement les jetons JWT Bearer et propager l'identité utilisateur de façon étanche et hexagonale.
 
-## 2. Invariants Techniques & Sécurité
-* Strictement aucun mot de passe ou secret utilisateur en clair dans les bases applicatives ou les logs.
-* Validation cryptographique locale des JWT via les clés publiques JWKS sans dépendance synchrone à Keycloak pour chaque appel API.
-* Idempotence garantie lors du premier appel pour le provisioning Just-In-Time de l'entité locale `app_user`.
+---
 
-## 3. ADRs de Référence
-* `ADR-0011` : Architecture hexagonale et structure des Bounded Contexts.
+## 1. Flux Architectural des Couches
+
+```mermaid
+flowchart LR
+    Client["📱 Client React<br><i>(keycloak-js, AuthContext)</i>"]
+    -->|OIDC Authorization Code + PKCE| IdP["🔐 Keycloak 26.1<br><i>(Realm nanko, JWKS RS256)</i>"]
+    Client -->|Bearer JWT| API["🚪 API Backend<br><i>(JwtKeycloakAuthenticator)</i>"]
+    API -->|Validation locale JWKS| Core["⚙️ Core Hexagonal<br><i>(SynchronizeUser UseCase)</i>"]
+    Core -->|Port Repository| DB["💾 PostgreSQL<br><i>(table app_user)</i>"]
+```
+
+---
+
+## 2. Cartographie des Composants
+
+| Couche | Responsabilité Technique | Composants Clés |
+|---|---|---|
+| **Identity Provider** | Émission de jetons JWT RS256, gestion de session et login SSO | Keycloak 26.1 (`infra/keycloak/realm-nanko.json`) |
+| **Client / Frontend** | Initialisation PKCE, renouvellement silencieux de token, garde de route | `keycloak.ts`, `AuthContext`, `ProtectedRoute`, `UserMenu` |
+| **Transport / API** | Interception HTTP, validation de signature JWKS sans appel synchrone à Keycloak | `JwtKeycloakAuthenticator.php`, `JwtKeycloakValidator.php`, `Me.php` |
+| **Cœur Métier (Core)** | Provisioning Just-in-Time (JIT) idempotent et résolution du compte interne | `SynchronizeUser/Handler.php`, `User.php`, `KeycloakId.php` |
+| **Persistance / Données** | Stockage relationnel de l'utilisateur interne et horodatages de synchronisation | `DoctrineRepository.php`, table `app_user` |
+
+---
+
+## 3. Dépendances Inter-Domaines
+
+| Relation | Domaine Lié | Contrat & Échange |
+|---|---|---|
+| **Fournit à** | `workspace-management` | Fournit le `userId` authentifié issu du jeton JWT validé |
+| **Fournit à** | `studio-modeling` | Assure l'identité pour le contrôle d'accès aux documents |
+
+---
+
+## 4. Invariants Techniques & Sécurité
+
+| Règle | Exigence d'Intégrité | Mécanisme de Contrôle |
+|---|---|---|
+| **`INV-TECH-01`** | **Zéro Mot de Passe en Base Nanko** : Nanko ne manipule ni ne stocke aucun mot de passe ou secret utilisateur | Délégation OIDC totale à Keycloak |
+| **`INV-TECH-02`** | **Validation Locale Asynchrone des JWT** : Les signatures RS256 sont vérifiées localement via JWKS avec cache et invalidation sur rotation | `JwtKeycloakValidator` avec cache public keys |
+| **`INV-TECH-03`** | **Idempotence du JIT Provisioning** : Tout appel simultané à `/api/v1/me` garantit l'absence de doublon sur `keycloak_id` | Contrainte SQL Unique & Use Case JIT |
+
+---
+
+## 5. Décisions d'Architecture de Référence
+
+| Référence | Décision Structurante | Impact Technique |
+|---|---|---|
+| [`ADR-0002`](../../../decisions/architecture/ADR-0002-modular-monolith-and-bounded-contexts.md) | Monolithe Modulaire | Isolation stricte du module AuthAndIdentity sans couplage fort |
+| [`ADR-0007`](../../../decisions/architecture/ADR-0007-postgresql-unique-runtime-source-of-truth.md) | Runtime PostgreSQL unique | Stockage de la table `app_user` et du schéma `keycloak` sur le même PostgreSQL |
+| [`ADR-0011`](../../../decisions/architecture/ADR-0011-hexagonal-architecture-and-dbal-without-orm.md) | Hexagone & DBAL sans ORM | Entités pures et requêtes d'hydratation manuelles |

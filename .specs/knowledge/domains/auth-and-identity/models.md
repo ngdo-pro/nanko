@@ -1,26 +1,52 @@
-# Domaine : Identité & Accès (auth-and-identity) - Modèles & Schéma DB
+# Domaine : Identité & Accès (auth-and-identity) — Modèle de Données & Schéma DB
 
-## 1. Modèle Domaine (Core Hexagonal)
-
-### Agrégat : `User`
-* **Entité racine :** `backend/src/AuthAndIdentity/Core/Domain/User/User.php`
-* **Identifiant interne :** `backend/src/AuthAndIdentity/Core/Domain/User/Id.php` (UUIDv7)
-* **Value Object Identité Externe :** `backend/src/AuthAndIdentity/Core/Domain/User/KeycloakId.php` (UUID correspondant au claim `sub` du JWT Keycloak)
-* **Port Repository :** `backend/src/AuthAndIdentity/Core/Port/User/Repository.php`
-* **Use Case JIT :** `backend/src/AuthAndIdentity/Core/UseCase/User/SynchronizeUser/`
+> **Mission :** Persister les comptes utilisateurs internes Nanko et assurer la correspondance biunivoque avec l'annuaire d'identité Keycloak (OIDC).
 
 ---
 
-## 2. Schéma de Base de Données Actif
+## 1. Diagramme Entité-Relation (ERD)
 
-### Table : `app_user`
-* **Migration de référence :** `backend/migrations/Version20260905000001.php`
-* **Repository DBAL :** `backend/src/AuthAndIdentity/Adapter/Driven/Persistence/User/DoctrineRepository.php`
+```mermaid
+erDiagram
+    APP_USER {
+        uuid id PK "UUIDv7 interne"
+        uuid keycloak_id UK "Claim sub Keycloak"
+        string email "Email utilisateur"
+        timestamp created_at
+        timestamp updated_at
+    }
+```
 
-| Colonne | Type SQL | Nullable | Contraintes / Index | Description |
-|---|---|---|---|---|
-| `id` | `uuid` | Non | `PRIMARY KEY` | Clé primaire interne UUIDv7 |
-| `keycloak_id` | `uuid` | Non | `UNIQUE INDEX uniq_user_keycloak_id` | Identifiant `sub` émis par Keycloak |
-| `email` | `varchar(180)` | Non | `INDEX idx_user_email` | Adresse email synchronisée depuis le JWT |
-| `created_at` | `timestamptz` | Non | - | Horodatage de première connexion |
-| `updated_at` | `timestamptz` | Non | - | Horodatage de dernière synchronisation |
+---
+
+## 2. Dictionnaire de Données & Stockage (PostgreSQL)
+
+| Colonne / Champ | Type | Nullable | Valeur par défaut | Description & Rôle Métier |
+|---|:---:|:---:|:---:|---|
+| `app_user.id` | `UUID` | Non | UUIDv7 | Identifiant primaire interne Nanko |
+| `app_user.keycloak_id` | `UUID` | Non | - | Identifiant unique externe (`sub` du JWT Keycloak) |
+| `app_user.email` | `VARCHAR(180)` | Non | - | Adresse email synchronisée au login |
+| `app_user.created_at` | `TIMESTAMPTZ` | Non | `NOW()` | Horodatage de première connexion |
+| `app_user.updated_at` | `TIMESTAMPTZ` | Non | `NOW()` | Horodatage de dernière synchronisation |
+
+---
+
+## 3. Agrégats & Entités Métier (Cœur Hexagonal)
+
+```text
+User (Root Aggregate)
+├── id: UserId (UUIDv7)
+├── keycloakId: KeycloakId (UUID)
+├── email: string
+└── syncTimestamps(createdAt, updatedAt)
+```
+
+---
+
+## 4. Règles d'Intégrité & Cycle de Vie
+
+| Règle | Type | Description |
+|---|---|---|
+| **`INT-AUTH-01`** | **Unicité Keycloak ID** | Un compte Keycloak ne peut être lié qu'à un seul utilisateur interne (`UNIQUE INDEX uniq_user_keycloak_id`). |
+| **`INT-AUTH-02`** | **Idempotence du JIT Provisioning** | Si l'utilisateur existe déjà lors de l'appel à `GET /api/v1/me`, ses informations sont rafraîchies sans duplication. |
+| **`INT-AUTH-03`** | **Clés Primaires UUIDv7** | L'identifiant interne est un UUIDv7 séquentiel, indépendant du `keycloak_id` externe. |

@@ -1,99 +1,73 @@
-# Domaine : Plateforme & Livraison Continue (platform) - Modèles & Schéma DB
+# Domaine : Plateforme & Livraison Continue (platform) — Modèle de Données & Stockage
 
-## 1. Modèle Domaine & Schéma de Données
-* **Aucune entité persistée en base de données relationnelle :** Le domaine Plateforme ne possède pas de table SQL dans PostgreSQL.
-* Les états de version sont injectés dynamiquement à la compilation/démarrage du conteneur sans état persistant.
-* **Datastore Télémétrique Dédié (ADR-0007) :** L'observabilité (traces, métriques, logs) repose sur un moteur ClickHouse dédié et isolé (`signoz-clickhouse-data`) géré par la stack SigNoz, sans aucun impact sur la base PostgreSQL applicative. Les logs applicatifs sont stockés dans la base ClickHouse `signoz_logs` (table `logs_v2`).
+> **Mission :** Structurer les métadonnées de versionnement applicatif, le modèle de données télémétrique OpenTelemetry (OTel) et le schéma d'audience éthique Plausible.
 
 ---
 
-## 2. DTO Système & Structure de Version
+## 1. Modèle de Stockage & Datastores Dédiés
 
-### DTO Réponse Version (`GET /api/v1/version`)
-* **Contrôleur :** `backend/src/Adapter/Driver/Http/Controller/System/VersionController.php`
+```mermaid
+flowchart TD
+    subgraph Runtime ["Application Nanko"]
+        BE["Backend Symfony<br><i>(APP_VERSION injectée)</i>"]
+        FE["Frontend React<br><i>(AppErrorBoundary, Logger)</i>"]
+    end
 
-```typescript
-export interface VersionResponse {
-  status: 'ok'
-  version: string      // Format SemVer (ex. "v0.1.0-pr.14.2", "v0.1.0-rc.35", "v0.1.0")
-  commit: string       // Hash Git court ou complet (ex. "a1b2c3d4e5f67890")
-  environment: string  // Nom de l'environnement ("local", "test", "preprod", "prod")
-}
+    subgraph Observabilite ["Datastore Télémétrique (SigNoz)"]
+        CH[("ClickHouse<br><i>(signoz_logs, traces)</i>")]
+    end
+
+    subgraph Audience ["Analytics (Plausible)"]
+        PG_PLUG[("PostgreSQL<br><i>(schéma plausible)</i>")]
+        CH_PLUG[("ClickHouse<br><i>(plausible_events_db)</i>")]
+    end
+
+    BE & FE -->|OTLP HTTP Logs & Traces| CH
+    FE -->|Pageviews & Events| CH_PLUG
 ```
 
 ---
 
+## 2. Dictionnaire de Données & DTOs
+
+### 2.1. DTO Réponse Version (`GET /api/v1/version`)
+
+| Propriété | Type | Nullable | Description & Format |
+|---|:---:|:---:|---|
+| `status` | `STRING` | Non | État opérationnel du service (`"ok"`) |
+| `version` | `STRING` | Non | Version dynamique SemVer (ex: `v0.1.0-pr.14.2`, `v0.1.0`) |
+| `commit` | `STRING` | Non | Hash SHA Git court du commit déployé |
+| `environment` | `ENUM` | Non | Environnement d'exécution : `local`, `preprod`, `prod` |
+
+### 2.2. Modèle LogRecord OpenTelemetry (Ingestion OTLP)
+
+| Champ OTel | Type | Rôle Métier & Format |
+|---|:---:|---|
+| `timeUnixNano` | `UINT64` | Horodatage précis de l'événement en nanosecondes |
+| `severityNumber` | `INT32` | Sévérité numérique OTel (INFO: 9, WARN: 13, ERROR: 17) |
+| `severityText` | `STRING` | Libellé textuel (`DEBUG`, `INFO`, `WARN`, `ERROR`) |
+| `body` | `STRING` | Corps textuel du message ou libellé de l'exception |
+| `trace_id` | `STRING(32)` | Identifiant W3C hexadécimal corrélé avec la trace distribuée |
+| `service.name` | `STRING` | Ressource émettrice : `nanko-backend` ou `nanko-frontend` |
+| `deployment.environment` | `STRING` | Environnement : `local`, `preprod`, `prod` |
+
+---
+
 ## 3. Conventions de Versionnement SemVer
-* **Branches Pull Request :** `<base-tag>-pr.<pr_number>.<run_number>` (ex. `v0.1.0-pr.14.2`)
-* **Branche Main (Release Candidates) :** `<base-tag>-rc.<run_number>` (ex. `v0.1.0-rc.35`)
-* **Releases / Tags Git :** `<base-tag>` (ex. `v0.1.0`)
-* **Environnement de développement local :** `v0.0.0-dev`
 
----
-
-## 4. Modèle de Données Télémétrique — LogRecord OpenTelemetry
-Les logs applicatifs émis par le Backend Symfony et le Frontend React sont normalisés selon le modèle de données de log OpenTelemetry :
-
-| Champ OTel | Type | Source Backend | Source Frontend | Description |
-|---|---|---|---|---|
-| `Timestamp` / `timeUnixNano` | uint64 (nanosecondes) | Horodatage précis PHP (microsecondes converties) | `Date.now() * 1_000_000` | Horodatage universel de l'événement |
-| `SeverityNumber` | int32 (1..24) | Mappé depuis le niveau Monolog (INFO: 9, WARN: 13, ERROR: 17, CRITICAL: 21) | DEBUG: 5, INFO: 9, WARN: 13, ERROR: 17 | Sévérité numérique normalisée OTel |
-| `SeverityText` | string | `DEBUG`, `INFO`, `NOTICE`, `WARNING`, `ERROR`, `CRITICAL` | `DEBUG`, `INFO`, `WARN`, `ERROR` | Libellé textuel de sévérité |
-| `Body` | string / value | Message de log Monolog | Message passé au logger ou `error.message` | Corps textuel du message |
-| `trace_id` / `traceId` | string (hex 32) | Extrait du span actif via `TracerProvider` | Extrait du span actif via `@opentelemetry/api` (ou généré W3C) | Identifiant W3C 128-bit corrélé avec la trace |
-| `span_id` / `spanId` | string (hex 16) | Extrait du span actif via `TracerProvider` | Extrait du span actif via `@opentelemetry/api` | Identifiant W3C 64-bit du span |
-| `service.name` | string | `nanko-backend` | `nanko-frontend` | Identifiant de la ressource émettrice |
-| `deployment.environment` | string | `local` / `preprod` / `prod` | `local` / `preprod` / `prod` | Environnement d'exécution |
-| `attributes` | map<string, value> | Contexte Monolog (`context` + `extra`) | Contexte additionnel (`stack`, `componentStack`, `url`, `userAgent`) | Paires clé-valeur de diagnostic |
-
----
-
-## 5. Modèle de Données Analytics — Plausible Community Edition
-
-### 5.1. Datastores Mutualisés (ADR-0007)
-* **Base Relationnelle PostgreSQL (`plausible`) :** Hébergée sur l'instance `nanko-prod-postgres` existante (PostgreSQL 16). Stocke l'état d'administration, les comptes utilisateurs (`users`), les domaines déclarés (`sites`), les autorisations (`site_memberships`) et les clés API (`api_keys`).
-* **Base Analytique ClickHouse (`plausible_events_db`) :** Hébergée sur l'instance `signoz-clickhouse` existante. Stocke les séries temporelles d'audience haute performance compressées en colonnes.
-
-### 5.2. Schéma ClickHouse Principal (`plausible_events_db`)
-| Table ClickHouse | Moteur de Table | Rôle |
+| Contexte | Format SemVer | Exemple |
 |---|---|---|
-| `events_v2` | `MergeTree` | Enregistrements individuels de pages vues et d'événements personnalisés |
-| `sessions_v2` | `SharedReplacingMergeTree` | Sessions de navigation agrégées par visiteur éphémère |
-| `location_data` | `Dictionary` / `MergeTree` | Dictionnaire de géolocalisation anonymisée (pays, région, ville) |
-
-### 5.3. Structure d'un Enregistrement d'Événement (`events_v2`)
-| Colonne ClickHouse | Type | Description |
-|---|---|---|
-| `timestamp` | `DateTime` | Horodatage UTC de l'événement |
-| `name` | `LowCardinality(String)` | Nom de l'événement (`pageview`, `login_initiated`, etc.) |
-| `hostname` | `LowCardinality(String)` | Domaine source (`nanko.dev`, `preprod.nanko.dev`) |
-| `pathname` | `String` | Chemin d'accès de la ressource (`/`, `/pricing`, `/dashboard`) |
-| `user_id` | `UInt64` | Hachage anonyme éphémère rotatif : `hash(IP + UA + sel_journalier)` (sel détruit toutes les 24h) |
-| `session_id` | `UInt64` | Identifiant éphémère de session |
-| `operating_system` | `LowCardinality(String)` | Système d'exploitation extrait du User-Agent (ex. `Mac OS`, `Linux`) |
-| `browser` | `LowCardinality(String)` | Navigateur extrait du User-Agent (ex. `Chrome`, `Firefox`) |
-| `country_code` | `LowCardinality(FixedString(2))` | Code pays ISO-3166-1 extrait de l'IP sans stockage de l'IP |
+| **Pull Request (CI)** | `<base-tag>-pr.<pr_number>.<run_number>` | `v0.1.0-pr.14.2` |
+| **Branche Main (RC)** | `<base-tag>-rc.<run_number>` | `v0.1.0-rc.35` |
+| **Releases Production** | `<base-tag>` | `v0.1.0` |
+| **Développement Local** | `v0.0.0-dev` | `v0.0.0-dev` |
 
 ---
 
-## 6. Cloisonnement & Moindre Privilège des Datastores (ADR-0012)
+## 4. Règles d'Intégrité & Cycle de Vie
 
-### 6.1. Rôles Applicatifs PostgreSQL (`nanko-prod-postgres`, `nanko-preprod-postgres`)
-Conformément à l'ADR-0012, le superutilisateur `nanko` n'est utilisé pour aucune connexion applicative en production ni en préproduction. Les rôles dédiés suivants sont configurés :
-
-| Rôle PostgreSQL | Type | Périmètre & Droits | Usage Applicatif |
-|---|---|---|---|
-| `nanko_app` | `NOSUPERUSER` | Propriétaire du schéma `public` et de ses tables/séquences dans la base `nanko` | Backend Symfony (`DATABASE_URL`) |
-| `keycloak` | `NOSUPERUSER` | Propriétaire du schéma `keycloak` (`search_path = keycloak`) dans la base `nanko` | IAM Keycloak (`KC_DB_USERNAME`) |
-| `plausible` | `NOSUPERUSER` | Propriétaire de la base `plausible` et de son schéma `public` | Plausible Analytics (`DATABASE_URL`) |
-| `backup` | `NOSUPERUSER` | `CONNECT` sur `nanko` et `plausible`, rôle système `pg_read_all_data` | Sidecar `postgres-backup` quotidien |
-
-La directive `CONNECT` sur les bases `nanko` et `plausible` est expressément révoquée pour `PUBLIC`.
-
-### 6.2. Comptes Utilisateurs ClickHouse (`signoz-clickhouse`)
-| Utilisateur ClickHouse | Périmètre Réseau | Droits & Bases Autorisées | Usage |
-|---|---|---|---|
-| `default` | `127.0.0.1`, `::1` | Administration locale, mot de passe requis | Maintenance hôte locale |
-| `signoz` | `::/0` (interne Docker) | `GRANT ALL ON *.*` avec mot de passe fort via variable d'environnement | Ingestion & requêtes distribuées SigNoz |
-| `plausible` | `::/0` (interne Docker) | Limité à la base `plausible_events_db` (`allow_databases`) | Ingestion et rapports Plausible Analytics |
-
+| Règle | Type | Description |
+|---|---|---|
+| **`INT-PLAT-01`** | **Immutabilité de la Version Injectée** | La variable `APP_VERSION` est figée lors du build de l'image Docker et ne peut être altérée au runtime. |
+| **`INT-PLAT-02`** | **Isolation Datastore Télémétrique** | Les métriques, traces et logs OTel n'écrivent jamais dans la base PostgreSQL métier Nanko (dédié à ClickHouse). |
+| **`INT-PLAT-03`** | **Propagation Traceparent W3C** | Toute requête du frontend vers le backend propage l'en-tête standard `traceparent` pour relier les spans. |

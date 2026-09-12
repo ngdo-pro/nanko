@@ -1,99 +1,101 @@
-# Domaine : Espaces de Travail (workspace-management) - Comportement Produit
+# Domaine : Espaces de Travail (workspace-management) — Comportement Produit
 
-## 1. Mission du Domaine (Le « Why »)
-Permettre aux utilisateurs et aux équipes de structurer leurs architectures dans Nanko au sein d'Organisations (`Organisation`) et de Projets (`Project`), servant de conteneurs obligatoires pour les futurs schémas versionnés (`Document`).
+> **Mission :** Permettre aux utilisateurs et aux équipes de structurer leurs architectures au sein d'Organisations étanches et de Projets, servant de conteneurs obligatoires pour les documents d'architecture versionnés.  
+> **Acteurs & Personas :** Développeur individuel, Membre d'équipe, Propriétaire d'organisation (Owner).
 
-## 2. Décision Produit & Modèle d'Accès
-* **Organisation personnelle implicite (`is_personal = true`) :**
-  Tout utilisateur authentifié dispose automatiquement d'un Espace personnel créé de manière transparente et idempotente lors de sa première visite, avec un projet initial nommé « Mon premier projet ».
-* **Pas de création d'organisation en libre-service :**
-  La création d'organisations d'équipe (*team* / *company*) est administrée sur demande directe. Aucun formulaire libre-service de création d'organisation n'est exposé en v1.
-* **Interface adaptative Solo vs Multi-organisation :**
-  * **Mode Solo (cas par défaut) :** L'organisation est masquée pour l'utilisateur. L'interface affiche directement ses projets (« Mes Projets », création de projet, sélecteur de projet actif) avec zéro friction managériale.
-  * **Mode Multi-organisation :** Si l'utilisateur est membre d'au moins une organisation d'équipe en plus de son Espace personnel, un sélecteur d'organisation apparaît dans la barre de navigation pour basculer de contexte.
+---
 
-## 3. Parcours Utilisateurs Actifs
-* **Parcours 1 : Premier accès & auto-provisioning transparent**
-  * À la première visite sur le Dashboard, l'API détecte l'absence d'organisation personnelle pour l'utilisateur.
-  * Elle provisionne instantanément l'Organisation personnelle (`is_personal = true`, nom: « Espace personnel », slug: `personal-<uid>`), rattache l'utilisateur comme `owner`, et crée « Mon premier projet » (`mon-premier-projet`).
-  * L'utilisateur accède immédiatement à ses projets sans étape de configuration bloquante.
-* **Parcours 2 : Création d'un Projet au sein de l'Organisation active**
-  * L'utilisateur clique sur « + Nouveau Projet » sur le Dashboard.
-  * Une modale s'ouvre, lui permettant de saisir le nom du projet (le slug est auto-généré et éditable).
-  * À la validation, le projet est créé dans l'organisation active et automatiquement sélectionné comme projet actif.
-* **Parcours 3 : Sélection et persistance du Projet actif**
-  * L'utilisateur bascule entre ses projets via les cartes du Dashboard ou le `ProjectSwitcher` dans la barre de navigation.
-  * L'identifiant du projet actif est persisté localement (`localStorage`) pour conserver le contexte après rafraîchissement de page.
-* **Parcours 4 : Création d'un Document au sein du Projet actif**
-  * L'utilisateur clique sur « + Nouveau Document » depuis le Dashboard de son projet sélectionné.
-  * Une modale s'ouvre permettant de saisir le nom, le slug (auto-généré) et la profondeur (`Layer`, défaut 0).
-  * À la validation, le document est créé avec un template source initial `.nanko` et l'utilisateur est immédiatement redirigé vers l'éditeur.
-* **Parcours 5 : Édition, analyse syntaxique et persistance du code source .nanko**
-  * Sur la route `/projects/:projectId/documents/:documentId`, l'utilisateur dispose d'un éditeur dark theme pour le code source `.nanko` et d'un inspecteur d'AST en temps réel (affichage de la version DSL `DSL v1`, des Shapes avec `label` et `desc`, et des Connecteurs).
-  * Le format `.nanko` s'appuie sur une grammaire déclarative clé-valeur stricte et sur la directive d'en-tête `@dsl-version 1` (défaut 1).
-  * L'utilisateur enregistre ses modifications via le bouton « Enregistrer » ou le raccourci clavier `Cmd+S` / `Ctrl+S`.
-  * Le backend valide la syntaxe `.nanko` (`NankoParser`) et met à jour l'AST dénormalisé (`NankoAst` enrichi de `dslVersion: 1`). En cas d'erreur de syntaxe, l'utilisateur est averti avec la ligne précise sans aucune perte de son code saisi.
-  * Si l'utilisateur tente de quitter la page avec des modifications non sauvegardées, un avertissement `beforeunload` est déclenché.
-* **Parcours 6 : Consultation des Documents sur le Dashboard**
-  * L'état vide du Dashboard est remplacé par la grille des documents du projet actif (`DocumentList`), affichant pour chaque document son nom, layer, nombre de shapes/connectors et date de modification.
-  * Un clic sur une carte de document ouvre directement la vue d'édition.
-* **Parcours 7 : Visualisation Graphique en Canvas Interactif (React Flow)**
-  * Dans la vue d'édition (`DocumentEditorView`), l'utilisateur dispose d'un sélecteur d'affichage dans la barre d'outils supérieure :
-    * **Mode Split (par défaut)** : Éditeur de code à gauche et canvas graphique interactif à droite (50/50).
-    * **Mode Canvas** : Canvas graphique en plein écran pour la manipulation spatiale et l'exploration d'architecture.
-    * **Mode Code** : Éditeur de code et inspecteur AST textuel en plein écran.
-  * Le canvas matérialise automatiquement les entités `.nanko` sous forme de nœuds typés conformes au design system Blueprint :
-    * `RectangleNode` : Panneau rectangulaire structuré pour services et composants.
-    * `CircleNode` : Véritable géométrie circulaire (`border-radius: 50%`) avec badge et identifiant centrés au-dessus du libellé, et 4 ports de connexion tangents aux points cardinaux.
-    * `TextNode` : Boîte de texte annotée avec bordure pointillée discrète.
-    * `NankoEdge` : Arêtes directionnelles avec flèches SVG et étiquettes intégrées.
-  * **Restitution visuelle des attributs sémantiques (`label`, `desc`) & Troncature** :
-    * Les formes (`RectangleNode`, `CircleNode`, `TextNode`) possédant un attribut `desc` affichent un sous-titre stylisé (`.nanko-node-desc`) sous le libellé principal (`label`).
-    * Le sous-titre est automatiquement tronqué à **2 lignes maximum** avec ellipse (`ellipsis`) afin de préserver les dimensions compactes des nœuds et la clarté visuelle du graphe.
-    * Les arêtes (`NankoEdge`) affichent sur leur badge central exclusivement le `label` du flux lorsqu'il est renseigné (sans le préfixe verbeux `source -> target`), agrémenté d'une pastille d'information (`•`) si une `desc` est présente.
-    * Les éléments dépourvus de `desc` conservent un rendu épuré sans espace vide superflu.
-  * **Infobulles Blueprint interactives (*Tooltips*)** :
-    * Au survol prolongé d'une forme (> 300 ms anti-scintillement), une infobulle Blueprint accessible (`BlueprintTooltip`, `role="tooltip"`, `data-qa="node-tooltip-{id}"`) apparaît au-dessus de l'élément, révélant son type, son identifiant, son libellé complet et l'intégralité de sa description sans troncature.
-    * Au survol du badge d'une arête documentée, une infobulle similaire (`data-qa="edge-tooltip-{source}-{target}"`) détaille la description du flux technique.
-    * **Ancrage et défilement interactif** : pour les descriptions longues nécessitant un ascenseur, un indicateur d'ancrage visuel signale le défilement disponible. Un délai de grâce de 250 ms sur `mouseleave` permet au pointeur de transiter vers l'infobulle sans fermeture intempestive. L'infobulle reste interactive (`pointer-events: auto`) tant que le curseur s'y trouve et est entièrement isolée des événements React Flow (`nodrag`, `nowheel`, `nopan`, arrêt de la propagation des événements souris/clics/molette) afin d'éviter tout déplacement de nœud ou zoom involontaire du canvas lors du défilement.
-  * **Manipulation spatiale (Drag & Drop)** : L'utilisateur peut déplacer librement les nœuds sur le canvas. Au relâchement (`onNodeDragStop`), les nouvelles coordonnées `(x, y)` sont automatiquement injectées ou mises à jour dans le bloc `!LAYOUT ... !END` du code `.nanko`, déclenchant l'état « Non enregistré » prêt à être sauvegardé via `Cmd+S` / `Ctrl+S`.
-  * **Réorganisation automatique (Auto-Layout)** : Un clic sur « Réorganiser » calcule instantanément un placement hiérarchique sans chevauchement via l'algorithme Dagre (prenant en compte les dimensions circulaires réelles) et synchronise l'ensemble des coordonnées dans le code source.
-  * **Résilience aux erreurs de syntaxe** : En cas de code syntaxiquement invalide pendant la frappe, le canvas se met en pause avec un badge discret `Syntaxe en cours d'édition - Canvas en pause` tout en conservant le dernier graphe valide affiché.
-* **Parcours 8 : Espace de Travail Pleine Largeur (*Edge-to-Edge*) & Barre de Commandes Flottante**
-  * **Disposition studio pleine largeur** : L'éditeur de document (`/projects/:projectId/documents/:documentId`) s'affranchit de la contrainte standard `max-width: 1200px` pour s'étendre sur 100% de la largeur du viewport (`.app-main-fullscreen`), éliminant tout défilement externe sur la page hôte tout en préservant la visibilité de la Navbar et du Footer. Le Dashboard conserve sa largeur centrée de 1200px.
-  * **Barre d'outils flottante en mode Canvas** : Lorsque l'utilisateur bascule en mode `Canvas`, la barre de commandes supérieure devient un îlot flottant au centre supérieur (`.editor-topbar.is-floating`) avec effet de flou technique (`backdrop-filter: blur(12px)`), fond translucide et bordure technique Blueprint. Le graphe React Flow s'étend en continu en arrière-plan sous la barre.
-  * **Barre ancrée en modes Split et Code** : Dans les modes `Split` et `Code`, la barre d'outils reste ancrée de façon statique (`.editor-topbar.is-static`) au sommet des panneaux de code et de canvas.
-* **Parcours 9 : Création Visuelle d'Éléments sur le Canvas par Roue Radiale et Raccourcis**
-  * **Roue Radiale sous le curseur (*Pie Menu*) :** En maintenant la touche `A` (*Add*) ou `Tab` enfoncée au-dessus du canvas, une roue circulaire ergonomique (design Blueprint, fond sombre translucide avec flou d'arrière-plan et surbrillance cyan) apparaît instantanément centrée sous le pointeur de la souris.
-  * **Geste de marquage fluide (*Release-to-create*) :** En maintenant `A` ou `Tab`, déplacer le curseur vers un secteur met en surbrillance la forme (`Rectangle` ou `Circle`). Relâcher la touche dépose immédiatement l'élément à l'emplacement exact et referme la roue en un geste unique sans clic supplémentaire. Le clic direct sur un secteur reste également supporté. Si la touche est relâchée au centre (pastille `×`) ou hors des secteurs, la roue se referme sans création.
-  * **Raccourcis de frappe rapide :** Frapper les touches `R` (Rectangle) ou `C` (Circle) dépose immédiatement la forme sous le curseur (ou au centre du viewport si le pointeur est hors canvas).
-  * **Protection des zones de saisie (*Focus Guard*) :** Neutralisation stricte de l'ouverture de la roue et des raccourcis de création lorsque le focus se trouve dans l'éditeur Monaco ou un champ de texte.
-  * **Regroupement sémantique et synchronisation DSL :** La forme créée est injectée dans le code source `.nanko` en bloc avec les shapes existantes au-dessus des connecteurs (format `<type> <id> label="<Label>"`), le bloc `!LAYOUT` est synchronisé avec les coordonnées spatiales `(x, y)` calculées, et l'état de modifications non enregistrées est activé pour une sauvegarde via `Cmd+S`.
+## 1. Périmètre & Frontières du Domaine (Bounded Context)
 
-## 4. Règles de Gestion Métier (Lexique Invariant cf. CONTEXT.md)
-* **Organisation :** Regroupement racine possédant des Projets et des membres. Ne jamais employer les termes « Tenant » ou « Workspace ».
-* **Organisation personnelle :** Organisation avec l'attribut `is_personal: true`. Un utilisateur ne peut posséder qu'une seule organisation personnelle.
-* **OrganisationMember :** Relation d'appartenance entre un utilisateur (`app_user`) et une organisation, qualifiée par un rôle (`owner`, `member`).
-* **Project :** Conteneur plat de documents au sein d'une organisation. Unicité stricte du slug de projet par organisation (`uniq_project_org_slug`).
-* **Document :** Schéma d'architecture positionné sur un `Layer` (profondeur / z-index entier >= 0), rattaché à un `Project`. Porte directement son identité (`name`, `slug`, `layer`) et son contenu (`source_code` textuel au format `.nanko`, `ast` JSONB dénormalisé). Unicité stricte du slug par projet (`uniq_document_project_slug`).
-* **Format .nanko & Parseur :** Format textuel déclaratif versionnable modélisant :
-  * Directives d'en-tête : `@id <slug>`, `@dsl-version <int>` (défaut `1`, rejet strict de toute version non supportée), `@layer <int>`.
-  * Entités graphiques (`Shape` : `rectangle`, `circle`, `text`) au format `<type> <id> label="<Libellé>" [desc="<Description>"]`. L'attribut `label` est obligatoire pour toute shape.
-  * Relations logiques (`Connector`) au format `<source> -> <target> [label="<Libellé>" [desc="<Description>"]]`. L'attribut `desc` exige impérativement un `label` ; un connecteur avec `desc` mais sans `label` est strictement rejeté.
-  * Blocs spatiaux : `!LAYOUT\nnodeId: x=..., y=...\n!END`.
-  * Tokenizer clé-valeur : Les valeurs d'attributs doivent obligatoirement être entourées de guillemets doubles `"..."` avec support des guillemets internes échappés `\"`. L'ordre des attributs sur la ligne est libre.
-  * Intégrité référentielle stricte : les connecteurs et coordonnées ne peuvent référencer que des shapes déclarées dans le document.
-* **Persistance du contexte :** Le projet actif est conservé côté client (`localStorage`) et réinitialisé intelligemment si l'organisation active change.
+* **Ce qui relève de ce domaine (In Scope) :**
+  * Auto-provisioning transparent de l'Organisation personnelle au premier login.
+  * Expérience adaptative : Mode Solo (organisation masquée) vs Mode Multi-Org (sélecteur actif).
+  * Création, modification et sélection persistée des Projets.
+  * Création des conteneurs de Documents (nom, slug, layer hiérarchique) et affichage en grille sur le Dashboard.
+  * Contrôle d'accès et d'appartenance organisationnelle.
+* **Ce qui relève d'autres domaines (Out of Scope & Frontières) :**
+  * *Éditeur de code .nanko & Canvas interactif :* Délégué à `studio-modeling`.
+  * *Authentification & Gestion des Identités :* Délégué à `auth-and-identity`.
 
-## 5. Matrice des Échecs & Cas Limites
-| Situation | Comportement visible pour l'utilisateur |
-|---|---|
-| Accès à une organisation ou un document hors organisation membre | Code 403 `ACCESS_DENIED` avec message explicite. |
-| Organisation inexistante | Code 404 `ORGANISATION_NOT_FOUND`. |
-| Projet ou Document inexistant | Code 404 `PROJECT_NOT_FOUND` ou `DOCUMENT_NOT_FOUND`. |
-| Tentative de création d'un projet avec un slug déjà utilisé dans l'organisation | Code 409 `PROJECT_SLUG_EXISTS` affiché directement dans la modale sans rechargement. |
-| Tentative de création d'un document avec un slug déjà utilisé dans le projet | Code 409 `DOCUMENT_SLUG_EXISTS` affiché dans la modale sans rechargement. |
-| Nom de projet ou document invalide | Code 422 `UNPROCESSABLE_ENTITY` avec message de validation sous le champ concerné. |
-| Erreur de syntaxe dans le code source `.nanko` à l'enregistrement (ex: attribut sans guillemets doubles, shape sans `label`, `desc` sans `label` sur connecteur, version DSL non supportée) | Code 422 `INVALID_NANKO_SYNTAX` affichant un panneau d'erreur rouge avec le numéro de ligne et le motif exact, préservant le code dans l'éditeur. |
-| Erreur de syntaxe locale en cours de frappe dans l'éditeur | Le canvas affiche le badge « Canvas en pause » et maintient le dernier AST valide sans crasher ni effacer le graphe. |
+---
 
+## 2. Macro-Flux Métier
+
+```mermaid
+flowchart TD
+    Login[Connexion Utilisateur] --> CheckOrg{Organisation Personnelle Existe ?}
+    CheckOrg -->|Non| AutoProv[Auto-Provisioning Espace Personnel + Mon Premier Projet]
+    CheckOrg -->|Oui| LoadContext[Chargement du WorkspaceContext]
+    AutoProv --> LoadContext
+
+    LoadContext --> ModeCheck{Membre Multi-Organisations ?}
+    ModeCheck -->|Non - Solo| SoloMode[Mode Solo : Organisation Masquée]
+    ModeCheck -->|Oui - Multi| MultiMode[Mode Multi-Org : OrganisationSwitcher Actif]
+
+    SoloMode & MultiMode --> Dashboard[Dashboard Projets]
+    Dashboard --> SelectProj[Sélection d'un Projet Actif]
+    SelectProj --> ProjView[Vue Projet : Grille des Documents]
+    ProjView --> CreateDoc[Création Document Conteneur]
+    CreateDoc --> OpenEditor[Redirection vers Studio de Modélisation]
+```
+
+---
+
+## 3. Cartographie des Parcours Utilisateurs
+
+| ID | Parcours Utilisateur | Acteur | Déclencheur | Résultat Attendu |
+|---|---|---|---|---|
+| `JRN-01` | Premier accès & Auto-provisioning | Nouvel utilisateur | Première navigation sur le Dashboard | Espace personnel et projet initial créés sans friction |
+| `JRN-02` | Bascule Solo vs Multi-Organisation | Utilisateur | Adhésion à une organisation d'équipe | Apparition du sélecteur d'organisation dans la navigation |
+| `JRN-03` | Création & Sélection de Projet | Utilisateur | Clic « + Nouveau Projet » | Projet créé et mémorisé localement comme actif |
+| `JRN-04` | Création de Document Conteneur | Utilisateur | Clic « + Nouveau Document » | Document créé avec son layer et initialisé avec template source |
+
+---
+
+## 4. Fiches Détaillées des Parcours
+
+### `JRN-01` : Premier accès & Auto-provisioning transparent
+* **Contexte :** Première visite de l'utilisateur authentifié sur la plateforme.
+* **Flux Nominal :**
+  1. L'API interroge les organisations de l'utilisateur.
+  2. Constatant l'absence d'espace personnel, elle crée immédiatement une `Organisation` (`is_personal = true`, nom: « Espace personnel ») et rattache l'utilisateur comme `owner`.
+  3. Elle instancie un premier projet par défaut nommé « Mon premier projet » (`mon-premier-projet`).
+  4. L'utilisateur atterrit directement sur son Dashboard sans aucune étape de configuration préalable.
+
+### `JRN-02` : Bascule Solo vs Multi-Organisation
+* **Contexte :** Affichage dans la barre de navigation.
+* **Flux Nominal :**
+  * **Mode Solo :** Tant que l'utilisateur ne possède que son espace personnel, l'organisation est totalement transparente. La navigation n'affiche que « Mes Projets ».
+  * **Mode Multi-Org :** Dès que l'utilisateur est rattaché à une organisation supplémentaire, un menu déroulant d'organisation apparaît, permettant d'isoler strictement les projets de chaque entité.
+
+### `JRN-03` : Création & Sélection de Projet
+* **Contexte :** Organisation active sélectionnée.
+* **Flux Nominal :**
+  1. L'utilisateur clique sur « + Nouveau Projet » depuis le Dashboard.
+  2. Une modale permet de renseigner le nom (le slug est prérempli et modifiable).
+  3. À la création, le projet devient le projet actif, et son ID est conservé dans le `localStorage`.
+
+### `JRN-04` : Création de Document Conteneur
+* **Contexte :** Dashboard d'un projet actif.
+* **Flux Nominal :**
+  1. L'utilisateur clique sur « + Nouveau Document ».
+  2. Il renseigne le nom, le slug et la profondeur hiérarchique (`layer`, défaut 0).
+  3. Le conteneur est créé avec un template source initial, puis l'application redirige automatiquement vers le studio de modélisation.
+
+---
+
+## 5. Invariants Fonctionnels & Règles Métier
+
+* **`INV-BUS-01` (Unicité de l'Espace Personnel) :** Un utilisateur ne peut posséder qu'une seule organisation personnelle (`is_personal = true`).
+* **`INV-BUS-02` (Isolation Stricte des Ressources) :** Un projet appartient à une et une seule organisation. Aucun document ne peut être accédé en dehors du contexte d'appartenance de son organisation parente.
+* **`INV-BUS-03` (Unicité des Slugs par Conteneur) :** Les slugs de projets sont uniques au sein d'une organisation ; les slugs de documents sont uniques au sein d'un projet.
+
+---
+
+## 6. Matrice des Échecs & Cas Limites
+
+| Situation d'Échec | Cause Racine | Comportement Système | Recouvrement Utilisateur |
+|---|---|---|---|
+| **Collision de Slug de Projet** | Nom de projet identique dans la même organisation | L'API renvoie HTTP 409 Conflict avec code `PROJECT_SLUG_EXISTS` | Modification du slug suggéré dans le formulaire |
+| **Tentative d'accès non autorisé** | Accès direct via URL à un projet d'une autre organisation | L'API renvoie HTTP 403 Forbidden | Redirection automatique vers le Dashboard personnel |
+| **Réseau Déconnecté** | Coupure réseau pendant la création | TanStack Query affiche un message d'erreur clair avec bouton de réessai | Clic sur « Réessayer » sans rechargement de page |

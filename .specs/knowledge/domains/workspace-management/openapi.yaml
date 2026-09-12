@@ -1,0 +1,352 @@
+openapi: 3.1.0
+info:
+  title: Espaces de Travail (workspace-management) API
+  description: Endpoints de gestion des Organisations, Projets et Conteneurs de Documents.
+  version: 1.0.0
+servers:
+  - url: /api/v1
+    description: API v1
+
+paths:
+  /organisations:
+    get:
+      summary: Lister les organisations de l'utilisateur connecté
+      description: Retourne la liste des organisations dont l'utilisateur est membre. Auto-provisionne l'espace personnel au premier appel si inexistant.
+      operationId: listOrganisations
+      tags:
+        - Organisations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste des organisations avec leurs projets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrganisationWithProjects'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+
+  /organisations/{organisationId}/projects:
+    get:
+      summary: Lister les projets d'une organisation
+      operationId: listProjects
+      tags:
+        - Projets
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organisationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Liste des projets de l'organisation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectResponse'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+    post:
+      summary: Créer un nouveau projet dans une organisation
+      operationId: createProject
+      tags:
+        - Projets
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: organisationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectRequest'
+      responses:
+        '201':
+          description: Projet créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectResponse'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          description: Conflit de slug de projet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /projects/{projectId}/documents:
+    get:
+      summary: Lister les documents d'un projet
+      operationId: listDocuments
+      tags:
+        - Documents
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Liste des documents conteneurs du projet
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentSummary'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+    post:
+      summary: Créer un nouveau document conteneur dans un projet
+      operationId: createDocument
+      tags:
+        - Documents
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDocumentRequest'
+      responses:
+        '201':
+          description: Document conteneur créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentSummary'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '409':
+          description: Conflit de slug de document
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    OrganisationWithProjects:
+      type: object
+      required:
+        - id
+        - name
+        - slug
+        - isPersonal
+        - role
+        - createdAt
+        - projects
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Espace personnel"
+        slug:
+          type: string
+          example: "personal-0191c0a1"
+        isPersonal:
+          type: boolean
+          example: true
+        role:
+          type: string
+          enum: [owner, member]
+          example: "owner"
+        createdAt:
+          type: string
+          format: date-time
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectResponse'
+
+    ProjectResponse:
+      type: object
+      required:
+        - id
+        - organisationId
+        - name
+        - slug
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        organisationId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Mon premier projet"
+        slug:
+          type: string
+          example: "mon-premier-projet"
+        createdAt:
+          type: string
+          format: date-time
+
+    CreateProjectRequest:
+      type: object
+      required:
+        - name
+        - slug
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Système de Paiement"
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+          example: "systeme-de-paiement"
+
+    CreateDocumentRequest:
+      type: object
+      required:
+        - name
+        - slug
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Architecture Globale"
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+          example: "architecture-globale"
+        layer:
+          type: integer
+          default: 0
+          example: 0
+
+    DocumentSummary:
+      type: object
+      required:
+        - id
+        - projectId
+        - name
+        - slug
+        - layer
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Architecture Globale"
+        slug:
+          type: string
+          example: "architecture-globale"
+        layer:
+          type: integer
+          example: 0
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: "PROJECT_SLUG_EXISTS"
+        message:
+          type: string
+          example: "Un projet avec ce slug existe déjà dans cette organisation."
+
+  responses:
+    400BadRequest:
+      description: Requête invalide
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    401Unauthorized:
+      description: Non authentifié
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    403Forbidden:
+      description: Accès refusé à l'organisation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    404NotFound:
+      description: Ressource introuvable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

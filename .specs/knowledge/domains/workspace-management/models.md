@@ -1,110 +1,106 @@
-# Domaine : Espaces de Travail (workspace-management) - Modèles & Schéma DB
+# Domaine : Espaces de Travail (workspace-management) — Modèle de Données & Schéma DB
 
-## 1. Modèle Domaine & Hexagone (Core)
-
-### Agrégat : `Organisation`
-* **Entité racine :** `backend/src/WorkspaceManagement/Core/Domain/Organisation/Organisation.php`
-* **Identifiant :** `backend/src/WorkspaceManagement/Core/Domain/Organisation/Id.php` (UUIDv7)
-* **Port Repository :** `backend/src/WorkspaceManagement/Core/Port/Organisation/Repository.php`
-* **Adapter Persistence :** `backend/src/WorkspaceManagement/Adapter/Driven/Persistence/Organisation/DoctrineRepository.php`
-
-### Entité : `OrganisationMember`
-* **Entité :** `backend/src/WorkspaceManagement/Core/Domain/OrganisationMember/OrganisationMember.php`
-* **Identifiant :** `backend/src/WorkspaceManagement/Core/Domain/OrganisationMember/Id.php` (UUIDv7)
-* **Enum Rôle :** `backend/src/WorkspaceManagement/Core/Domain/OrganisationMember/Role.php` (`owner`, `member`)
-* **Port Repository :** `backend/src/WorkspaceManagement/Core/Port/OrganisationMember/Repository.php`
-* **Adapter Persistence :** `backend/src/WorkspaceManagement/Adapter/Driven/Persistence/OrganisationMember/DoctrineRepository.php`
-
-### Entité : `Project`
-* **Entité :** `backend/src/WorkspaceManagement/Core/Domain/Project/Project.php`
-* **Identifiant :** `backend/src/WorkspaceManagement/Core/Domain/Project/Id.php` (UUIDv7)
-* **Port Repository :** `backend/src/WorkspaceManagement/Core/Port/Project/Repository.php`
-* **Adapter Persistence :** `backend/src/WorkspaceManagement/Adapter/Driven/Persistence/Project/DoctrineRepository.php`
-
-### Entité : `Document`
-* **Entité :** `backend/src/WorkspaceManagement/Core/Domain/Document/Document.php`
-* **Identifiant :** `backend/src/WorkspaceManagement/Core/Domain/Document/Id.php` (UUIDv7)
-* **Value Object :** `backend/src/WorkspaceManagement/Core/Domain/Document/Layer.php`
-* **Service Parseur & AST :** `backend/src/WorkspaceManagement/Core/Domain/Document/Parser/` :
-  * `NankoParser.php` : Tokenizer générique d'attributs déclaratifs clé-valeur (`key="valeur"`), gestion stricte des guillemets doubles et échappement `\"`, vérification de la directive `@dsl-version`, validation obligatoire du `label` pour les shapes et interdiction de `desc` sans `label` sur les connecteurs.
-  * `NankoAst.php` : Arbre syntaxique dénormalisé enrichi du champ `public int $dslVersion = 1`.
-  * `Shape.php` : Nœud de forme typé enrichi du champ `public ?string $desc = null`.
-  * `Connector.php` : Arête orientée enrichie du champ `public ?string $desc = null`.
-  * `InvalidNankoSyntaxException.php` : Exception typée portant le numéro de ligne et le motif exact d'erreur de syntaxe.
-* **Parseur Client & Synchronisation Spatiale :** `frontend/src/features/documents/components/canvas/utils/nankoParser.ts`, `syncLayoutToSource.ts`, `dagreLayout.ts`, `insertShapeToSource.ts` assurant l'extraction syntaxique symétrique en temps réel (détection des directives `@dsl-version`, validation des attributs), l'agencement spatial hiérarchique (avec prise en compte des géométries rectangulaires et circulaires) et la synchronisation bidirectionnelle du bloc `!LAYOUT` vers le code source.
-* **Port Repository :** `backend/src/WorkspaceManagement/Core/Port/Document/Repository.php`
-* **Adapter Persistence :** `backend/src/WorkspaceManagement/Adapter/Driven/Persistence/Document/DoctrineRepository.php`
+> **Mission :** Modéliser l'isolation multi-tenant stricte des Organisations, de leurs Membres, des Projets et des conteneurs de Documents.
 
 ---
 
-## 2. Cas d'Usage Métier (UseCases)
+## 1. Diagramme Entité-Relation (ERD)
 
-* **`GetOrCreatePersonalOrganisationUseCase` :**
-  Assure l'auto-provisioning idempotent de l'Espace personnel et de son projet initial lors de la première connexion de l'utilisateur, puis retourne l'ensemble des organisations accessibles avec leurs projets.
-* **`ListProjectsUseCase` :**
-  Vérifie l'appartenance de l'utilisateur à l'organisation demandée avant de retourner la liste ordonnée des projets.
-* **`CreateProjectUseCase` :**
-  Contrôle les droits d'écriture, vérifie l'unicité du slug au sein de l'organisation et persiste la nouvelle entité `Project`.
-* **`ListDocumentsUseCase` :**
-  Liste tous les documents rattachés à un projet après vérification des droits d'accès au projet et à l'organisation parente.
-* **`CreateDocumentUseCase` :**
-  Vérifie l'unicité du slug de document dans le projet, initialise le document avec un code template `.nanko`, analyse sa syntaxe et le persiste.
-* **`GetDocumentUseCase` :**
-  Charge un document par son identifiant avec vérification d'accès et retourne ses métadonnées, son code source et son AST.
-* **`UpdateDocumentUseCase` :**
-  Met à jour le code source `.nanko` d'un document existant, valide la syntaxe via `NankoParser`, extrait l'AST dénormalisé et actualise la ligne en base.
+```mermaid
+erDiagram
+    ORGANISATIONS ||--o{ ORGANISATION_MEMBERS : possède
+    ORGANISATIONS ||--o{ PROJECTS : regroupe
+    PROJECTS ||--o{ DOCUMENTS : contient
+
+    ORGANISATIONS {
+        uuid id PK
+        string name
+        string slug UK
+        boolean is_personal
+        timestamp created_at
+    }
+
+    ORGANISATION_MEMBERS {
+        uuid id PK
+        uuid organisation_id FK
+        uuid user_id
+        string role "owner | member"
+        timestamp joined_at
+    }
+
+    PROJECTS {
+        uuid id PK
+        uuid organisation_id FK
+        string name
+        string slug "UK(organisation_id, slug)"
+        timestamp created_at
+    }
+
+    DOCUMENTS {
+        uuid id PK
+        uuid project_id FK
+        string name
+        string slug "UK(project_id, slug)"
+        int layer
+        text content
+        jsonb ast
+        timestamp created_at
+        timestamp updated_at
+    }
+```
 
 ---
 
-## 3. Schéma de Base de Données Actif
+## 2. Dictionnaire de Données & Stockage (PostgreSQL)
 
-* **Migrations sources :**
-  * `backend/migrations/Version20260906000001.php` (organisations, membres, projets)
-  * `backend/migrations/Version20260907000001.php` (documents)
+| Colonne / Champ | Type | Nullable | Valeur par défaut | Description & Rôle Métier |
+|---|:---:|:---:|:---:|---|
+| `organisations.id` | `UUID` | Non | UUIDv7 | Identifiant unique de l'organisation |
+| `organisations.name` | `VARCHAR(255)` | Non | - | Nom de l'organisation (ex: « Espace personnel ») |
+| `organisations.slug` | `VARCHAR(255)` | Non | - | Slug unique global (index unique) |
+| `organisations.is_personal` | `BOOLEAN` | Non | `false` | `true` si espace personnel auto-provisionné |
+| `organisation_members.role` | `VARCHAR(32)` | Non | `'member'` | Rôle du membre (`owner` ou `member`) |
+| `organisation_members.user_id`| `UUID` | Non | - | Référence à l'utilisateur (`auth-and-identity`) |
+| `projects.slug` | `VARCHAR(255)` | Non | - | Slug unique au sein de l'organisation |
+| `documents.slug` | `VARCHAR(255)` | Non | - | Slug unique au sein du projet |
+| `documents.layer` | `INT` | Non | `0` | Profondeur hiérarchique du conteneur d'architecture |
+| `documents.content` | `TEXT` | Non | Template initial | Code source brut du document `.nanko` |
+| `documents.ast` | `JSONB` | Non | `{}` | AST précalculé dénormalisé |
 
-### Table : `organisation`
-| Colonne | Type SQL | Nullable | Contraintes / Index | Description |
-|---|---|---|---|---|
-| `id` | `uuid` | Non | `PRIMARY KEY` | UUIDv7 de l'organisation |
-| `name` | `varchar(255)` | Non | - | Nom d'affichage de l'organisation |
-| `slug` | `varchar(100)` | Non | `UNIQUE INDEX uniq_organisation_slug` | Slug unique d'URL |
-| `is_personal` | `boolean` | Non | `DEFAULT false` | Espace personnel implicite de l'utilisateur |
-| `created_at` | `timestamp with time zone` | Non | - | Date de création |
-| `updated_at` | `timestamp with time zone` | Non | - | Date de dernière mise à jour |
+---
 
-### Table : `organisation_member`
-| Colonne | Type SQL | Nullable | Contraintes / Index | Description |
-|---|---|---|---|---|
-| `id` | `uuid` | Non | `PRIMARY KEY` | UUIDv7 de l'adhésion |
-| `organisation_id` | `uuid` | Non | `FOREIGN KEY REFERENCES organisation(id) ON DELETE CASCADE` | Organisation liée |
-| `user_id` | `uuid` | Non | `FOREIGN KEY REFERENCES app_user(id) ON DELETE CASCADE` | Utilisateur membre |
-| `role` | `varchar(50)` | Non | `DEFAULT 'owner'` | Rôle (`owner`, `member`) |
-| `created_at` | `timestamp with time zone` | Non | - | Date d'adhésion |
-| *(composite)* | `(organisation_id, user_id)` | Non | `UNIQUE INDEX uniq_org_member` | Unicité membre par organisation |
+## 3. Agrégats & Entités Métier (Cœur Hexagonal)
 
-### Table : `project`
-| Colonne | Type SQL | Nullable | Contraintes / Index | Description |
-|---|---|---|---|---|
-| `id` | `uuid` | Non | `PRIMARY KEY` | UUIDv7 du projet |
-| `organisation_id` | `uuid` | Non | `FOREIGN KEY REFERENCES organisation(id) ON DELETE CASCADE` | Organisation propriétaire |
-| `name` | `varchar(255)` | Non | - | Nom du projet |
-| `slug` | `varchar(100)` | Non | - | Slug lisible du projet |
-| `created_at` | `timestamp with time zone` | Non | - | Date de création |
-| `updated_at` | `timestamp with time zone` | Non | - | Date de dernière mise à jour |
-| *(composite)* | `(organisation_id, slug)` | Non | `UNIQUE INDEX uniq_project_org_slug` | Unicité du slug de projet par organisation |
+```text
+Organisation (Root Aggregate)
+├── id: OrganisationId (UUIDv7)
+├── name: string
+├── slug: string
+├── isPersonal: bool
+└── members: OrganisationMember[] (userId, role: Owner|Member)
 
-### Table : `document`
-| Colonne | Type SQL | Nullable | Contraintes / Index | Description |
-|---|---|---|---|---|
-| `id` | `uuid` | Non | `PRIMARY KEY` | UUIDv7 du document |
-| `project_id` | `uuid` | Non | `FOREIGN KEY REFERENCES project(id) ON DELETE CASCADE` | Projet propriétaire |
-| `name` | `varchar(255)` | Non | - | Nom du document |
-| `slug` | `varchar(100)` | Non | - | Slug lisible du document |
-| `layer` | `integer` | Non | `DEFAULT 0` | Attribut de profondeur du Document au sein du Projet |
-| `source_code` | `text` | Non | - | Code source textuel brut au format `.nanko` |
-| `ast` | `jsonb` | Non | `DEFAULT '{}'::jsonb` | Arbre syntaxique dénormalisé (`dslVersion`, `shapes` avec `id`, `type`, `label`, `desc`, `connectors` avec `source`, `target`, `label`, `desc`, et `layout`) |
-| `created_at` | `timestamp with time zone` | Non | - | Date de création |
-| `updated_at` | `timestamp with time zone` | Non | - | Date de dernière mise à jour |
-| *(composite)* | `(project_id, slug)` | Non | `UNIQUE INDEX uniq_document_project_slug` | Unicité du slug de document par projet |
-| `project_id` | `uuid` | Non | `INDEX idx_document_project_id` | Index de recherche des documents par projet |
+Project (Entity)
+├── id: ProjectId (UUIDv7)
+├── organisationId: OrganisationId
+├── name: string
+└── slug: string
 
+Document (Entity / Container)
+├── id: DocumentId (UUIDv7)
+├── projectId: ProjectId
+├── name: string
+├── slug: string
+├── layer: Layer (int >= 0)
+└── content: DocumentContent (.nanko)
+```
+
+---
+
+## 4. Règles d'Intégrité & Cycle de Vie
+
+| Règle | Type | Description |
+|---|---|---|
+| **`INT-DB-01`** | **Contrainte d'Unicité de Slug** | L'unicité de `projects.slug` est scopée par `organisation_id`. L'unicité de `documents.slug` est scopée par `project_id`. |
+| **`INT-DB-02`** | **Espace Personnel Unique** | Un utilisateur ne peut être `owner` que d'une seule organisation avec `is_personal = true`. |
+| **`INT-DB-03`** | **Cascade de Suppression** | La suppression d'une organisation entraîne la suppression en cascade de ses membres, de ses projets et de leurs documents. |
+| **`INT-DB-04`** | **Clés Primaires UUIDv7** | Toutes les clés primaires sont générées via l'algorithme UUIDv7 pour garantir un tri chronologique et des performances d'index B-Tree optimales. |

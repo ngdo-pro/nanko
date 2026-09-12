@@ -1,0 +1,48 @@
+openapi: 3.1.0
+info:
+  title: Plateforme & Observabilité (platform) API
+  description: Endpoints d'infrastructure, de versionnement sémantique et de télémétrie.
+  version: 1.0.0
+servers:
+  - url: /api/v1
+    description: API v1
+
+paths:
+  /version:
+    get:
+      summary: Diagnostic de version applicative active
+      description: Retourne la version SemVer dynamique, le SHA de commit Git et l'environnement actif.
+      operationId: getVersion
+      tags:
+        - Diagnostic
+      responses:
+        '200':
+          description: Informations de version opérationnelle
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionResponse'
+
+components:
+  schemas:
+    VersionResponse:
+      type: object
+      required:
+        - status
+        - version
+        - commit
+        - environment
+      properties:
+        status:
+          type: string
+          example: "ok"
+        version:
+          type: string
+          example: "v0.1.0-pr.14.2"
+        commit:
+          type: string
+          example: "a1b2c3d4e5f67890"
+        environment:
+          type: string
+          enum: [local, preprod, prod]
+          example: "preprod"

@@ -1,35 +1,36 @@
-# Domaine : Identité & Accès (auth-and-identity) - Contrats d'API & Schémas
+# Domaine : Identité & Accès (auth-and-identity) — Contrats d'API & Schémas
 
-## 1. Endpoints REST Actifs
-
-### `GET /api/v1/me`
-* **Authentification :** `ROLE_USER` (Jeton Bearer JWT émis par Keycloak valide)
-* **Headers :** `Authorization: Bearer <access_token>`
-* **Description :** Retourne le profil interne Nanko associé au compte Keycloak connecté (avec JIT provisioning automatique si premier appel).
-
-#### Réponses
-* `200 OK` :
-  ```json
-  {
-    "id": "0191c280-496a-7312-bf91-a1b2c3d4e5f6",
-    "keycloakId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "email": "user@nanko.dev",
-    "createdAt": "2026-09-05T08:00:00.000Z"
-  }
-  ```
-* `401 Unauthorized` :
-  ```json
-  {
-    "code": "UNAUTHORIZED",
-    "message": "Token JWT manquant, invalide ou expiré."
-  }
-  ```
+> **Spécification Formelle :** [`./openapi.yaml`](./openapi.yaml) (OpenAPI 3.1)  
+> **Base URL :** `/api/v1`  
+> **Format d'échange :** `application/json`
 
 ---
 
-## 2. Contrats & Types Frontend (TypeScript)
+## 1. Périmètre & Frontières des Contrats
 
-### Type & Schéma Zod : `UserProfile` (`frontend/src/features/auth/types/index.ts`)
+* **Ressources & Endpoints gérés dans ce domaine :**
+  * `/api/v1/me` (Profil interne de l'utilisateur authentifié avec JIT provisioning)
+* **Contrats délégués à l'IdP (Keycloak OIDC) :**
+  * Authentification interactive PKCE (`/realms/nanko/protocol/openid-connect/auth`)
+  * Échange de code & refresh token (`/realms/nanko/protocol/openid-connect/token`)
+  * Clés publiques JWKS (`/realms/nanko/protocol/openid-connect/certs`)
+  * Déconnexion globale (`/realms/nanko/protocol/openid-connect/logout`)
+
+---
+
+## 2. Cartographie des Endpoints REST
+
+| Méthode | Endpoint | OperationId | Auth | Description |
+|---|---|---|:---:|---|
+| `GET` | `/api/v1/me` | `getMe` | Bearer JWT | Retourne le profil utilisateur interne synchronisé |
+
+> ℹ️ **Spécification Formelle des Requêtes & Réponses :**  
+> Les schémas de payload et d'erreur sont décrits dans [`./openapi.yaml`](./openapi.yaml).
+
+---
+
+## 3. Schémas de Validation Client / Consommateurs (TypeScript & Zod)
+
 ```typescript
 import { z } from 'zod';
 
@@ -40,31 +41,13 @@ export const userProfileSchema = z.object({
   createdAt: z.string().datetime(),
 });
 
-export type ValidatedUserProfile = z.infer<typeof userProfileSchema>;
-
-export interface UserProfile {
-  id: string
-  keycloakId: string
-  email: string
-  createdAt: string
-}
+export type UserProfile = z.infer<typeof userProfileSchema>;
 ```
 
-export interface AuthContextValue {
-  isAuthenticated: boolean
-  isLoading: boolean
-  user: UserProfile | null
-  token: string | null
-  login: () => Promise<void>
-  logout: () => Promise<void>
-}
-```
+---
 
-### Configuration OIDC Client
-* **Client ID :** `nanko-web` (Public client avec PKCE standard S256).
-* **Realm :** `nanko`.
-* **Endpoints OIDC standards :**
-  * Authorization : `/realms/nanko/protocol/openid-connect/auth`
-  * Token : `/realms/nanko/protocol/openid-connect/token`
-  * JWKS Certs : `/realms/nanko/protocol/openid-connect/certs`
-  * Logout : `/realms/nanko/protocol/openid-connect/logout`
+## 4. Modèle Standard d'Erreur
+
+| Code HTTP | Format du Payload | Signification / Usage |
+|---|---|---|
+| `401 Unauthorized` | `{ "code": "UNAUTHORIZED", "message": "Token JWT manquant, invalide ou expiré." }` | Session expirée ou jeton falsifié |
