@@ -11,6 +11,7 @@ import {
   updateNankoSourceLayout,
   updateNankoSourceBulkLayout,
   insertShapeToSource,
+  insertConnectorToSource,
   type ShapePrimitiveType,
   parseNankoSource,
   type NankoAst,
@@ -108,6 +109,13 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
   const handleCreateShape = (shapeType: ShapePrimitiveType, position: { x: number; y: number }) => {
     setCode((prevCode) => {
       const { newSourceCode } = insertShapeToSource(prevCode, { type: shapeType, position })
+      return newSourceCode
+    })
+  }
+
+  const handleConnectorCreated = (source: string, target: string) => {
+    setCode((prevCode) => {
+      const { newSourceCode } = insertConnectorToSource(prevCode, source, target)
       return newSourceCode
     })
   }
@@ -227,6 +235,7 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
               onNodePositionChange={handleNodePositionChange}
               onAutoLayoutApplied={handleAutoLayoutApplied}
               onCreateShape={handleCreateShape}
+              onConnectorCreated={handleConnectorCreated}
             />
           </div>
         )}
@@ -239,6 +248,7 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
               onNodePositionChange={handleNodePositionChange}
               onAutoLayoutApplied={handleAutoLayoutApplied}
               onCreateShape={handleCreateShape}
+              onConnectorCreated={handleConnectorCreated}
             />
           </div>
         )}

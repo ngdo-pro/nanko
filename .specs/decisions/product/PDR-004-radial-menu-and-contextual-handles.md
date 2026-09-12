@@ -1,6 +1,6 @@
 # PDR-004 : Roue radiale d'outils, poignées contextuelles et tracé libre magnétique
 
-* **Statut :** Validé (Cible en cours de réalisation)
+* **Statut :** Réalisé (Livré via Spec 017 & Spec 021)
 * **Date :** 2026-09-08
 * **Impact UX :** Expérience utilisateur Board, Ergonomie Mac/trackpad, Vitesse de modélisation
 

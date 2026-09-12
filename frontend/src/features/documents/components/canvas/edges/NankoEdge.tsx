@@ -55,7 +55,7 @@ export const NankoEdge: React.FC<EdgeProps> = ({
         path={edgePath}
         markerEnd={markerEnd}
         style={{
-          stroke: 'var(--structure, #5EEAD4)',
+          stroke: 'var(--brand)',
           strokeWidth: 1.5,
           ...style,
         }}

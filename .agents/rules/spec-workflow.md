@@ -9,8 +9,8 @@ Ce dépôt applique une méthodologie de développement piloté par les spécifi
    * Une spec est rédigée selon `.specs/templates/SPEC_TEMPLATE.md` avec diagrammes Mermaid, wireframes ASCII, DTOs avec validation, schémas de validation et scénarios Gherkin.
 3. **Qualité et vérification impérative (Quality Gates) :**
    * Backend : `make deptrac`, `make test-backend`, `make static-analysis`, `make lint`.
-   * Frontend : `pnpm --filter frontend typecheck`, `pnpm --filter frontend lint`.
-   * E2E : `pnpm --filter tests-e2e exec playwright test`.
+   * Frontend : `pnpm --filter frontend test`, `pnpm --filter frontend typecheck`, `pnpm --filter frontend lint`.
+   * E2E : `pnpm --filter tests-e2e test <spec-impactée>` obligatoirement en local avant tout commit/push.
 4. **Synchronisation et archivage post-livraison (`/sync-knowledge`) :**
    * Une fois le code et les tests validés, les modifications sont répercutées dans `.specs/knowledge/domains/[domaine]/` via les sub-skills dédiés (`sync-behavior`, `sync-contracts`, `sync-models`, `sync-tech`) et la spec est archivée dans `.specs/specs/archive/`.
 5. **Invariance Spec-Code (Zéro dérive en cours de vol) :**
@@ -19,7 +19,10 @@ Ce dépôt applique une méthodologie de développement piloté par les spécifi
 6. **Réflexe de Test Systématique & Synchronisation Gherkin (Skill `test-spec`) :**
    * Toute modification de comportement, logique, géométrie, règle métier ou cas limite DOIT s'accompagner de ses tests unitaires ou d'intégration.
    * Tout test ajouté ou modifié DOIT obligatoirement être répercuté sous forme de scénario Gherkin dans la Section 8 de la spec active (`.specs/specs/active/XXX-*.md`). L'agent ne doit jamais omettre d'écrire les tests correspondants ni d'aligner les scénarios de la spec.
-7. **Portabilité et Liens Markdown Relatifs Stricts :**
+7. **Exécution Locale Obligatoire des Tests E2E (Zéro Découverte en CI) :**
+   * Tout test E2E (Playwright) ajouté ou touché par un delivery DOIT impérativement être exécuté et passer avec succès localement (`pnpm --filter tests-e2e test <spec>`) AVANT tout commit, push ou ouverture de Pull Request.
+   * Il est strictement interdit de supposer qu'un test Playwright passera sans exécution réelle : les contraintes de dimensionnement de viewport (ex: 1280x720 en split view), les hit-testings de collision (`elementFromPoint`, `pointer-events`) et les interactions de drag & drop doivent être éprouvées dans le navigateur local.
+8. **Portabilité et Liens Markdown Relatifs Stricts :**
    * Tout lien Markdown (`[texte](cible)`) au sein des spécifications, initiatives, ADRs/PDRs ou fichiers de knowledge DOIT impérativement être un chemin relatif au fichier source (ex: `../../../decisions/architecture/ADR-0002.md`, `./openapi.yaml`).
    * Il est formellement interdit d'insérer des chemins absolus machine (`/Users/...`, `file:///...`, `C:\...`).
 

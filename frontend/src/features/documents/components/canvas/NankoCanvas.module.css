@@ -118,13 +118,35 @@
   background-color: var(--surface) !important;
   /* Override bordure par défaut de React Flow pour appliquer le token brand */
   border: 1.5px solid var(--brand) !important;
-  transition: transform 0.12s ease, background-color 0.12s ease;
+  /* Masquage contextuel au repos : style Miro / FigJam pour un schéma épuré */
+  opacity: 0;
+  transition: opacity 0.12s ease, transform 0.12s ease, background-color 0.12s ease;
+}
+
+/* Révélation locale : survol (:hover) OU sélection (.selected) de la shape */
+:global(.react-flow__node:hover) :global(.nanko-handle),
+:global(.react-flow__node.selected) :global(.nanko-handle) {
+  opacity: 1;
 }
 
 :global(.nanko-handle:hover) {
   /* Override background au survol pour garantir le remplissage brand */
   background-color: var(--brand) !important;
   transform: scale(1.4);
+}
+
+/* Maintien de visibilité de la poignée source durant le glisser */
+:global(.nanko-handle.connectingfrom) {
+  opacity: 1 !important;
+}
+
+/* Approche magnétique ciblée : poignée candidate valide (< connectionRadius 32px) */
+:global(.nanko-handle.valid),
+:global(.react-flow__handle.valid) {
+  opacity: 1 !important;
+  transform: scale(1.5) !important;
+  /* Surcharge indispensable pour garantir la couleur brand lors de l'aimantation */
+  background-color: var(--brand) !important;
 }
 
 /* Surcharges indispensables des coordonnées inline calculées par @xyflow/react pour centrer les handles de 7px */

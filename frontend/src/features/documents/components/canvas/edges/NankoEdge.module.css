@@ -23,7 +23,7 @@
 
 
 .edgeDescIndicator {
-  color: var(--brand, #5EEAD4);
+  color: var(--brand);
   font-weight: 700;
   margin-left: 2px;
 }
