@@ -69,8 +69,8 @@ test.describe('Tracé de Connecteur par Glisser & Magnétisme Automatique (021)'
 circle auth label="Auth Service"
 
 !LAYOUT
-gateway: x=100, y=150
-auth: x=450, y=150
+gateway: x=50, y=100
+auth: x=250, y=100
 !END
 `
     await textarea.fill(initialDsl)
@@ -105,12 +105,7 @@ auth: x=450, y=150
     // 6. Glisser depuis le handle source vers le handle cible
     await page.mouse.move(startX, startY)
     await page.mouse.down()
-
-    // Déplacement intermédiaire vers la cible pour déclencher l'aimantation
-    await page.mouse.move(endX - 10, endY, { steps: 5 })
-    await page.mouse.move(endX, endY, { steps: 5 })
-
-    // Relâcher sur la cible
+    await page.mouse.move(endX, endY, { steps: 10 })
     await page.mouse.up()
 
     // 7. Vérifier que la connexion a été injectée dans le code source
