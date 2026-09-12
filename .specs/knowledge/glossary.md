@@ -1,6 +1,6 @@
 # Langage Ubiquitaire (Ubiquitous Language & Glossaire DDD)
 
-> **Référence :** Issu de l'initiative socle [`core-domain`](../initiatives/archive/000-core-domain/README.md).  
+> **Référence :** Issu de l'initiative socle [`core-domain`](../initiatives/archive/core-domain/README.md).  
 > Ce glossaire fixe les termes officiels non négociables utilisés dans le code, les spécifications, les contrats d'API et les interfaces.
 
 ---

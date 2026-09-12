@@ -56,7 +56,7 @@
 *Prochains chantiers priorisés, prêts à démarrer dès libération de bande passante :*
 
 - [ ] **`workspace-management`** : Gestion des Espaces Personnels & Hiérarchie de Projets  
-  ↳ *Initiative :* [`.specs/initiatives/planned/workspace-management/README.md`](./initiatives/planned/workspace-management/README.md) *(À initialiser via `/initiative`)*
+  ↳ *Initiative :* [`.specs/initiatives/planned/workspace-management/README.md`](./initiatives/planned/workspace-management/README.md)
 
 ---
 
@@ -73,4 +73,4 @@
 *Socles et jalons stratégiques accomplis :*
 
 - [x] **`core-domain`** : Modèle Métier Fondamental & Langage Ubiquitaire  
-  ↳ *Initiative :* [`.specs/initiatives/archive/000-core-domain/README.md`](./initiatives/archive/000-core-domain/README.md)
+  ↳ *Initiative :* [`.specs/initiatives/archive/core-domain/README.md`](./initiatives/archive/core-domain/README.md)
