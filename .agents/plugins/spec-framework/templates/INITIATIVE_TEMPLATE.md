@@ -3,7 +3,7 @@
 > **Type:** Product / UX  |  Architecture / Tech  
 > **Initiative Slug:** `[slug]`  
 > **Owner:** [Name]  
-> **Status:** Active  
+> **Status:** Planned | Active | Archived (Default: Planned)  
 > **Started:** [YYYY-MM-DD]
 
 ---

@@ -18,7 +18,7 @@ The document must remain concise (**1 page maximum**), visual, and behavior-orie
 ## Procedure
 
 ### 1. Immersion
-1. Read the parent initiative's overview in `.specs/initiatives/active/[initiative]/README.md`.
+1. Read the parent initiative's overview in `.specs/initiatives/active/[initiative]/README.md` (or `.specs/initiatives/planned/[initiative]/README.md`).
 2. Inspect active domain ground truth in `.specs/current/domains/[domain]/` to understand current baseline behavior.
 
 ### 2. Exhaustive Interaction & Invariants Interview (via `ask_question`)
@@ -29,7 +29,8 @@ Clarify all interaction specifics, edge cases, and constraints without artificia
 * **Scope Slicing:** If the interaction complexity reveals multiple distinct user workflows, sub-states, or conflicting goals, proactively propose splitting into multiple smaller features.
 
 ### 3. Generate Feature Document
-1. Instantiate `templates/FEATURE_TEMPLATE.md` in `.specs/initiatives/active/[initiative]/[feature-slug].md`.
+1. Locate the initiative directory (`active/[initiative]/` or `planned/[initiative]/`).
+2. Instantiate `templates/FEATURE_TEMPLATE.md` in `.specs/initiatives/[initiative-dir]/[feature-slug].md`.
 2. Complete thoroughly in the user's language:
    - 2-sentence Problem & Trigger.
    - Precise ASCII wireframe.

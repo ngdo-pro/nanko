@@ -62,12 +62,13 @@ flowchart TD
 
 ### Scenario 1: Launching a New Initiative (`/initiative [slug]`)
 1. **Existence & Duplicate Check:**
-   - Inspect `.specs/initiatives/active/` and `.specs/initiatives/archive/` for the requested slug or overlapping topics.
-   - **If already active:** Abort duplicate creation, present the existing initiative's roadmap, and prompt the user to contribute via `/feature [slug] [feature-slug]` or update its scope.
+   - Inspect `.specs/initiatives/planned/`, `.specs/initiatives/active/`, and `.specs/initiatives/archive/` for the requested slug or overlapping topics.
+   - **If already planned:** Report that the initiative is already framed in `planned/[slug]/`; ask the user if they wish to activate it or amend its roadmap.
+   - **If already active:** Abort duplicate creation, present the existing initiative's roadmap, and prompt the user to contribute via `/feature [slug] [feature-slug]`.
    - **If archived:** Inform the user that this milestone was already delivered; suggest an explicit follow-up slug (e.g., `[slug]-phase2`) or direct maintenance specs.
-   - **WIP Guardrail:** Check active concurrent initiatives. If 2 or more are already active, alert the user about WIP saturation and recommend parking or finishing one first.
-2. **Vision Alignment:** Verify the strategic initiative adheres to tenets in `.specs/vision.md` and promote it to Section 5 (*🚀 Active Initiatives*).
-3. **Macro Framing with Product Designer:** Delegate writing `.specs/initiatives/active/[slug]/README.md` (1-2 pages max, ASCII mental model, ordered roadmap of features) to the `product-designer`.
+   - **WIP Guardrail:** If 2 or more initiatives are already active in `active/`, create the new initiative in `planned/` by default.
+2. **Vision Alignment:** Verify the strategic initiative adheres to tenets in `.specs/vision.md` and register it in Section 5 (*🎯 Planned Initiatives (Ready)*).
+3. **Macro Framing with Product Designer:** Delegate writing `.specs/initiatives/planned/[slug]/README.md` (1-2 pages max, ASCII mental model, ordered roadmap of features) to the `product-designer`.
 4. **Immediate Progression:** Prompt to frame the first roadmap Feature via `/feature [slug] [feature-slug]`.
 
 ### Scenario 2: Contributing to an Existing Initiative (`/feature [initiative] [slug]`)

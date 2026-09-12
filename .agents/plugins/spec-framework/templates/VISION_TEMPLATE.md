@@ -60,7 +60,7 @@
 *Prioritized next initiatives ready to launch once capacity is unlocked:*
 
 - [ ] **`[initiative-slug]`**: [Initiative Title]  
-  ↳ *Initiative:* [`.specs/initiatives/active/[initiative-slug]/README.md`](./initiatives/active/[initiative-slug]/README.md) *(Framed via `/initiative`)*
+  ↳ *Initiative:* [`.specs/initiatives/planned/[initiative-slug]/README.md`](./initiatives/planned/[initiative-slug]/README.md) *(Framed via `/initiative`)*
 
 ---
 

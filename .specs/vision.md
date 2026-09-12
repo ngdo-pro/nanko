@@ -56,7 +56,7 @@
 *Prochains chantiers priorisés, prêts à démarrer dès libération de bande passante :*
 
 - [ ] **`workspace-management`** : Gestion des Espaces Personnels & Hiérarchie de Projets  
-  ↳ *Initiative :* [`.specs/initiatives/active/workspace-management/README.md`](./initiatives/active/workspace-management/README.md) *(À initialiser via `/initiative`)*
+  ↳ *Initiative :* [`.specs/initiatives/planned/workspace-management/README.md`](./initiatives/planned/workspace-management/README.md) *(À initialiser via `/initiative`)*
 
 ---
 

@@ -50,8 +50,12 @@ All generated specification documents (`.specs/changes/active/XXX-[slug].md`) mu
        * `8.2 Execution Commands & Quality Gates`: Project-specific copy-pasteable execution commands (test runner, typechecker, linter).
      - **Appendix (File Index):** Path resolution table mapping short names to full workspace-relative paths.
 
-5. **Feature Traceability:**
-   * If derived from an initiative feature (`.specs/initiatives/active/[initiative]/[feature].md`):
+5. **Feature & Initiative Traceability:**
+   * If derived from an initiative feature:
+     - If the parent initiative is currently in `.specs/initiatives/planned/[initiative]/`:
+       * Activate it: move directory from `planned/[initiative]/` to `active/[initiative]/`.
+       * Update initiative `README.md` header to `Status: Active`.
+       * In `.specs/vision.md`, promote the initiative entry from `🎯 Planifiées (Prêtes)` to `🚀 En Cours (Actives)`.
      - Update the Feature document status header to `Status: In Development`.
      - Add the new active specification under `## 6. Implementation Spec(s)`:
        `- [ ] **`[XXX-[slug]]`** : [Spec Title] (File: `.specs/changes/active/XXX-[slug].md`)`
