@@ -48,7 +48,24 @@
 
 ## 5. Strategic Initiatives Roadmap
 
-*Ordered sequence of major strategic milestones driving product evolution:*
+### Active Initiatives
+*Immediate focus — currently being framed or delivered (Strict WIP limit: 1-2 concurrent initiatives):*
+
+- [ ] **`[initiative-slug]`**: [Initiative Title]  
+  ↳ *Initiative:* [`.specs/initiatives/active/[initiative-slug]/README.md`](./initiatives/active/[initiative-slug]/README.md)
+
+---
+
+### Planned Initiatives (Ready)
+*Prioritized next initiatives ready to launch once capacity is unlocked:*
 
 - [ ] **`[initiative-slug]`**: [Initiative Title]  
   ↳ *Initiative:* [`.specs/initiatives/active/[initiative-slug]/README.md`](./initiatives/active/[initiative-slug]/README.md) *(Framed via `/initiative`)*
+
+---
+
+### Backlog & Future Opportunities
+*Strategic candidate themes to explore later (simple intentions at this stage, no directory needed):*
+
+* **`[opportunity-slug]`**: [1-sentence description of intent and potential user value].
+* **`[opportunity-slug]`**: [1-sentence description of intent and potential user value].

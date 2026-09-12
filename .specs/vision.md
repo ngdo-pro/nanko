@@ -44,9 +44,25 @@
 
 ## 5. Roadmap des Initiatives Stratégiques
 
-*Grands jalons structurants dérivant de cette vision produit :*
+### En Cours (Actives)
+*Chantiers prioritaires en cours de cadrage ou de livraison (WIP limité : 1 à 2 initiatives max) :*
+
+- [ ] **`studio-modeling`** : Modélisation Visuelle Directe & Fluide sur le Canvas (Shapes, Connecteurs, In-place)  
+  ↳ *Initiative :* [`.specs/initiatives/active/studio-modeling/README.md`](./initiatives/active/studio-modeling/README.md)
+
+---
+
+### Planifiées (Prêtes)
+*Prochains chantiers priorisés, prêts à démarrer dès libération de bande passante :*
 
 - [ ] **`workspace-management`** : Gestion des Espaces Personnels & Hiérarchie de Projets  
-  ↳ *Initiative :* [`.specs/initiatives/active/workspace-management/README.md`](./initiatives/active/workspace-management/README.md) *(Prête à démarrer)*
-- [ ] **`studio-modeling`** : Modélisation Visuelle Directe & Fluide sur le Canvas (Shapes, Connecteurs, In-place)  
-  ↳ *Initiative :* [`.specs/initiatives/active/studio-modeling/README.md`](./initiatives/active/studio-modeling/README.md) *(En cours)*
+  ↳ *Initiative :* [`.specs/initiatives/active/workspace-management/README.md`](./initiatives/active/workspace-management/README.md) *(À initialiser via `/initiative`)*
+
+---
+
+### Backlog & Opportunités Futures
+*Pistes stratégiques à instruire ultérieurement (simples intentions à ce stade) :*
+
+* **`multiplayer-collaboration`** : Édition synchrone à plusieurs et présence de curseurs en temps réel sur le canvas.
+* **`git-sync-integrations`** : Synchronisation bidirectionnelle native avec dépôts Git distants (pull/push automatique des `.nanko`).
+* **`cli-headless-export`** : Outil CLI headless pour export automatisé SVG/PNG dans les pipelines de documentation CI/CD.
