@@ -66,3 +66,11 @@
 * **`multiplayer-collaboration`** : Édition synchrone à plusieurs et présence de curseurs en temps réel sur le canvas.
 * **`git-sync-integrations`** : Synchronisation bidirectionnelle native avec dépôts Git distants (pull/push automatique des `.nanko`).
 * **`cli-headless-export`** : Outil CLI headless pour export automatisé SVG/PNG dans les pipelines de documentation CI/CD.
+
+---
+
+### 📦 Livrées (Archivées)
+*Socles et jalons stratégiques accomplis :*
+
+- [x] **`core-domain`** : Modèle Métier Fondamental & Langage Ubiquitaire  
+  ↳ *Initiative :* [`.specs/initiatives/archive/000-core-domain/README.md`](./initiatives/archive/000-core-domain/README.md)
