@@ -9,7 +9,7 @@
 ## Tooling & Required Skills
 
 * **Primary Skill:** `skills/build-spec/SKILL.md` (`/build-spec [XXX]`)
-* **Required Input:** Active engineering specification (`.specs/changes/active/XXX-[slug].md`)
+* **Required Input:** Engineering specification (`.specs/changes/planned/XXX-[slug].md` or `active/XXX-[slug].md`)
 * **Governing Rules:** `rules/spec-rules.md` (portability, strict adherence to file inventory)
 * **Execution Tools:** Code editing tools, local build/typecheck commands, and database migration runners.
 

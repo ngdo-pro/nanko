@@ -25,10 +25,10 @@ All generated specification documents (`.specs/changes/active/XXX-[slug].md`) mu
    * **Proactive Slicing:** If resolving technical edge cases reveals cross-cutting complexity across multiple tiers (e.g., heavy backend contracts + complex UI canvas), proactively recommend splitting into sequential specs (e.g., Backend/Contracts first, then Frontend/UI).
 
 3. **Sequential Identifier:**
-   * Determine the next sequential 3-digit ID (`XXX`) from `.specs/changes/active/` and `.specs/changes/archive/`.
+   * Determine the next sequential 3-digit ID (`XXX`) by scanning `.specs/changes/planned/`, `.specs/changes/active/`, and `.specs/changes/archive/`.
 
-4. **Generate Engineering Delta (`.specs/changes/active/XXX-[slug].md`):**
-   * Instantiate `templates/SPEC_TEMPLATE.md` adhering strictly to conciseness and structure rules:
+4. **Generate Engineering Delta (`.specs/changes/planned/XXX-[slug].md`):**
+   * Instantiate `templates/SPEC_TEMPLATE.md` into `.specs/changes/planned/XXX-[slug].md` adhering strictly to conciseness and structure rules:
      - **Absolute Path Portability:** All paths must be workspace-relative (relative to repository root, e.g., `src/...`, `tests/...`, `config/...`). Never include absolute machine paths.
      - **Section 1 (Intent & Context):** Why, impact, In Scope, Out of Scope. Include clean omission lines for irrelevant tiers (e.g., if UI-only, condense Data/Infra tiers into an omission note).
      - **Section 2 (Flow & Architecture):** Concise Mermaid diagram (nominal + error cases).
@@ -53,12 +53,15 @@ All generated specification documents (`.specs/changes/active/XXX-[slug].md`) mu
 5. **Feature & Initiative Traceability:**
    * If derived from an initiative feature:
      - If the parent initiative is currently in `.specs/initiatives/planned/[initiative]/`:
-       * Activate it: move directory from `planned/[initiative]/` to `active/[initiative]/`.
+       * Activate initiative: move directory from `planned/[initiative]/` to `active/[initiative]/`.
        * Update initiative `README.md` header to `Status: Active`.
        * In `.specs/vision.md`, promote the initiative entry from `🎯 Planifiées (Prêtes)` to `🚀 En Cours (Actives)`.
-     - Update the Feature document status header to `Status: In Development`.
-     - Add the new active specification under `## 6. Implementation Spec(s)`:
-       `- [ ] **`[XXX-[slug]]`** : [Spec Title] (File: `.specs/changes/active/XXX-[slug].md`)`
+     - If the feature is currently in `[initiative]/planned/[feature].md`:
+       * Activate feature: move file from `planned/[feature].md` to `active/[feature].md`.
+       * In initiative `README.md`, update link to `active/[feature].md` with state indicator `*(Active 🛠️)*`.
+     - In the feature document, set `Status: Active`.
+     - Add the new spec under `## 6. Implementation Spec(s)`:
+       `- [ ] **`[XXX-[slug]]`** : [Spec Title] (File: `.specs/changes/planned/XXX-[slug].md`)`
 
 6. **Validation:**
    * Invite the user to review the spec before launching implementation (`/build-spec XXX`).

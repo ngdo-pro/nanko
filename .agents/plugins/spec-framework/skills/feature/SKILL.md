@@ -29,16 +29,16 @@ Clarify all interaction specifics, edge cases, and constraints without artificia
 * **Scope Slicing:** If the interaction complexity reveals multiple distinct user workflows, sub-states, or conflicting goals, proactively propose splitting into multiple smaller features.
 
 ### 3. Generate Feature Document
-1. Locate the initiative directory (`active/[initiative]/` or `planned/[initiative]/`).
-2. Instantiate `templates/FEATURE_TEMPLATE.md` in `.specs/initiatives/[initiative-dir]/[feature-slug].md`.
-2. Complete thoroughly in the user's language:
+1. Locate the parent initiative directory (`.specs/initiatives/active/[initiative]/` or `.specs/initiatives/planned/[initiative]/`). Ensure its `planned/` subfolder exists.
+2. Instantiate `templates/FEATURE_TEMPLATE.md` in `.specs/initiatives/[initiative-dir]/planned/[feature-slug].md`.
+3. Complete thoroughly in the user's language:
    - 2-sentence Problem & Trigger.
    - Precise ASCII wireframe.
    - 3-step nominal user flow (*Happy Path*: Trigger, Interaction, Validation).
    - Numbered functional invariants (`INV-1`, `INV-2`...).
    - Strict Out-of-Scope boundaries.
-3. Update the feature roadmap in the parent initiative's `README.md`:
-   - Turn the feature reference into a relative link to the new file: `[`[feature-slug].md`](./[feature-slug].md)`.
+4. Update the feature roadmap in the parent initiative's `README.md`:
+   - Link to the newly framed feature: `[`planned/[feature-slug].md`](./planned/[feature-slug].md)`.
    - Update its state indicator (e.g., `*(Framed ✅ — Ready for `/spec`)*`).
 
 ### 4. Next Step

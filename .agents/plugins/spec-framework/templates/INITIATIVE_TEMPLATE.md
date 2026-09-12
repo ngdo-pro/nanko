@@ -36,8 +36,8 @@
 *Ordered sequence of discrete features planned for this initiative:*
 
 - [ ] **`01-[slug]`**: [Feature 1 Title]  
-  ↳ *File:* `01-[slug].md` *(Framed via `/feature`)*
+  ↳ *File:* `planned/01-[slug].md` *(Framed via `/feature`)*
 - [ ] **`02-[slug]`**: [Feature 2 Title]  
-  ↳ *File:* `02-[slug].md` *(Framed via `/feature`)*
+  ↳ *File:* `planned/02-[slug].md` *(Framed via `/feature`)*
 - [ ] **`03-[slug]`**: [Feature 3 Title]  
-  ↳ *File:* `03-[slug].md` *(Framed via `/feature`)*
+  ↳ *File:* `planned/03-[slug].md` *(Framed via `/feature`)*

@@ -27,7 +27,7 @@
 2. **Execute the `spec` Skill Protocol:**
    - Execute the step-by-step procedure defined in `skills/spec/SKILL.md`.
    - Ask targeted technical questions via `ask_question` for all critical boundary, error, or security ambiguities (proactively proposing to split the spec if scope spans multiple heavy subsystems).
-   - Instantiate `templates/SPEC_TEMPLATE.md` to produce `.specs/changes/active/XXX-[slug].md`.
+   - Instantiate `templates/SPEC_TEMPLATE.md` to produce `.specs/changes/planned/XXX-[slug].md`.
 
 3. **Delta Minimality & Precision:**
    - Focus exclusively on the scope required to fulfill the Feature brief.

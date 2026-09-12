@@ -25,8 +25,8 @@ flowchart LR
 
 | Phase | Responsible Agent | Mobilized Skill | Produced Deliverable |
 |---|---|---|---|
-| **1. Spec Framing** | `agents/spec-writer.md` | `skills/spec/SKILL.md` | `.specs/changes/active/XXX-[slug].md` |
-| **2. Build Code** | `agents/implementer.md` | `skills/build-spec/SKILL.md` | Compiled code & executed migrations |
+| **1. Spec Framing** | `agents/spec-writer.md` | `skills/spec/SKILL.md` | `.specs/changes/planned/XXX-[slug].md` |
+| **2. Build Code** | `agents/implementer.md` | `skills/build-spec/SKILL.md` | Compiled code & executed migrations (Spec in `active/`) |
 | **3. Quality Gates** | `agents/qa-tester.md` | `skills/test-spec/SKILL.md` | 100% passing tests (Unit, Component, E2E) |
 | **4. Clean-Room Audit** | `agents/reviewer.md` | Clean-Room Protocol | Audit report (Spec vs Git Diff) |
 | **5. Release & Sync** | `delivery-orchestrator` | `skills/sync-current/SKILL.md` | Updated `.specs/current/` & Archived spec |
@@ -37,14 +37,14 @@ flowchart LR
 
 1. **Technical Spec Generation:**
    - Consume a qualified Feature.
-   - Delegate writing the engineering spec (`SPEC_TEMPLATE.md` in `.specs/changes/active/XXX-[slug].md`) to `spec-writer`.
+   - Delegate writing the engineering spec (`SPEC_TEMPLATE.md` in `.specs/changes/planned/XXX-[slug].md`) to `spec-writer`.
    - Ensure all feature invariants map directly to `INV-X` and Gherkin scenarios.
 
 2. **Mandatory User Approval Gate:**
    - **Hard Stop:** Present the Spec to the user and await explicit approval before any code implementation.
 
-3. **Implementation Coordination:**
-   - Delegate code implementation to `implementer`.
+3. **Build Implementation:**
+   - Activate the spec (moves from `planned/` to `active/`) and delegate implementation to `implementer`.
    - Monitor that code changes strictly respect the file inventory (`[NEW]`, `[MOD]`).
 
 4. **QA Verification & Quality Gates:**

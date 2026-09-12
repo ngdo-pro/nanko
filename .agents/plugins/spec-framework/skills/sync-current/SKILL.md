@@ -33,15 +33,17 @@ All updated ground truth documents must be maintained in the user's language.
 
 4. **Archive Specification & Cascading Roadmap Completion:**
    * Move the specification file from `.specs/changes/active/` to `.specs/changes/archive/`.
-   * **Level 1 (Feature):** If derived from an initiative feature (`.specs/initiatives/active/[initiative]/[feature].md`):
+   * **Level 1 (Feature):** If derived from an initiative feature:
      - Check off this spec under `## 6. Implementation Spec(s)`: `- [x] **`[XXX-[slug]]`**`.
      - **Cascade Check:** Are all specs in Section 6 now marked `[x]`?
-       - If yes: update Feature header to `Status: Implemented ✅`.
-   * **Level 2 (Initiative):** If the Feature was marked `Implemented ✅`:
-     - In the parent initiative (`.specs/initiatives/active/[initiative]/README.md`), check off the feature in Section 4: `- [x] **`[feature-slug]`**: ...`.
-     - **Cascade Check:** Are all features in Section 4 now marked `[x]`?
-       - If yes: update Initiative header to `Status: Completed ✅` and move directory to `.specs/initiatives/archive/[initiative]`.
-   * **Level 3 (Vision):** If the Initiative was marked `Completed ✅`:
+       - If yes:
+         * Update Feature header to `Status: Archived`.
+         * Move the feature file from `active/[feature].md` to `archive/[feature].md`.
+   * **Level 2 (Initiative):** If the Feature was archived:
+     - In the parent initiative's `README.md`, update the feature link to `archive/[feature].md` and check it off: `- [x] **`[feature-slug]`**: ...`.
+     - **Cascade Check:** Are all features of the initiative now in `archive/`?
+       - If yes: update Initiative header to `Status: Archived` and move the initiative directory from `.specs/initiatives/active/[initiative]` to `.specs/initiatives/archive/[initiative]`.
+   * **Level 3 (Vision):** If the Initiative was archived:
      - In `.specs/vision.md` under Section 5 (*Strategic Initiatives Roadmap*), check off the initiative: `- [x] **`[initiative-slug]`**: ...`.
 
 5. **Confirmation:**

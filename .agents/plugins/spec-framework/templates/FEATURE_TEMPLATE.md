@@ -1,7 +1,7 @@
 # Feature: [Feature Name]
 
 > **Parent Initiative:** `[initiative-slug]`  
-> **Status:** Draft | Ready for Spec | Implemented  
+> **Status:** Planned | Active | Archived (Default: Planned)  
 > **Author(s):** [Name]  
 > **Last Updated:** [YYYY-MM-DD]
 
@@ -55,6 +55,6 @@
 **State 1 (When initially framed — no specs derived yet):**
 *No execution specs linked yet.*
 
-**State 2 (When specs are derived via `/spec` — replace State 1 with active spec deltas):**
+**State 2 (When specs are derived via `/spec` — replace State 1 with spec deltas):**
 - [ ] **`[XXX-[slug]]`** : [Spec Title]  
-  ↳ *File:* `.specs/changes/active/XXX-[slug].md`
+  ↳ *File:* `.specs/changes/planned/XXX-[slug].md` *(or `active/` once `/build-spec` starts)*

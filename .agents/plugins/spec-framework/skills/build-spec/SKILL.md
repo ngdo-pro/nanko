@@ -11,7 +11,10 @@ Use this skill when the user requests implementing an approved engineering speci
 
 ## Procedure
 
-1. **Load & Analyze Specification:**
+1. **Activate Specification (Planned ➔ Active):**
+   * Check if the spec is located in `.specs/changes/planned/[id]*.md`:
+     - If yes: move the file to `.specs/changes/active/[id]*.md` (the spec is now officially active in development).
+     - If already in `.specs/changes/active/[id]*.md`: proceed directly.
    * Read `.specs/changes/active/[id]*.md`, `.specs/architecture.md`, and the target domain ground truth.
    * **Inventory & Signatures:** Analyze the factorized `tree` (Section 3.1) and key contracts (Section 3.2).
    * **Technical Watchouts:** Read **Section 6** before writing any code to prevent documented pitfalls.

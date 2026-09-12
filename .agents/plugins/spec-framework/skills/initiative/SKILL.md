@@ -37,7 +37,7 @@ Clarify all strategic axes with the user without artificial question caps:
 * **Scope Slicing:** If the strategic leap reveals too many disparate subsystems or conflicting milestones, proactively recommend slicing into separate, sequential initiatives.
 
 ### 3. Generate Initiative Document
-1. Create directory `.specs/initiatives/planned/[slug]/` (or `active/[slug]/` if immediately activating under WIP limits).
+1. Create directory `.specs/initiatives/planned/[slug]/` (or `active/[slug]/` if activating immediately under WIP limits) and initialize its subdirectories: `planned/`, `active/`, and `archive/`.
 2. Instantiate `templates/INITIATIVE_TEMPLATE.md` in `.specs/initiatives/planned/[slug]/README.md`.
 3. Complete thoroughly in the user's language:
    - Intent & Gap (Today vs Tomorrow).
