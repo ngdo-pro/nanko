@@ -44,6 +44,29 @@ describe('NankoEdge', () => {
     expect(screen.queryByTestId('ast-connector-front-db')).not.toBeInTheDocument()
   })
 
+  it('applique le token var(--brand) pour la couleur du connecteur', () => {
+    const { container } = render(
+      <svg>
+        <NankoEdge
+          id="front->db"
+          source="front"
+          target="db"
+          sourceX={100}
+          sourceY={100}
+          targetX={200}
+          targetY={100}
+          sourcePosition={Position.Right}
+          targetPosition={Position.Left}
+          label=""
+          data={{ label: null, desc: null }}
+        />
+      </svg>,
+    )
+
+    const path = container.querySelector('.react-flow__edge-path')
+    expect(path).toHaveStyle({ stroke: 'var(--brand)' })
+  })
+
   it('rend une arête sans description : label seul sans préfixe "source -> target", ni indicateur, ni tooltip', () => {
     render(
       <svg>

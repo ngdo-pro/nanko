@@ -97,7 +97,7 @@ function buildEdgesFromAst(ast: NankoAst, colorMode: 'dark' | 'light'): Edge[] {
       type: MarkerType.ArrowClosed,
       width: 14,
       height: 14,
-      color: colorMode === 'dark' ? '#5EEAD4' : '#1C382E',
+      color: colorMode === 'dark' ? '#5EEAD4' : '#2C4A3B',
     },
   }))
 }
@@ -424,6 +424,10 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
         minZoom={0.1}
         maxZoom={3}
         defaultEdgeOptions={{ type: 'nanko' }}
+        connectionLineStyle={{
+          stroke: colorMode === 'dark' ? '#5EEAD4' : '#2C4A3B',
+          strokeWidth: 1.5,
+        }}
         proOptions={{ hideAttribution: true }}
         style={{
           width: '100%',
