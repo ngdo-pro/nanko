@@ -1,5 +1,26 @@
-# Déploiement par polling d'image (Watchtower) plutôt que par SSH déclenché depuis la CI
+# ADR-010 : Déploiement continu par scrutation d'images (Watchtower) sans exposition de secrets SSH
 
-Le déploiement continu de nanko reprend le pattern déjà en place pour un autre projet sur le même VPS : la CI (GitHub Actions) se contente de builder et pousser une image sur GHCR sur un tag stable par environnement (`:preprod`, `:prod`) ; aucun secret de déploiement (clé SSH, hôte cible) ne transite par la CI. Watchtower, sur le VPS, scrute ce tag toutes les 5 minutes et effectue lui-même le pull puis la recréation du conteneur dès qu'un nouveau digest est publié. L'alternative initialement construite — un step SSH déclenché depuis le workflow — a été abandonnée : elle réintroduit toute la surface de credentials que ce pattern existe justement pour éviter, pour un projet où l'approche fait déjà ses preuves en production sur un autre service.
+* **Statut :** Validé
+* **Date :** 2026-08-30
+* **Impact :** `infra`
 
-Contrepartie assumée : les migrations Doctrine ne sont plus jouées par un step de déploiement externe, mais par l'entrypoint de l'image backend elle-même, avant l'exec vers FrankenPHP. Si la migration échoue, l'entrypoint sort en erreur sans jamais la masquer — le conteneur (en `restart: unless-stopped`) part en crash-loop, visible via `docker ps`/`docker logs`, plutôt que de servir silencieusement une application cassée sur un schéma obsolète. Aucun mécanisme de blue/green ni de rollback piloté par health-check n'est mis en place : pour un projet solo, ce serait de l'ingénierie prématurée face à un mode de défaillance rare et déjà visible.
+## 1. Contexte & Problématique
+Comment automatiser le déploiement continu des conteneurs applicatifs (Backend Symfony, Frontend React, Landing) sur les environnements VPS de préproduction et de production depuis GitHub Actions, sans introduire de vulnérabilité de sécurité liée au stockage de clés d'accès serveur sur des runners de CI mutualisés ?
+
+## 2. Options techniques étudiées
+* **Option A : Déploiement en Push déclenché depuis la CI via SSH**
+  * *Inconvénients :* Nécessite de stocker une clé SSH privée dans les secrets GitHub (`SSH_PRIVATE_KEY`) ; élargit la surface d'attaque en cas de compromission d'un workflow tiers ; exige l'ouverture du port SSH aux plages d'adresses IP dynamiques des runners GitHub Actions.
+* **Option B : Déploiement en Pull autonome via scrutation d'images (Watchtower)**
+  * *Avantages :* Aucun secret de connexion serveur (clé SSH, mot de passe root, hôte) ne quitte le VPS ; la CI GitHub Actions se limite à construire et pousser les images Docker sur GitHub Container Registry (GHCR) ; Watchtower s'exécute localement sur le VPS, scrute les digests d'images toutes les 5 minutes (`com.centurylinklabs.watchtower.enable: "true"`) et orchestre le remplacement à chaud des conteneurs.
+
+## 3. Décision
+Retenir l'**Option B** : Déploiement passif en mode Pull orchestré par Watchtower sur le VPS :
+1. La CI publie l'image sur GHCR sous un tag d'environnement stable (`:preprod` ou `:prod`).
+2. Watchtower détecte la mise à jour du digest, télécharge la nouvelle image et redémarre le conteneur.
+3. Les migrations de base de données Doctrine sont exécutées automatiquement dans `backend/docker-entrypoint.sh` avant le lancement de FrankenPHP.
+4. Si une migration échoue, l'entrypoint interrompt le processus avec code d'erreur non nul : avec la politique `restart: unless-stopped`, le conteneur entre en crash-loop visible (`docker ps`) plutôt que de servir du trafic sur un schéma obsolète.
+
+## 4. Justifications & Conséquences
+* **Sécurité & Moindre Privilège :** Clôture complète de la surface d'attaque SSH depuis l'extérieur.
+* **Résilience des Migrations :** Pas d'orchestration externe fragile des migrations ; l'image embarque et garantit l'alignement de son schéma SQL à l'instanciation.
+* **Contrepartie acceptée :** Un délai de latence de propagation pouvant atteindre 5 minutes (intervalle de polling Watchtower). Cette latence est absorbée en CI grâce à une boucle d'attente active interrogeant `GET /api/v1/version` jusqu'à validation de la version SemVer ciblée.

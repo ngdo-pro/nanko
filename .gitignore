@@ -32,3 +32,6 @@ build/
 /infra/prod/.env
 /infra/signoz/.env
 /infra/plausible/.env
+
+# Temporary scratch files
+temp-*.md

@@ -1,0 +1,246 @@
+openapi: 3.1.0
+info:
+  title: Studio de Modélisation (studio-modeling) API
+  description: Endpoints de consultation et de mise à jour des documents d'architecture, du code source .nanko et de l'AST visuel.
+  version: 1.0.0
+servers:
+  - url: /api/v1
+    description: API v1
+
+paths:
+  /documents/{id}:
+    get:
+      summary: Récupérer un document et son AST compilé
+      operationId: getDocument
+      tags:
+        - Studio
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identifiant UUIDv7 du document
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Document récupéré avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentResponse'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+    put:
+      summary: Mettre à jour le code source .nanko d'un document
+      operationId: updateDocument
+      tags:
+        - Studio
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identifiant UUIDv7 du document
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDocumentRequest'
+      responses:
+        '200':
+          description: Document mis à jour avec son nouvel AST
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentResponse'
+        '400':
+          $ref: '#/components/responses/400InvalidSyntax'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '403':
+          $ref: '#/components/responses/403Forbidden'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    UpdateDocumentRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          description: Code source .nanko incluant la directive @dsl-version et le bloc optionnel !LAYOUT
+          example: "@dsl-version 1\n\nrectangle auth_service {\n  label: \"Auth Service\"\n}\n"
+        layer:
+          type: integer
+          description: Profondeur hiérarchique du conteneur (défaut 0)
+          default: 0
+
+    DocumentResponse:
+      type: object
+      required:
+        - id
+        - projectId
+        - name
+        - slug
+        - content
+        - layer
+        - ast
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Architecture Globale"
+        slug:
+          type: string
+          example: "architecture-globale"
+        content:
+          type: string
+        layer:
+          type: integer
+          example: 0
+        ast:
+          $ref: '#/components/schemas/NankoAst'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    NankoAst:
+      type: object
+      required:
+        - dslVersion
+        - shapes
+        - connectors
+      properties:
+        dslVersion:
+          type: integer
+          example: 1
+        shapes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AstShape'
+        connectors:
+          type: array
+          items:
+            $ref: '#/components/schemas/AstConnector'
+
+    AstShape:
+      type: object
+      required:
+        - id
+        - type
+        - label
+      properties:
+        id:
+          type: string
+          example: "api_gateway"
+        type:
+          type: string
+          enum: [rectangle, circle, text]
+          example: "rectangle"
+        label:
+          type: string
+          example: "API Gateway"
+        desc:
+          type: string
+          nullable: true
+          example: "Point d'entrée sécurisé des flux HTTP"
+        x:
+          type: number
+          nullable: true
+          example: 120.5
+        y:
+          type: number
+          nullable: true
+          example: 80.0
+
+    AstConnector:
+      type: object
+      required:
+        - source
+        - target
+      properties:
+        source:
+          type: string
+          example: "api_gateway"
+        target:
+          type: string
+          example: "auth_service"
+        label:
+          type: string
+          nullable: true
+          example: "Bearer JWT"
+        desc:
+          type: string
+          nullable: true
+          example: "Validation des signatures de jeton"
+
+    ErrorResponse:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: "SYNTAX_ERROR"
+        message:
+          type: string
+          example: "Erreur de syntaxe à la ligne 4: jeton inattendu"
+
+  responses:
+    400InvalidSyntax:
+      description: Erreur de syntaxe dans le code .nanko
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    401Unauthorized:
+      description: Non authentifié
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    403Forbidden:
+      description: Accès refusé à ce document
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    404NotFound:
+      description: Document introuvable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
