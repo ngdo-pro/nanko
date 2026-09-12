@@ -4,21 +4,25 @@
 * **Domaine concerné :** `.specs/current/domains/[nom-du-domaine]/`
 * **Type de changement :** `Nouveau module` | `Évolution` | `Refonte` | `Fix`
 * **Cible :** `Fullstack` | `backend` | `frontend` | `tests-e2e`
+* **Complexité :** `Faible` | `Moyenne` | `Élevée`
 
 ---
 
-## 1. Intention & Contexte (Le « Why » du Delta)
+## 1. Intention & Contexte (Le « Why »)
+
 * **Problème résolu / Besoin :** [Explication en 1-2 phrases du besoin et de l'irritant utilisateur traité].
 * **Impact utilisateur :** [Ce qui change concrètement dans l'expérience par rapport à l'état courant].
 * **In Scope (Ce qui est ajouté/modifié) :**
   * [Livrable ou modification 1]
   * [Livrable ou modification 2]
 * **Out of Scope (Exclusions strictes) :**
-  * [Comportement non touché ou reporté]
+  * [Comportement non touché ou reporté à un delta ultérieur]
+
+> *Note d'omission (si applicable) : « Sections [DBAL / API Symfony / Réseau / UI Layout] : Sans objet ([Raison : ex. Évolution purement client / refactor interne / sans persistance]). »*
 
 ---
 
-## 2. Flux & Architecture (Diff)
+## 2. Flux & Architecture
 
 ```mermaid
 sequenceDiagram
@@ -26,348 +30,200 @@ sequenceDiagram
     actor U as Utilisateur
     participant F as Frontend React (frontend/)
     participant B as Backend Symfony (backend/)
-    participant DB as PostgreSQL
+    participant DB as Base de données PostgreSQL
 
-    Note over U,DB: [Nouveau flux ou flux modifié]
-    U->>F: [Action utilisateur]
-    F->>B: [METHOD] /api/v1/[resource] (Payload JSON)
-    alt Cas nominal
-        B->>DB: [Mutation / Écriture SQL DBAL]
+    Note over U,DB: Flux nominal & gestion des erreurs
+    U->>F: Action utilisateur
+    F->>B: Requête API / Commande
+    alt Succès
+        B->>DB: Mutation / Persistance
         DB-->>B: Confirmation
-        B-->>F: 200 OK / 201 Created (Response DTO)
-        F-->>U: [Feedback UI de succès / Redirection]
-    else Erreur de validation (422)
-        B-->>F: 422 Unprocessable (Violations)
-        F-->>U: [Affichage des erreurs de saisie]
-    else Conflit ou règle métier violée (409)
-        B-->>F: 409 Conflict (Error code)
-        F-->>U: [Notification d'erreur ciblée]
+        B-->>F: 200 OK / Réponse DTO
+        F-->>U: Feedback visuel de succès
+    else Erreur de validation ou conflit
+        B-->>F: Erreur 422 / 409
+        F-->>U: Notification / Erreur inline
     end
 ```
 
 ---
 
-## 3. Delta Modèle de données & Base de données
+## 3. Inventaire des Fichiers & Responsabilités
 
-### 3.1. Diagramme Entité-Relation (ERD - Nouveaux éléments / Liaisons)
+### 3.1. Arborescence & Responsabilités
+*Chemins relatifs à la racine du projet, statuts `[NEW]` (création) ou `[MOD]` (modification existante), et rôles synthétiques en 1 ligne.*
 
-```mermaid
-erDiagram
-    EXISTING_TABLE ||--o{ NEW_OR_MODIFIED_TABLE : "liaison"
-
-    NEW_OR_MODIFIED_TABLE {
-        uuid id PK
-        uuid existing_table_id FK
-        varchar(255) new_field "NOT NULL"
-        timestamp created_at "NOT NULL"
-    }
+```text
+[frontend|backend]/src/
+├── [module-or-feature]/
+│   ├── [SubComponent].tsx                      [NEW] Rôle en 1 phrase courte
+│   ├── [ExistingService].ts                    [MOD] Rôle en 1 phrase courte
+│   └── tests/
+│       └── [SubComponent].test.tsx             [NEW] Tests unitaires & intégration
+tests-e2e/tests/
+└── [feature].spec.ts                           [NEW] Scénarios Playwright E2E
 ```
 
-### 3.2. Modifications de tables
+### 3.2. Contrats & Signatures Clés
+*Définitions TypeScript ou PHP des interfaces, DTOs ou callbacks critiques pour lever toute ambiguïté d'implémentation.*
 
-#### Table : `[nom_de_la_table]` (`Création` | `Modification`)
-* **Entité / Value Object Core :** `backend/src/Core/Domain/[Aggregate]/[EntityName].php`
-* **Port Repository :** `backend/src/Core/Port/[Aggregate]/Repository.php`
-* **Adapter Persistence :** `backend/src/Adapter/Driven/Persistence/[Aggregate]/DoctrineRepository.php`
+```typescript
+// Exemple de types / callbacks critiques
+export interface [FeatureProps] {
+  [propKey]: string;
+  [onAction]: (id: string, value: string) => void;
+}
+```
 
-| Action | Champ | Type SQL / DBAL | Nullable | Contraintes & Index | Description métier |
-|---|---|---|---|---|---|
-| `Ajout` | `id` | `uuid` (v7) | Non | `PRIMARY KEY` | Identifiant unique généré. |
-| `Ajout` | `new_field` | `varchar(255)` | Non | `INDEX idx_[table]_[field]` | Description du champ. |
-| `Modif` | `status` | `varchar(50)` | Non | `DEFAULT 'draft'` | Ajout d'une nouvelle valeur d'état. |
-
-### 3.3. Règles de migration & Intégrité
-* **Fichier de migration :** `backend/migrations/VersionYYYYMMDDHHMMSS.php`.
-* **Rétrocompatibilité :** [Ex. Pas d'ajout de colonne NOT NULL sans valeur par défaut sur une table existante volumineuse].
-
----
-
-## 4. Delta Contrats d'API (Symfony)
-
-### Endpoint : `[METHOD] /api/v1/[resource]` (`Nouveau` | `Modifié`)
-* **Authentification requise :** `PUBLIC_ACCESS` | `ROLE_USER` | `Voter:[VoterName]`
-* **Headers :** `Content-Type: application/json` | `Authorization: Bearer <token>`
-
-#### Request (`[InputDtoName]`)
 ```php
-final readonly class [InputDtoName]
+// Exemple de DTO / Command PHP
+final readonly class [FeatureCommand]
 {
     public function __construct(
-        #[Assert\NotBlank(message: 'Champ obligatoire.')]
-        #[Assert\Email(message: 'Format d\'email invalide.')]
-        public string $fieldA,
-
-        #[Assert\NotBlank(message: 'Champ obligatoire.')]
-        #[Assert\PositiveOrZero(message: 'Doit être supérieur ou égal à 0.')]
-        public int $fieldB,
+        public string $id,
+        public string $value,
     ) {}
 }
 ```
 
-#### Responses
-* `200 OK` / `201 Created` :
-  ```json
-  {
-    "id": "01918a24-7b3b-7c99-b1d5-2a1d2f34e567",
-    "fieldA": "valeur",
-    "fieldB": 10,
-    "createdAt": "2026-08-31T01:00:00Z"
-  }
-  ```
-* `422 Unprocessable Entity` : Format standard des violations Symfony (`violations: [{ propertyPath, title }]`).
-* `400 / 401 / 403 / 404 / 409` : `{ "code": "ERROR_CODE", "message": "Description de l'erreur." }`
-
 ---
 
-## 5. Configuration Réseau, Prérequis DNS & Sécurisation des Endpoints
+## 4. Spécifications Détaillées (Données, API & UI)
 
-### 5.1. Prérequis DNS Externes (Registrar / Zone DNS)
-*Indiquer les enregistrements DNS requis si de nouveaux sous-domaines ou services exposés sont introduits.*
+*(Conserver les sous-sections pertinentes selon la cible de l'évolution, omettre les autres)*
 
-| Sous-domaine / Hôte | Type DNS | Cible | Rôle |
-|---|---|---|---|
-| `[service].nanko.dev` | `A` (ou `CNAME`) | `<IP_PUBLIQUE_VPS>` | [Description du rôle de l'hôte / service] |
+### 4.1. Modèle de données & API (Backend)
+*(À renseigner si l'évolution touche la persistance ou expose de nouveaux endpoints)*
 
-> [!NOTE]
-> Préciser si l'entrée est déjà couverte par un wildcard existant (ex: `*.nanko.dev` pointant vers l'IP du VPS) ou si une création manuelle est requise chez le registrar.
+* **Migration SQL / DBAL :** `backend/migrations/VersionYYYYMMDDHHMMSS.php`
+* **Contrat Endpoint :** `[METHOD] /api/v1/[resource]` (`200 OK` / `422 Unprocessable` / `409 Conflict`)
 
-### 5.2. Matrice d'Exposition et Sécurisation des Endpoints
-*Détailler pour chaque endpoint ou service son niveau d'exposition, son authentification et les mesures de mitigation associées.*
-
-| Endpoint / Service | Exposition (`Publique` / `Restreinte` / `Interne Docker`) | Authentification & Contrôle d'accès | Mesures de mitigation (CORS, Rate-limit, Payload max, TLS/HSTS) |
-|---|---|---|---|
-| `[Nom Endpoint/URL]` | `Publique` / `Restreinte` | `Bearer Token JWT` / `Public` / `BasicAuth` | CORS restreint aux origines Nanko, Rate limiting X req/min, HSTS |
-| `[Flux Interne]` | `Interne Docker` | Réseau privé `edge` | Aucun port exposé publiquement sur l'hôte |
-
-### 5.3. Variables d'Environnement & Secrets requis
-| Variable | Composant (`backend` / `frontend` / `compose`) | Environnement (`local` / `preprod` / `prod`) | Description & Exemple |
-|---|---|---|---|
-| `[NOM_VARIABLE]` | `frontend` | Tous | [Description de la variable et valeur par défaut] |
-
----
-
-## 6. Delta Maquettes & Layout UI
-
-### 6.1. Référence visuelle (Vision / Humain)
-* **Fichier mockup :** `.specs/mockups/[XXX]-[change-name].png` *(ou URL Figma ciblée)*.
-* **Consigne :** Respecter les alignements, proportions et contrastes de la maquette.
-
-### 6.2. Wireframes conceptuels (ASCII Layout)
-
-#### Vue Desktop (≥ 1024px)
-```text
-+-----------------------------------------------------------------------+
-|  [Header / BrandLogo]                                                 |
-+-----------------------------------+-----------------------------------+
-|                                   |                                   |
-|   ZONE SECONDAIRE / CONTEXTE      |   CONTENEUR PRINCIPAL (max-w-md)  |
-|                                   |                                   |
-|   - Titre / Visuel                |   +---------------------------+   |
-|   - Informations d'aide           |   | Titre formulaire          |   |
-|                                   |   |                           |   |
-|                                   |   | Champ A : [             ] |   |
-|                                   |   | Champ B : [             ] |   |
-|                                   |   |                           |   |
-|                                   |   | [ Action (Primary) ]      |   |
-|                                   |   +---------------------------+   |
-|                                   |   Lien secondaire             |   |
-|                                   |                                   |
-+-----------------------------------+-----------------------------------+
-```
-
-#### Vue Mobile (< 768px)
-```text
-+-----------------------------------+
-|  [Header Mobile]                  |
-+-----------------------------------+
-|                                   |
-|  Titre formulaire                 |
-|                                   |
-|  Champ A :                        |
-|  [                              ] |
-|                                   |
-|  Champ B :                        |
-|  [                              ] |
-|                                   |
-|  [     Action (Full width)      ] |
-|                                   |
-|  Lien secondaire                  |
-|                                   |
-+-----------------------------------+
-```
-
-### 5.3. Squelette JSX & Arborescence attendue
+### 4.2. Spécifications UI, Wireframes & États (Frontend)
+*(À renseigner si l'évolution comporte une interface visuelle)*
 
 ```text
-frontend/src/features/[feature-name]/
-├── components/
-│   └── [FeatureForm].tsx
-├── layouts/
-│   └── [FeatureLayout].tsx
-├── hooks/
-│   └── use[FeatureMutation].ts
-└── schemas.ts
+[ WIREFRAME ASCII ]
++-------------------------------------------------------+
+|  [Composant / Vue]                                    |
+|  +---------------------------+                        |
+|  | Champ A : [             ] |                        |
+|  | [ Action Principale ]     |                        |
+|  +---------------------------+                        |
++-------------------------------------------------------+
 ```
 
-```tsx
-// Structure de layout et classes utilitaires attendues
-<FeatureLayout>
-  <div className="hidden lg:flex flex-col justify-between bg-slate-900 p-12 text-white">
-    <FeatureContextDisplay/>
-  </div>
-
-  <div className="flex flex-1 items-center justify-center p-6 sm:p-12">
-    <div className="w-full max-w-md space-y-6">
-      <div className="space-y-2 text-center">
-        <h1 className="text-2xl font-bold tracking-tight">[Titre]</h1>
-        <p className="text-sm text-slate-500">[Texte explicatif]</p>
-      </div>
-
-      <FeatureForm/>
-    </div>
-  </div>
-</FeatureLayout>
-```
-
----
-
-## 7. Delta Spécifications UI & Logique Client (React)
-
-### Schéma de validation Zod (`schemas.ts`)
-```typescript
-import { z } from 'zod';
-
-export const [featureSchema] = z.object({
-  fieldA: z.string().trim().email('Format email invalide'),
-  fieldB: z.number().int().nonnegative('Doit être un entier positif ou nul')
-});
-
-export type [FeatureInput] = z.infer<typeof [featureSchema]>;
-```
-
-### Matrice des états d'interface
-
+#### Matrice des États d'Interface
 | État | Déclencheur | Rendu visuel & Comportement |
 |---|---|---|
-| **Idle** | Arrivée sur la vue | Formulaire accessible, inputs actifs, bouton d'action activé. |
-| **Submitting** | Clic sur le bouton d'action | Inputs en `disabled`, spinner animé sur le bouton + texte adapté (« En cours... »). |
-| **Error (Validation)** | Erreur 422 ou échec Zod | Bordure d'input en rouge (`border-destructive`), message sous le champ, focus sur le premier champ invalide. |
-| **Error (Serveur / Réseau)** | Erreur 500 / 409 / Réseau | Bannière d'alerte dismissible en haut du conteneur avec message explicite. |
-| **Success** | Réponse 200 / 201 | Redirection vers la route cible ou notification toast de succès. |
+| **Idle** | Chargement initial | Affichage par défaut des données. |
+| **En cours / Saisie** | Interaction utilisateur | Rendu dynamique du champ / état focalisé. |
+| **Validation / Succès** | Soumission valide | Synchronisation de l'état, feedback visuel. |
+| **Erreur** | Données invalides / échec | Message d'erreur inline, préservation de la saisie. |
 
 ---
 
-## 8. Invariants & Cas limites (*Edge cases*)
-1. **Rétrocompatibilité :** [Impact sur les endpoints existants ou sur les clients déjà connectés].
-2. **Idempotence & Concurrence :** [Gestion des doubles soumissions ou accès concurrents].
-3. **Contrôle d'accès :** [Vérification des droits et renvoi explicite de 403 Forbidden via un Voter ou Capability].
+## 5. Invariants Métier & Traçabilité des Tests
+
+Chaque invariant métier correspond à son scénario Gherkin en section 8.1 et est vérifié par les tests suivants :
+
+* **INV-1 · [Nom de la règle 1]**  
+  [Description concise de la règle et du comportement garanti en cas de violation].  
+  ↳ *Couvert par :* [`[FichierTest.test.tsx]`](#annexe-index-des-fichiers)
+
+* **INV-2 · [Nom de la règle 2]**  
+  [Description concise de la règle et du comportement garanti en cas de violation].  
+  ↳ *Couvert par :* [`[AutreTest.test.ts]`](#annexe-index-des-fichiers)
 
 ---
 
-## 9. Plan d'exécution séquentiel
+## 6. Pièges Techniques & Anti-Patterns (*Watchouts*)
 
-- [ ] **Phase 1 : Backend (`backend/`)**
-  - [ ] 1. Modèle & DB : Créer/mettre à jour la migration Doctrine et les types DBAL.
-  - [ ] 2. Core : Entité Domain, Value Objects (Id UUIDv7), Ports Repository et Use Case (Command/Handler).
-  - [ ] 3. Adapter Persistence : Implémenter le repository DBAL dans `Adapter/Driven/Persistence/`.
-  - [ ] 4. Adapter Driver : Contrôleur HTTP dans `Adapter/Driver/Http/Controller/` et DTOs d'entrée avec contraintes `Assert\*`.
-  - [ ] **Validation Architecture :** Vérifier les frontières hexagonales avec `make deptrac`.
-  - [ ] **Tests Unitaires Backend :** Valider la logique métier pure et DTOs sans DB (`backend/tests/Unit/`).
-  - [ ] **Tests d'Intégration Backend :** Valider la persistance DBAL et les endpoints (`backend/tests/Integration/` / `make test-backend`).
-
-- [ ] **Phase 2 : Frontend (`frontend/`)**
-  - [ ] 1. Contrats : Déclarer le schéma Zod et exporter les types TypeScript (`schemas.ts`).
-  - [ ] 2. Hooks & API : Créer le hook TanStack Query (`useMutation` / `useQuery`).
-  - [ ] 3. Composants : Implémenter le layout, le formulaire et gérer la matrice des 5 états UI.
-  - [ ] **Tests & Types Frontend :** Valider avec `pnpm --filter frontend typecheck` et `pnpm --filter frontend lint`.
-
-- [ ] **Phase 3 : End-to-End (`tests-e2e/`)**
-  - [ ] 1. Implémenter le parcours utilisateur complet dans Playwright (`tests-e2e/tests/[feature].spec.ts`).
-  - [ ] **Tests E2E :** Exécuter la suite de tests contre l'environnement cible (`pnpm --filter tests-e2e exec playwright test`).
-
-- [ ] **Phase 4 : Synchronisation documentaire (Automatisable via `/sync-current`)**
-  - [ ] 1. Répercuter les modifications dans `.specs/current/domains/[domaine]/behavior.md`.
-  - [ ] 2. Répercuter les nouveaux contrats dans `.specs/current/domains/[domaine]/contracts.md`.
-  - [ ] 3. Répercuter les schémas de données dans `.specs/current/domains/[domaine]/models.md`.
-  - [ ] 4. Déplacer ce fichier dans `.specs/changes/archive/[XXX]-[nom].md`.
+* **[Piège technique 1] :** [Description concrète du piège d'implémentation anticipé et de la parade recommandée].
+* **[Piège technique 2] :** [Description concrète du piège d'implémentation anticipé et de la parade recommandée].
+* **[Piège technique 3] :** [Description concrète du piège d'implémentation anticipé et de la parade recommandée].
 
 ---
 
-## 10. Definition of Done & Stratégie de tests
+## 7. Plan d'Exécution Séquentiel
 
-### 10.1. Scénarios de validation (Format Gherkin avec tags)
+- [ ] **Phase 1 : Socle & Contrats de Données**
+  - [ ] Implémenter les types et utilitaires dans [`[fichier.ts]`](#annexe-index-des-fichiers).
+  - [ ] Écrire les tests unitaires associés dans [`[fichier.test.ts]`](#annexe-index-des-fichiers).
+
+- [ ] **Phase 2 : Composants & Logique Métier**
+  - [ ] Créer / adapter les composants dans [`[Composant.tsx]`](#annexe-index-des-fichiers).
+  - [ ] Compléter les suites de tests d'intégration dans [`[Composant.test.tsx]`](#annexe-index-des-fichiers).
+
+- [ ] **Phase 3 : Intégration E2E & Quality Gates**
+  - [ ] Créer le test E2E Playwright dans [`[feature.spec.ts]`](#annexe-index-des-fichiers).
+  - [ ] Valider l'intégralité des quality gates (`pnpm test`, `typecheck`, `lint`, `make lint`).
+
+---
+
+## 8. Validation BDD & Commandes de Test
+
+### 8.1. Scénarios Gherkin Exhaustifs
+*Tous les invariants de la section 5 doivent obligatoirement disposer d'un scénario Gherkin ci-dessous, ordonnés par niveau de test.*
 
 ```gherkin
-# ==============================================================================
-# TESTS E2E (tests-e2e/ - Exécutés contre l'environnement cible)
-# ==============================================================================
+Fonctionnalité: [Nom de la fonctionnalité]
 
-@e2e @preprod
-Fonctionnalité: Parcours complet [Nom de l'évolution]
+  # ============================================================================
+  # 1. Tests Unitaires (@unit)
+  # ============================================================================
 
-  Scénario: Parcours nominal complet du delta
-    Étant donné que l'utilisateur est sur la page "/[route]"
-    Quand il remplit les champs obligatoires avec des données valides
-    Et qu'il soumet le formulaire
-    Alors l'action est enregistrée en base
-    Et l'utilisateur est redirigé vers "/[route-cible]" avec un message de confirmation
+  @unit
+  Scénario: [INV-X] [Comportement unitaire spécifique]
+    Étant donné [contexte initial isolé]
+    Quand [fonction ou méthode appelée avec paramètres]
+    Alors [valeur retournée conforme à l'invariant]
 
-# ==============================================================================
-# TESTS BACKEND (backend/ - Unitaires, Intégration & Architecture)
-# ==============================================================================
+  # ============================================================================
+  # 2. Tests d'Intégration & Composants (@component / @integration)
+  # ============================================================================
 
-@api @integration
-Fonctionnalité: Endpoints API [Nom de la ressource]
+  @component
+  Scénario: [INV-Y] [Comportement de composant ou service intégré]
+    Étant donné [composant monté dans un état donné]
+    Quand [interaction utilisateur ou appel de service]
+    Alors [état visuel ou résultat d'intégration garanti]
 
-  Scénario: Exécution nominale du nouvel endpoint
-    Quand l'API reçoit une requête "POST /api/v1/[resource]" avec un payload valide
-    Alors le code de réponse HTTP est 201
-    Et le header "Location" contient l'URI de la ressource créée
-    Et la ressource est bien persistée dans la table "[nom_de_la_table]"
+  # ============================================================================
+  # 3. Tests End-to-End (@e2e)
+  # ============================================================================
 
-  @api @integration
-  Scénario: Rejet en cas de conflit ou doublon
-    Étant donné qu'une ressource existe déjà avec le même identifiant métier
-    Quand l'API reçoit une requête "POST /api/v1/[resource]" identique
-    Alors le code de réponse HTTP est 409
-    Et le payload contient le code d'erreur "[ERROR_CODE]"
-
-  @api @unit
-  Scénario: Validation des contraintes du DTO
-    Quand le DTO "[InputDtoName]" est instancié avec des données invalides
-    Alors le validateur Symfony renvoie les violations attendues
-
-# ==============================================================================
-# TESTS FRONTEND (frontend/ - Unitaires & Intégration UI)
-# ==============================================================================
-
-@web @unit
-Fonctionnalité: Schémas de validation client
-
-  Scénario: Validation Zod échouée sur champ invalide
-    Quand un objet invalide est passé à "[featureSchema]"
-    Alors la validation échoue avec les messages d'erreur ciblés
-
-  @web @integration
-  Scénario: Rendu des états UI et gestion des erreurs API
-    Étant donné le composant "<[FeatureForm]/>" rendu avec un mock API en erreur 422
-    Quand l'utilisateur clique sur le bouton de soumission
-    Alors les messages d'erreur s'affichent sous les champs concernés
+  @e2e @web
+  Scénario: [INV-Z] [Parcours utilisateur complet]
+    Étant donné [utilisateur connecté sur la vue cible]
+    Quand [série d'actions utilisateur de bout en bout]
+    Alors [résultat observable et persistance validée après rechargement]
 ```
 
-### 9.2. Commandes de validation automatisée
+### 8.2. Commandes d'Exécution & Quality Gates
 
 ```bash
-# 1. Architecture, Base de données & Backend (backend/)
-make deptrac
-make test-backend
-make static-analysis
-make lint
+# 1. Tests unitaires et composants ciblés
+pnpm --filter frontend test -- [NomDuTest.test.ts]
+# ou pour le backend : make test-backend
 
-# 2. Frontend (frontend/)
+# 2. Quality Gates statiques
 pnpm --filter frontend typecheck
 pnpm --filter frontend lint
+make lint
 
-# 3. End-to-End (tests-e2e/)
-pnpm --filter tests-e2e exec playwright test
+# 3. Test E2E Playwright
+npx playwright test tests/[feature].spec.ts
 ```
+
+---
+
+<a id="annexe-index-des-fichiers"></a>
+## Annexe : Index des Fichiers
+
+Table de correspondance des chemins complets (relatifs au projet) pour l'outillage et l'automatisation :
+
+| Fichier court | Chemin relatif projet |
+|---|---|
+| `[NomCourt.ts]` | `[frontend|backend]/src/.../[NomCourt.ts]` |
+| `[NomCourt.test.ts]` | `[frontend|backend]/src/.../[NomCourt.test.ts]` |
+| `[feature.spec.ts]` | `tests-e2e/tests/.../[feature.spec.ts]` |

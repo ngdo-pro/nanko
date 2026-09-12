@@ -10,7 +10,7 @@ Utilisez ce skill pour auditer, concevoir et synchroniser les tests (unitaires, 
 ## Quand l'utiliser ?
 
 1. **Avant ou pendant `/build-spec` :** Pour cadrer la stratégie de test et écrire les tests en TDD / BDD.
-2. **Après tout ajout de test ou cas limite :** Pour synchroniser immédiatement les scénarios Gherkin de la section 10 de la spec active (zéro dérive spec $\leftrightarrow$ tests).
+2. **Après tout ajout de test ou cas limite :** Pour synchroniser immédiatement les scénarios Gherkin de la section 8.1 de la spec active (zéro dérive spec $\leftrightarrow$ tests).
 3. **Sur demande explicite (`/test-spec [id]`) :** Pour auditer la couverture réelle par rapport aux critères d'acceptation et aux invariants de la spec.
 
 ---
@@ -19,14 +19,14 @@ Utilisez ce skill pour auditer, concevoir et synchroniser les tests (unitaires, 
 
 ### 1. Audit croisé Spec $\leftrightarrow$ Code de Test
 * Charger la spécification active sous `.specs/changes/active/[id]*.md`.
-* Analyser la **Section 8 (Invariants & Cas limites)** et la **Section 10 (Critères d'acceptation & Scénarios Gherkin)**.
+* Analyser la **Section 5 (Invariants Métier & Traçabilité)** et la **Section 8.1 (Scénarios Gherkin Exhaustifs)**.
 * Examiner les suites de tests existantes :
   * Backend : `backend/tests/Unit/`, `backend/tests/Integration/`.
   * Frontend : `frontend/src/**/*.test.ts`, `frontend/src/**/*.test.tsx`.
   * E2E : `tests-e2e/tests/**/*.spec.ts`.
 * Identifier les écarts :
-  * **Cas limite ou invariant sans test unitaire.**
-  * **Test unitaire ou E2E existant sans scénario Gherkin dans la spec.**
+  * **Cas limite ou invariant sans test automatisé.**
+  * **Test unitaire, composant ou E2E existant sans scénario Gherkin dans la Section 8.1.**
   * **Scénario Gherkin obsolète ou non aligné avec les assertions réelles.**
 
 ### 2. Implémentation des Tests Manquants
@@ -39,28 +39,33 @@ Utilisez ce skill pour auditer, concevoir et synchroniser les tests (unitaires, 
 * **E2E (Playwright) :**
   * Scénarios nominaux complets d'intégration (authentification, création, interaction, persistance, rechargement).
 
-### 3. Synchronisation Systématique de la Spec Active (Section 10)
-* Pour chaque nouveau test créé ou ajusté, enrichir la **Section 10 de la spec active** avec le scénario Gherkin correspondant sous le tag approprié :
-  * `@backend @unit` / `@backend @integration`
-  * `@web @unit` / `@web @ui`
-  * `@e2e @preprod`
-* Respecter la syntaxe BDD standard :
-  ```gherkin
-  @web @unit
-  Scénario: [Description concise du comportement vérifié]
-    Étant donné [contexte initial]
-    Quand [action déclenchée]
-    Alors [résultat observable et invariant garanti]
-  ```
+### 3. Synchronisation Systématique de la Spec Active
+* **Section 8.1 (Scénarios Gherkin Exhaustifs) :**
+  * Enrichir la section avec les scénarios manquants en respectant l'ordre strict par niveau de test :
+    1. Tests Unitaires (`@unit`)
+    2. Tests d'Intégration & Composants (`@component` / `@integration`)
+    3. Tests End-to-End (`@e2e` / `@web`)
+  * Respecter la syntaxe BDD standard :
+    ```gherkin
+    @unit
+    Scénario: [INV-X] [Description concise du comportement vérifié]
+      Étant donné [contexte initial]
+      Quand [action déclenchée]
+      Alors [résultat observable et invariant garanti]
+    ```
+* **Section 5 (Invariants Métier) :**
+  * Mettre à jour la ligne `↳ *Couvert par :* [fichiers courts](#annexe-index-des-fichiers)` pour lier chaque invariant au nouveau fichier de test.
+* **Annexe (Index des Fichiers) :**
+  * Si un nouveau fichier de test a été créé, l'ajouter dans la table de correspondance en bas de document.
 
-### 4. Validation des Quality Gates
+### 4. Validation des Quality Gates (Section 8.2)
 * Exécuter systématiquement la suite de tests modifiée :
   * Backend : `make test-backend`
   * Frontend : `pnpm --filter frontend test --run`
-  * E2E : `pnpm --filter tests-e2e test [fichier]`
+  * E2E : `npx playwright test [fichier]`
 * Vérifier l'absence d'erreurs de linting ou de typage :
-  * `pnpm --filter frontend typecheck && pnpm --filter frontend lint`
+  * `pnpm --filter frontend typecheck && pnpm --filter frontend lint && make lint`
 
 ### 5. Restitution & Checklist
 * Résumer les tests ajoutés/mis à jour (fichiers et nombre de tests).
-* Confirmer la synchronisation des scénarios Gherkin dans la spec active.
+* Confirmer la synchronisation 1-pour-1 des scénarios Gherkin en 8.1 et des invariants en 5 dans la spec active.
