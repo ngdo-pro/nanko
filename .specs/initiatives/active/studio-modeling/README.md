@@ -68,3 +68,18 @@
   ↳ *Fichier :* `planned/06-shortcuts-cheatsheet-modal.md` *(À cadrer via `/feature`)*
 - [ ] **`07-activity-log-notion-style`** : Journal d'activité granulaire action par action avec diff visuel et restauration  
   ↳ *Fichier :* `planned/07-activity-log-notion-style.md` *(Cadré via PDR-005 — À initialiser)*
+- [ ] **`08-omnidirectional-and-smart-anchor-connectors`** : Poignées omnidirectionnelles 4 côtés et point central d'ancrage dynamique (`auto`)  
+  ↳ *Fichier :* [`planned/08-omnidirectional-and-smart-anchor-connectors.md`](./planned/08-omnidirectional-and-smart-anchor-connectors.md) *(Cadré ✅ — Prêt pour `/spec`)*
+- [ ] **`09-multi-anchor-distribution-and-auto-scale`** : Répartition spatiale harmonieuse multi-ports par flanc et redimensionnement automatique $\times 2$  
+  ↳ *Fichier :* [`planned/09-multi-anchor-distribution-and-auto-scale.md`](./planned/09-multi-anchor-distribution-and-auto-scale.md) *(Cadré ✅ — Backlog Feature)*
+- [ ] **`10-draggable-connector-labels`** : Repositionnement manuel par glisser des labels de connecteurs et persistance `!LAYOUT`  
+  ↳ *Fichier :* [`planned/10-draggable-connector-labels.md`](./planned/10-draggable-connector-labels.md) *(Cadré ✅ — Backlog Feature)*
+- [ ] **`11-connector-quick-spawn-on-drop`** : Création rapide de shape connectée par glisser-déposer dans le vide (Miro Quick Spawn)  
+  ↳ *Fichier :* [`planned/11-connector-quick-spawn-on-drop.md`](./planned/11-connector-quick-spawn-on-drop.md) *(Cadré ✅ — Backlog Feature)*
+- [ ] **`12-connector-selection-and-deletion`** : Sélection visuelle, surbrillance et suppression directe au clavier (`Backspace`/`Delete`)  
+  ↳ *Fichier :* [`planned/12-connector-selection-and-deletion.md`](./planned/12-connector-selection-and-deletion.md) *(Cadré ✅ — Backlog Feature)*
+- [ ] **`13-connector-reconnection`** : Reconnexion interactive et ré-ancrage d'extrémités existantes par glisser  
+  ↳ *Fichier :* [`planned/13-connector-reconnection.md`](./planned/13-connector-reconnection.md) *(Cadré ✅ — Backlog Feature)*
+
+
+
