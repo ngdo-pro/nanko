@@ -1,7 +1,7 @@
 # Feature : Repositionnement Manuel des Labels de Connecteurs (10-draggable-connector-labels)
 
 > **Parent Initiative :** `studio-modeling`  
-> **Status :** Planned *(Framed ✅ — Backlog Feature)*  
+> **Status :** Completed & Archived ✅  
 > **Author(s) :** Nicolas & Nanko Core Team  
 > **Last Updated :** 2026-09-13  
 
@@ -59,4 +59,5 @@ gateway->auth: labelX=180, labelY=95
 
 ## 6. Implementation Spec(s)
 
-*No execution specs linked yet.*
+* [Spec 025 - Repositionnement Manuel des Labels de Connecteurs & Persistance Layout](../../../../specs/archive/025-draggable-connector-labels.md)
+

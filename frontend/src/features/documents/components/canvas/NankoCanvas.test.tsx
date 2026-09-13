@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { NankoCanvas } from './NankoCanvas'
+import { buildEdgesFromAst } from './utils/buildEdgesFromAst'
 import { isValidNankoConnection } from './utils/isValidConnection'
 import type { NankoAst } from '@/features/documents'
 
@@ -284,6 +285,30 @@ describe('NankoCanvas', () => {
     render(<NankoCanvas ast={crossingAst} />)
     expect(spy).toHaveBeenCalled()
     spy.mockRestore()
+  })
+
+  it('transmet customLabelPosition aux edges générées depuis edgeLayout (Spec 025)', () => {
+    const customAst: NankoAst = {
+      dslVersion: 1,
+      shapes: [
+        { id: 'a', type: 'rectangle', label: 'A', desc: null },
+        { id: 'b', type: 'rectangle', label: 'B', desc: null },
+      ],
+      connectors: [{ source: 'a', target: 'b', label: 'Link', desc: null }],
+      layout: { a: { x: 0, y: 0 }, b: { x: 300, y: 0 } },
+      edgeLayout: {
+        'a->b': { labelX: 175, labelY: 45 },
+      },
+    }
+
+    const dummyNodes = [
+      { id: 'a', type: 'rectangle', position: { x: 0, y: 0 }, data: { label: 'A', shapeType: 'rectangle' } },
+      { id: 'b', type: 'rectangle', position: { x: 300, y: 0 }, data: { label: 'B', shapeType: 'rectangle' } },
+    ]
+
+    const edges = buildEdgesFromAst(customAst, dummyNodes, 'dark')
+    expect(edges).toHaveLength(1)
+    expect(edges[0]?.data?.customLabelPosition).toEqual({ x: 175, y: 45 })
   })
 
   describe('isValidNankoConnection [INV-3]', () => {

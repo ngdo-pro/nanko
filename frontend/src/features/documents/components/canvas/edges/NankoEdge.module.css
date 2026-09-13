@@ -17,8 +17,23 @@
   padding: 0.15rem 0.45rem;
   white-space: nowrap;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-  cursor: pointer;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
   pointer-events: auto;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.edgeLabel:hover {
+  border-color: var(--brand);
+}
+
+.isDragging {
+  /* Surcharge indispensable pour garantir le curseur grabbing pendant la capture de glisser */
+  cursor: grabbing !important;
+  border-color: var(--brand) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45) !important;
+  z-index: 1001;
 }
 
 

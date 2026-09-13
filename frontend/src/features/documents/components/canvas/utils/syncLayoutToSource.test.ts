@@ -3,6 +3,7 @@ import {
   updateNankoSourceLayout,
   updateNankoSourceBulkLayout,
   updateNankoSourceEdgeLayout,
+  updateNankoSourceEdgeLabelPosition,
 } from './syncLayoutToSource'
 
 describe('syncLayoutToSource', () => {
@@ -134,6 +135,81 @@ describe('syncLayoutToSource', () => {
       ].join('\n')
 
       const updated = updateNankoSourceEdgeLayout(code, 'a', 'b', { from: 'auto', to: 'auto' })
+      expect(updated).not.toContain('a->b:')
+      expect(updated).toContain('a: x=10, y=20')
+    })
+
+    it('préserve labelX et labelY lors de la mise à jour des ancres', () => {
+      const code = [
+        'rectangle a label="A"',
+        '!LAYOUT',
+        'a->b: from=top, to=left, labelX=150, labelY=80',
+        '!END',
+      ].join('\n')
+
+      const updated = updateNankoSourceEdgeLayout(code, 'a', 'b', { from: 'bottom', to: 'right' })
+      expect(updated).toContain('a->b: from=bottom, to=right, labelX=150, labelY=80')
+    })
+  })
+
+  describe('updateNankoSourceEdgeLabelPosition', () => {
+    it('insère la section !LAYOUT et les coordonnées de label si absentes', () => {
+      const code = 'rectangle a label="A"\nrectangle b label="B"\na -> b label="Link"'
+      const updated = updateNankoSourceEdgeLabelPosition(code, 'a', 'b', { x: 140.2, y: 75.8 })
+
+      expect(updated).toContain('!LAYOUT\na->b: labelX=140, labelY=76\n!END')
+    })
+
+    it('ajoute labelX et labelY à une arête existante sans ancres', () => {
+      const code = [
+        'rectangle a label="A"',
+        '!LAYOUT',
+        'a: x=10, y=20',
+        '!END',
+      ].join('\n')
+
+      const updated = updateNankoSourceEdgeLabelPosition(code, 'a', 'b', { x: 200, y: 150 })
+      expect(updated).toContain('a->b: labelX=200, labelY=150')
+      expect(updated).toContain('a: x=10, y=20')
+    })
+
+    it('met à jour labelX et labelY en préservant from et to existants', () => {
+      const code = [
+        'rectangle a label="A"',
+        '!LAYOUT',
+        'a->b: from=top, to=right, labelX=100, labelY=50',
+        '!END',
+      ].join('\n')
+
+      const updated = updateNankoSourceEdgeLabelPosition(code, 'a', 'b', { x: 220, y: 90 })
+      expect(updated).toContain('a->b: from=top, to=right, labelX=220, labelY=90')
+      expect(updated).not.toContain('labelX=100')
+    })
+
+    it('retire labelX et labelY quand coords est null tout en préservant from et to', () => {
+      const code = [
+        'rectangle a label="A"',
+        '!LAYOUT',
+        'a->b: from=left, to=bottom, labelX=120, labelY=40',
+        '!END',
+      ].join('\n')
+
+      const updated = updateNankoSourceEdgeLabelPosition(code, 'a', 'b', null)
+      expect(updated).toContain('a->b: from=left, to=bottom')
+      expect(updated).not.toContain('labelX=')
+      expect(updated).not.toContain('labelY=')
+    })
+
+    it('supprime la ligne d arête si aucun autre attribut ne subsiste lors du reset', () => {
+      const code = [
+        'rectangle a label="A"',
+        '!LAYOUT',
+        'a: x=10, y=20',
+        'a->b: labelX=120, labelY=40',
+        '!END',
+      ].join('\n')
+
+      const updated = updateNankoSourceEdgeLabelPosition(code, 'a', 'b', null)
       expect(updated).not.toContain('a->b:')
       expect(updated).toContain('a: x=10, y=20')
     })

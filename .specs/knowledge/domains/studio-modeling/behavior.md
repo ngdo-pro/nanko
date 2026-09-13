@@ -58,6 +58,7 @@ flowchart TD
 | `JRN-07` | Tracé de Connecteur par Glisser & Magnétisme | Utilisateur | Glisser depuis une poignée révélée | Fil élastique, aimantation cible (< 32px), injection `source -> target` |
 | `JRN-08` | Distribution Multi-Ports & Redimensionnement Automatique | Utilisateur | Multiples flux connectés sur un même flanc | Répartition uniforme sans collision, auto-scale x2 si > 8 flux |
 | `JRN-09` | Pontets de Croisement (Line Jumps) & Hiérarchie Z-Index | Utilisateur | Croisement orthogonal de connecteurs / Survol | Arc semi-circulaire (r=6px) sur l'arête au premier plan ; survol élevant temporairement l'arête |
+| `JRN-10` | Repositionnement Manuel des Labels de Connecteurs & Persistance | Utilisateur | Glisser-déposer le badge de libellé / Double-clic | Coordonnées `labelX`/`labelY` enregistrées dans `!LAYOUT` ; réinitialisation à la position par défaut (36px) au double-clic |
 
 ---
 
@@ -130,6 +131,14 @@ flowchart TD
   4. Au survol d'un connecteur avec le pointeur (`:hover`), son z-index s'élève immédiatement (`zIndex: 1000`) : le pontet s'inverse instantanément et ce flux enjambe désormais tous les connecteurs traversés pour une traçabilité visuelle immédiate.
   5. Les angles droits Blueprint (`borderRadius: 0`), le déport du label (36px) et le contact périmétrique circulaire (`INV-7`) sont rigoureusement préservés.
 
+### `JRN-10` : Repositionnement Manuel des Labels de Connecteurs & Persistance Layout
+* **Contexte :** Dégagement manuel d'un badge de libellé de connecteur pour éviter de masquer une forme ou un autre flux.
+* **Flux Nominal :**
+  1. Le badge de libellé de connecteur expose un curseur `grab` au survol.
+  2. L'utilisateur clique et glisse le badge (`grabbing`) : le déplacement est fluide, compensé du facteur de zoom du viewport React Flow, et totalement étanche (`nodrag`, `setPointerCapture`, `stopPropagation`).
+  3. Au relâchement du pointeur, si le déplacement excède le seuil anti-tremblement (3px), les coordonnées entières `labelX` et `labelY` sont persistées dans la section `!LAYOUT` du code source `.nanko` (`source->target: labelX=..., labelY=...`).
+  4. Un double-clic sur le badge réinitialise sa position : `labelX` et `labelY` sont retirés du bloc `!LAYOUT` et le badge reprend son décalage canonique par défaut de 36px.
+
 ---
 
 ## 5. Invariants Fonctionnels & Règles Métier
@@ -139,9 +148,10 @@ flowchart TD
 * **`INV-BUS-03` (Isolement des Événements Canvas) :** Les interactions au sein des modales, menus radiaux et infobulles scrollables sont totalement étanches des événements de zoom et de pan de React Flow.
 * **`INV-BUS-04` (Intégrité des Connexions & Rejet des Doublons) :** Les auto-connexions (`source === target`) et les arêtes dupliquées dans le même sens sont strictement neutralisées au niveau du canvas et du moteur de sérialisation.
 * **`INV-BUS-05` (Omnidirectionnalité & Ancrage Dynamique) :** Les 4 poignées cardinales de toute forme autorisent indifféremment l'émission et la réception de flux. L'ancre centrale `auto` recalcule les flancs de contact optimaux en temps réel lors du déplacement des nœuds.
-* **`INV-BUS-06` (Positionnement Déterministe du Label de Flux) :** Le libellé du connecteur est positionné à une distance fixe de 36px de la poignée source le long du tracé (borné au milieu si distance < 72px).
+* **`INV-BUS-06` (Positionnement Déterministe du Label de Flux) :** Le libellé du connecteur est positionné par défaut à une distance fixe de 36px de la poignée source le long du tracé (borné au milieu si distance < 72px), sauf surcharge manuelle (`INV-BUS-09`).
 * **`INV-BUS-07` (Répartition Uniforme Multi-Ports, Auto-Scale $\times 2$ & Contact Périmétrique) :** Chaque connecteur raccordé sur un flanc disposant de $N$ flux se voit allouer un point d'attache dédié équidistant à $\frac{i+1}{N+1}$. Seules les 5 poignées canoniques (`top`, `bottom`, `left`, `right`, `auto`) sont interactives pour la création de flux ; les points d'attache distribués existants sont strictement passifs et invisibles au survol. Les connecteurs se dirigent vers le centre et s'arrêtent net sur la frontière réelle de la forme affichée (découpe sur le rayon $R$ pour `circle` sur les 4 flancs, contact direct pour `rectangle`), éliminant tout décollement visuel. L'insertion via la roue radiale (`A` + curseur) est atomique et produit strictement une forme unique. Dès le 9ᵉ flux sur un flanc, la forme s'agrandit automatiquement d'un facteur 2 sur la dimension correspondante (hauteur, largeur ou diamètre).
 * **`INV-BUS-08` (Pontets de Croisement Orthogonaux & Priorité Z-Index) :** Seuls les croisements transversaux stricts entre segments orthogonaux engendrent un pontet semi-circulaire régulier ($r = 6\text{px}$). C'est exclusivement l'arête de rang supérieur (ordre AST ou élévation active au survol) qui porte l'arc SVG ; l'arête inférieure demeure rectiligne continue. Les segments colinéaires et les connexions partageant un handle sont rigoureusement exclus.
+* **`INV-BUS-09` (Repositionnement Manuel des Labels & Persistance Layout) :** Tout déplacement manuel d'un badge de libellé enregistre ses coordonnées relatives sous la forme `labelX=..., labelY=...` dans l'arête correspondante du bloc `!LAYOUT`. Le double-clic supprime ces clés et rétablit le calcul automatique à 36px. Si une ligne d'arête dans `!LAYOUT` ne comporte plus aucune propriété (`from`, `to`, `labelX`, `labelY`), la ligne est proprement élaguée.
 
 ---
 

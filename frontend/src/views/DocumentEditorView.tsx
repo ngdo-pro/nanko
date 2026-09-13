@@ -10,6 +10,7 @@ import {
   type LayoutMode,
   updateNankoSourceLayout,
   updateNankoSourceBulkLayout,
+  updateNankoSourceEdgeLabelPosition,
   insertShapeToSource,
   insertConnectorToSource,
   type AnchorSide,
@@ -123,6 +124,25 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
       const { newSourceCode } = insertConnectorToSource(prevCode, source, target, options)
       return newSourceCode
     })
+  }, [])
+
+  const handleEdgeLabelPositionChange = useCallback(
+    (edgeKey: string, position: { x: number; y: number }) => {
+      const parts = edgeKey.split('->')
+      if (parts.length === 2 && parts[0] && parts[1]) {
+        setCode((prevCode) =>
+          updateNankoSourceEdgeLabelPosition(prevCode, parts[0]!, parts[1]!, position),
+        )
+      }
+    },
+    [],
+  )
+
+  const handleEdgeLabelPositionReset = useCallback((edgeKey: string) => {
+    const parts = edgeKey.split('->')
+    if (parts.length === 2 && parts[0] && parts[1]) {
+      setCode((prevCode) => updateNankoSourceEdgeLabelPosition(prevCode, parts[0]!, parts[1]!, null))
+    }
   }, [])
 
   return (
@@ -241,6 +261,8 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
               onAutoLayoutApplied={handleAutoLayoutApplied}
               onCreateShape={handleCreateShape}
               onConnectorCreated={handleConnectorCreated}
+              onEdgeLabelPositionChange={handleEdgeLabelPositionChange}
+              onEdgeLabelPositionReset={handleEdgeLabelPositionReset}
             />
           </div>
         )}
@@ -254,6 +276,8 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
               onAutoLayoutApplied={handleAutoLayoutApplied}
               onCreateShape={handleCreateShape}
               onConnectorCreated={handleConnectorCreated}
+              onEdgeLabelPositionChange={handleEdgeLabelPositionChange}
+              onEdgeLabelPositionReset={handleEdgeLabelPositionReset}
             />
           </div>
         )}

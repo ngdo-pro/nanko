@@ -1,9 +1,10 @@
-import React from 'react'
+import React, { useState, useRef } from 'react'
 import {
   BaseEdge,
   getSmoothStepPath,
   EdgeLabelRenderer,
   Position,
+  useReactFlow,
   type EdgeProps,
 } from '@xyflow/react'
 import clsx from 'clsx'
@@ -27,6 +28,7 @@ export const NankoEdge: React.FC<EdgeProps> = ({
   label,
   data,
 }) => {
+  const reactFlow = useReactFlow()
   const [edgePath, defaultLabelX, defaultLabelY] = getSmoothStepPath({
     sourceX,
     sourceY,
@@ -37,39 +39,113 @@ export const NankoEdge: React.FC<EdgeProps> = ({
     borderRadius: 0, // Coins droits pour le look Blueprint
   })
 
-  // Positionnement déterministe à 36px de la source le long du tracé (INV-6)
-  const dist = Math.hypot(targetX - sourceX, targetY - sourceY)
-  let badgeX = defaultLabelX
-  let badgeY = defaultLabelY
-
-  if (dist >= 72) {
-    switch (sourcePosition) {
-      case Position.Right:
-        badgeX = sourceX + 36
-        badgeY = sourceY
-        break
-      case Position.Left:
-        badgeX = sourceX - 36
-        badgeY = sourceY
-        break
-      case Position.Bottom:
-        badgeX = sourceX
-        badgeY = sourceY + 36
-        break
-      case Position.Top:
-        badgeX = sourceX
-        badgeY = sourceY - 36
-        break
-    }
-  }
-
   const edgeData = data as {
     label?: string | null
     desc?: string | null
     sourceContactOffset?: { dx: number; dy: number }
     targetContactOffset?: { dx: number; dy: number }
     jumps?: LineJumpDescriptor[]
+    customLabelPosition?: { x: number; y: number } | null
+    onLabelPositionChange?: (edgeId: string, position: { x: number; y: number }) => void
+    onLabelPositionReset?: (edgeId: string) => void
   } | undefined
+
+  // Positionnement : coordonnées personnalisées dans !LAYOUT si définies, sinon déterministe à 36px (INV-6)
+  let baseBadgeX = defaultLabelX
+  let baseBadgeY = defaultLabelY
+
+  const customPos = edgeData?.customLabelPosition
+  if (customPos && typeof customPos.x === 'number' && typeof customPos.y === 'number') {
+    baseBadgeX = customPos.x
+    baseBadgeY = customPos.y
+  } else {
+    const dist = Math.hypot(targetX - sourceX, targetY - sourceY)
+    if (dist >= 72) {
+      switch (sourcePosition) {
+        case Position.Right:
+          baseBadgeX = sourceX + 36
+          baseBadgeY = sourceY
+          break
+        case Position.Left:
+          baseBadgeX = sourceX - 36
+          baseBadgeY = sourceY
+          break
+        case Position.Bottom:
+          baseBadgeX = sourceX
+          baseBadgeY = sourceY + 36
+          break
+        case Position.Top:
+          baseBadgeX = sourceX
+          baseBadgeY = sourceY - 36
+          break
+      }
+    }
+  }
+
+  // Gestion du drag interactif
+  const [dragDelta, setDragDelta] = useState<{ dx: number; dy: number } | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const dragStartRef = useRef<{ clientX: number; clientY: number; startX: number; startY: number } | null>(null)
+
+  const displayedBadgeX = baseBadgeX + (dragDelta?.dx ?? 0)
+  const displayedBadgeY = baseBadgeY + (dragDelta?.dy ?? 0)
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return
+    e.stopPropagation()
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId)
+    } catch {
+      // ignore
+    }
+    dragStartRef.current = {
+      clientX: e.clientX,
+      clientY: e.clientY,
+      startX: baseBadgeX,
+      startY: baseBadgeY,
+    }
+    setIsDragging(true)
+    setDragDelta({ dx: 0, dy: 0 })
+  }
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragStartRef.current) return
+    e.stopPropagation()
+    const zoom = reactFlow?.getViewport?.()?.zoom || 1
+    const currentZoom = zoom > 0 ? zoom : 1
+    const dx = (e.clientX - dragStartRef.current.clientX) / currentZoom
+    const dy = (e.clientY - dragStartRef.current.clientY) / currentZoom
+    setDragDelta({ dx, dy })
+  }
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragStartRef.current) return
+    e.stopPropagation()
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId)
+    } catch {
+      // ignore
+    }
+    const finalDx = dragDelta?.dx ?? 0
+    const finalDy = dragDelta?.dy ?? 0
+    const finalX = dragStartRef.current.startX + finalDx
+    const finalY = dragStartRef.current.startY + finalDy
+    const moved = Math.hypot(finalDx, finalDy)
+
+    dragStartRef.current = null
+    setIsDragging(false)
+    setDragDelta(null)
+
+    if (moved >= 3) {
+      edgeData?.onLabelPositionChange?.(id, { x: finalX, y: finalY })
+    }
+  }
+
+  const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.stopPropagation()
+    edgeData?.onLabelPositionReset?.(id)
+  }
+
   const edgeLabel = (label as string) || (edgeData?.label as string) || ''
   const edgeDesc = edgeData?.desc || null
   const {
@@ -116,18 +192,35 @@ export const NankoEdge: React.FC<EdgeProps> = ({
       {hasBadge && (
         <EdgeLabelRenderer>
           <div
-            className={clsx(styles.edgeLabelContainer, edgeLabel && styles.hasLabel, 'nanko-edge-label-container')}
+            className={clsx(
+              styles.edgeLabelContainer,
+              edgeLabel && styles.hasLabel,
+              'nanko-edge-label-container',
+              'nodrag',
+            )}
             style={{
               position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${badgeX}px,${badgeY}px)`,
+              transform: `translate(-50%, -50%) translate(${displayedBadgeX}px,${displayedBadgeY}px)`,
               pointerEvents: 'auto',
             }}
             data-qa={`ast-connector-${source}-${target}`}
             data-testid={`ast-connector-${source}-${target}`}
-            onMouseEnter={edgeDesc ? handleMouseEnter : undefined}
-            onMouseLeave={edgeDesc ? handleMouseLeave : undefined}
+            onMouseEnter={edgeDesc && !isDragging ? handleMouseEnter : undefined}
+            onMouseLeave={edgeDesc && !isDragging ? handleMouseLeave : undefined}
           >
-            <div className={clsx(styles.edgeLabel, 'nanko-edge-label')}>
+            <div
+              className={clsx(
+                styles.edgeLabel,
+                'nanko-edge-label',
+                isDragging && styles.isDragging,
+              )}
+              data-qa={`edge-label-${source}-${target}`}
+              data-testid={`edge-label-${source}-${target}`}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
+              onDoubleClick={handleDoubleClick}
+            >
               {edgeLabel ? (
                 <span
                   className="nanko-edge-label-text"
@@ -146,7 +239,7 @@ export const NankoEdge: React.FC<EdgeProps> = ({
               ) : null}
             </div>
 
-            {isVisible && edgeDesc && (
+            {isVisible && edgeDesc && !isDragging && (
               <BlueprintTooltip
                 typeBadge="connector"
                 id={`${source} → ${target}`}

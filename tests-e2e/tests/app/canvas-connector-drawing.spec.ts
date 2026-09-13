@@ -415,4 +415,86 @@ nNorth->nSouth: from=bottom, to=top
     const hasStraightLine = dAttrs.some((d) => !d.includes('A 6 6'))
     expect(hasStraightLine).toBe(true)
   })
+
+  test('Repositionnement manuel des labels de connecteurs et persistance layout (Spec 025)', async ({ page }) => {
+    const uniqueSuffix = Date.now().toString().slice(-6)
+    const baseUser = await getOrSetupTestUser()
+    const isLocal = !env.testUser.username
+
+    const email = isLocal ? `connector-lbl-${uniqueSuffix}@nanko.dev` : baseUser.email
+    const password = baseUser.password
+    if (isLocal) {
+      await createOrResetKeycloakUser(email, password)
+    }
+
+    const docName = `Connector Label Drag ${uniqueSuffix}`
+    const docSlug = `connector-lbl-drag-${uniqueSuffix}`
+
+    await page.goto('/')
+    const loginButton = page.getByTestId('login-button')
+    await expect(loginButton).toBeVisible()
+    await loginButton.click()
+
+    await expect(page).toHaveURL(/.*\/realms\/nanko\/protocol\/openid-connect\/auth.*/)
+    await page.locator('#username').fill(email)
+    await page.locator('#password').fill(password)
+    await page.locator('#kc-login').click()
+    await expect(page).toHaveURL(/.*localhost:45173.*|.*app.*nanko\.dev.*/)
+
+    const newDocButton = page.getByTestId('new-document-button')
+    await expect(newDocButton).toBeVisible()
+    await newDocButton.click()
+
+    await page.getByTestId('document-name-input').fill(docName)
+    await page.getByTestId('document-slug-input').fill(docSlug)
+    await page.getByTestId('submit-create-document').click()
+
+    await expect(page).toHaveURL(/.*\/projects\/[0-9a-f-]+\/documents\/[0-9a-f-]+/)
+    const textarea = page.getByTestId('source-code-textarea')
+    await expect(textarea).toBeVisible()
+
+    const initialDsl = `rectangle srcNode label="Source Node"
+rectangle dstNode label="Destination Node"
+
+srcNode -> dstNode label="Appel gRPC"
+
+!LAYOUT
+srcNode: x=50, y=150
+dstNode: x=350, y=150
+srcNode->dstNode: from=right, to=left
+!END
+`
+    await textarea.fill(initialDsl)
+
+    await expect(page.getByTestId('canvas-node-srcNode')).toBeVisible()
+    await expect(page.getByTestId('canvas-node-dstNode')).toBeVisible()
+
+    // 1. Badge de libellé visible et positionné
+    const labelBadge = page.getByTestId('edge-label-srcNode-dstNode')
+    await expect(labelBadge).toBeVisible()
+    await expect(labelBadge).toHaveText('Appel gRPC')
+
+    // 2. Glisser-déposer interactif du badge
+    const box = await labelBadge.boundingBox()
+    expect(box).not.toBeNull()
+    const startX = (box?.x ?? 0) + (box?.width ?? 0) / 2
+    const startY = (box?.y ?? 0) + (box?.height ?? 0) / 2
+
+    await page.mouse.move(startX, startY)
+    await page.mouse.down()
+    await page.mouse.move(startX + 60, startY - 40, { steps: 5 })
+    await page.mouse.up()
+
+    // 3. Vérifier que labelX et labelY ont été enregistrés dans le DSL !LAYOUT
+    await expect(textarea).toHaveValue(/srcNode->dstNode:\s*from=right,\s*to=left,\s*labelX=\d+,\s*labelY=\d+/)
+
+    // 4. Double-cliquer pour réinitialiser la position du badge
+    await labelBadge.dblclick()
+
+    // 5. Vérifier que labelX et labelY sont supprimés de la ligne du connecteur
+    await expect(textarea).not.toHaveValue(/labelX=/)
+    await expect(textarea).not.toHaveValue(/labelY=/)
+    await expect(textarea).toHaveValue(/srcNode->dstNode:\s*from=right,\s*to=left/)
+  })
 })
+
