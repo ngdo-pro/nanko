@@ -162,4 +162,62 @@ describe('NankoEdge', () => {
       transform: 'translate(-50%, -50%) translate(136px,100px)',
     })
   })
+
+  it('ajoute le segment orienté vers le centre quand targetContactOffset est fourni (INV-7)', () => {
+    const { container } = render(
+      <svg>
+        <NankoEdge
+          id="gw->circle"
+          source="gw"
+          target="circle"
+          sourceX={100}
+          sourceY={100}
+          targetX={300}
+          targetY={100}
+          sourcePosition={Position.Right}
+          targetPosition={Position.Left}
+          label=""
+          data={{
+            label: null,
+            desc: null,
+            targetContactOffset: { dx: 6.86, dy: 3.43 },
+          }}
+        />
+      </svg>,
+    )
+
+    const path = container.querySelector('.react-flow__edge-path')
+    const d = path?.getAttribute('d') ?? ''
+    // Le tracé doit se terminer par le segment visant le centre jusqu'au contour du cercle
+    expect(d).toContain('L 306.86 103.43')
+  })
+
+  it('ajoute le segment source démarrant sur le contour du cercle quand sourceContactOffset est fourni (INV-7)', () => {
+    const { container } = render(
+      <svg>
+        <NankoEdge
+          id="circle->db"
+          source="circle"
+          target="db"
+          sourceX={100}
+          sourceY={100}
+          targetX={300}
+          targetY={100}
+          sourcePosition={Position.Right}
+          targetPosition={Position.Left}
+          label=""
+          data={{
+            label: null,
+            desc: null,
+            sourceContactOffset: { dx: -6.86, dy: -3.43 },
+          }}
+        />
+      </svg>,
+    )
+
+    const path = container.querySelector('.react-flow__edge-path')
+    const d = path?.getAttribute('d') ?? ''
+    // Le tracé doit débuter au point d'impact sur le cercle et passer par la boîte de manipulation
+    expect(d).toMatch(/^M\s*93.14\s+96.57\s+L\s+100\s+100/)
+  })
 })

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import clsx from 'clsx'
 import styles from './DocumentEditorView.module.css'
@@ -99,22 +99,22 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
     }
   }
 
-  const handleNodePositionChange = (nodeId: string, position: { x: number; y: number }) => {
+  const handleNodePositionChange = useCallback((nodeId: string, position: { x: number; y: number }) => {
     setCode((prevCode) => updateNankoSourceLayout(prevCode, nodeId, position))
-  }
+  }, [])
 
-  const handleAutoLayoutApplied = (layout: Record<string, { x: number; y: number }>) => {
+  const handleAutoLayoutApplied = useCallback((layout: Record<string, { x: number; y: number }>) => {
     setCode((prevCode) => updateNankoSourceBulkLayout(prevCode, layout))
-  }
+  }, [])
 
-  const handleCreateShape = (shapeType: ShapePrimitiveType, position: { x: number; y: number }) => {
+  const handleCreateShape = useCallback((shapeType: ShapePrimitiveType, position: { x: number; y: number }) => {
     setCode((prevCode) => {
       const { newSourceCode } = insertShapeToSource(prevCode, { type: shapeType, position })
       return newSourceCode
     })
-  }
+  }, [])
 
-  const handleConnectorCreated = (
+  const handleConnectorCreated = useCallback((
     source: string,
     target: string,
     options?: { from?: AnchorSide | null; to?: AnchorSide | null },
@@ -123,7 +123,7 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
       const { newSourceCode } = insertConnectorToSource(prevCode, source, target, options)
       return newSourceCode
     })
-  }
+  }, [])
 
   return (
     <div

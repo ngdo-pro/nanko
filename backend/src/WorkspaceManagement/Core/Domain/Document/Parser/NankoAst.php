@@ -10,7 +10,6 @@ final readonly class NankoAst
      * @param list<Shape> $shapes
      * @param list<Connector> $connectors
      * @param array<string, mixed> $layout
-     * @param int $dslVersion
      * @param array<string, mixed> $edgeLayout
      */
     public function __construct(

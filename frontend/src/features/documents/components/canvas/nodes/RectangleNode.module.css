@@ -1,6 +1,8 @@
 .nodeRectangle {
   min-width: 190px;
   max-width: 240px;
+  display: flex;
+  flex-direction: column;
   background-color: var(--surface);
   border: 1.5px solid var(--border-strong);
   border-radius: 0;
@@ -9,6 +11,15 @@
   box-sizing: border-box;
   cursor: grab;
   user-select: none;
+}
+
+.isScaledY {
+  min-height: 160px;
+}
+
+.isScaledX {
+  min-width: 380px;
+  max-width: 480px;
 }
 
 .nodeRectangle:active {
@@ -54,6 +65,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
+  flex: 1;
 }
 
 .nodeLabel {

@@ -31,10 +31,13 @@ import styles from './NankoCanvas.module.css'
 import { calculateDagreLayout } from './utils/dagreLayout'
 import { isValidNankoConnection } from './utils/isValidConnection'
 import {
-  getOptimalConnectorSides,
-  isCardinalSide,
+  extractCanonicalSide,
   type AnchorSide,
 } from './utils/connectorGeometry'
+import {
+  computeAnchorDistribution,
+  type AnchorDistributionResult,
+} from './utils/anchorDistribution'
 import type { ShapePrimitiveType } from './utils/insertShapeToSource'
 import type { NankoAst } from '@/features/documents'
 
@@ -79,7 +82,17 @@ function buildNodesFromAst(ast: NankoAst): Node[] {
     }
   })
 
-  // Si des nœuds n'ont pas de coordonnées dans layout, on utilise dagre pour les placer
+  // Calcul initial de distribution et échelle pour Dagre
+  const initialDist = computeAnchorDistribution(ast, rawNodes)
+  const nodesWithScale = rawNodes.map((n) => ({
+    ...n,
+    data: {
+      ...n.data,
+      handles: initialDist.nodeHandles.get(n.id) ?? [],
+      scale: initialDist.nodeScale.get(n.id),
+    },
+  }))
+
   const edgesForLayout: Edge[] = (ast?.connectors ?? []).map((c) => ({
     id: `${c.source}->${c.target}`,
     source: c.source,
@@ -87,57 +100,37 @@ function buildNodesFromAst(ast: NankoAst): Node[] {
   }))
 
   const missingLayout = rawNodes.some((n) => !layoutDict[n.id])
+  let positionedNodes = nodesWithScale
   if (missingLayout && rawNodes.length > 0) {
-    return calculateDagreLayout(rawNodes, edgesForLayout)
+    positionedNodes = calculateDagreLayout(nodesWithScale, edgesForLayout)
   }
 
-  return rawNodes
+  // Recalculer les positions des poignées après positionnement
+  const finalDist = computeAnchorDistribution(ast, positionedNodes)
+  return positionedNodes.map((n) => ({
+    ...n,
+    data: {
+      ...n.data,
+      handles: finalDist.nodeHandles.get(n.id) ?? [],
+      scale: finalDist.nodeScale.get(n.id),
+    },
+  }))
 }
 
 function buildEdgesFromAst(
   ast: NankoAst,
   nodes: Node[],
   colorMode: 'dark' | 'light',
+  precomputedDist?: AnchorDistributionResult,
 ): Edge[] {
-  const edgeLayout = (ast?.edgeLayout ?? {}) as Record<
-    string,
-    { from?: AnchorSide; to?: AnchorSide }
-  >
-  const nodeMap = new Map<string, Node>()
-  for (const n of nodes) {
-    nodeMap.set(n.id, n)
-  }
+  const distribution = precomputedDist ?? computeAnchorDistribution(ast, nodes)
 
   return (ast?.connectors ?? []).map((connector) => {
     const edgeKey = `${connector.source}->${connector.target}`
-    const layoutEntry = edgeLayout[edgeKey]
-    const sNode = nodeMap.get(connector.source)
-    const tNode = nodeMap.get(connector.target)
+    const assignment = distribution.edgeAssignments.get(edgeKey)
 
-    let sourceHandle: string =
-      layoutEntry?.from && isCardinalSide(layoutEntry.from) ? layoutEntry.from : 'right'
-    let targetHandle: string =
-      layoutEntry?.to && isCardinalSide(layoutEntry.to) ? layoutEntry.to : 'left'
-
-    if (
-      sNode &&
-      tNode &&
-      (!isCardinalSide(layoutEntry?.from) || !isCardinalSide(layoutEntry?.to))
-    ) {
-      const sWidth = sNode.measured?.width ?? (sNode.type === 'circle' ? 120 : 160)
-      const sHeight = sNode.measured?.height ?? (sNode.type === 'circle' ? 120 : 60)
-      const tWidth = tNode.measured?.width ?? (tNode.type === 'circle' ? 120 : 160)
-      const tHeight = tNode.measured?.height ?? (tNode.type === 'circle' ? 120 : 60)
-
-      const optimal = getOptimalConnectorSides(
-        { x: sNode.position.x, y: sNode.position.y, width: sWidth, height: sHeight },
-        { x: tNode.position.x, y: tNode.position.y, width: tWidth, height: tHeight },
-        layoutEntry?.from,
-        layoutEntry?.to,
-      )
-      sourceHandle = optimal.sourceSide
-      targetHandle = optimal.targetSide
-    }
+    const sourceHandle = assignment?.sourceHandle ?? 'right'
+    const targetHandle = assignment?.targetHandle ?? 'left'
 
     return {
       id: edgeKey,
@@ -147,7 +140,12 @@ function buildEdgesFromAst(
       targetHandle,
       type: 'nanko',
       label: connector.label ?? undefined,
-      data: { label: connector.label, desc: connector.desc },
+      data: {
+        label: connector.label,
+        desc: connector.desc,
+        sourceContactOffset: assignment?.sourceContactOffset,
+        targetContactOffset: assignment?.targetContactOffset,
+      },
       markerEnd: {
         type: MarkerType.ArrowClosed,
         width: 14,
@@ -195,6 +193,8 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
   const isMouseOverCanvasRef = useRef<boolean>(false)
   const latestMouseRef = useRef<{ clientX: number; clientY: number; inside: boolean } | null>(null)
   const hoveredSectorRef = useRef<ShapePrimitiveType | null>(null)
+  const radialMenuRef = useRef<RadialMenuState | null>(null)
+  const isRadialActionHandledRef = useRef<boolean>(false)
 
   const { screenToFlowPosition } = useReactFlow()
 
@@ -248,8 +248,17 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
     (changes) => {
       setNodes((nds) => {
         const nextNodes = applyNodeChanges(changes, nds)
-        setEdges(buildEdgesFromAst(effectiveAst, nextNodes, colorMode))
-        return nextNodes
+        const dist = computeAnchorDistribution(effectiveAst, nextNodes)
+        const enrichedNodes = nextNodes.map((n) => ({
+          ...n,
+          data: {
+            ...n.data,
+            handles: dist.nodeHandles.get(n.id) ?? [],
+            scale: dist.nodeScale.get(n.id),
+          },
+        }))
+        setEdges(buildEdgesFromAst(effectiveAst, enrichedNodes, colorMode, dist))
+        return enrichedNodes
       })
     },
     [effectiveAst, colorMode],
@@ -270,8 +279,8 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
   const handleConnect = useCallback(
     (connection: Connection) => {
       if (!isValidNankoConnection(connection, edges)) return
-      const sourceHandle = (connection.sourceHandle as AnchorSide) ?? 'auto'
-      const targetHandle = (connection.targetHandle as AnchorSide) ?? 'auto'
+      const sourceHandle = extractCanonicalSide(connection.sourceHandle)
+      const targetHandle = extractCanonicalSide(connection.targetHandle)
       onConnectorCreated?.(connection.source, connection.target, {
         from: sourceHandle,
         to: targetHandle,
@@ -291,26 +300,41 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
   // Action d'auto-layout
   const handleAutoLayout = useCallback(() => {
     const layoutedNodes = calculateDagreLayout(nodes, edges)
-    setNodes(layoutedNodes)
-    setEdges(buildEdgesFromAst(effectiveAst, layoutedNodes, colorMode))
+    const dist = computeAnchorDistribution(effectiveAst, layoutedNodes)
+    const enrichedNodes = layoutedNodes.map((n) => ({
+      ...n,
+      data: {
+        ...n.data,
+        handles: dist.nodeHandles.get(n.id) ?? [],
+        scale: dist.nodeScale.get(n.id),
+      },
+    }))
+    setNodes(enrichedNodes)
+    setEdges(buildEdgesFromAst(effectiveAst, enrichedNodes, colorMode, dist))
 
     const newPositions: Record<string, { x: number; y: number }> = {}
-    for (const n of layoutedNodes) {
+    for (const n of enrichedNodes) {
       newPositions[n.id] = { x: n.position.x, y: n.position.y }
     }
 
     onAutoLayoutApplied?.(newPositions)
   }, [nodes, edges, effectiveAst, colorMode, onAutoLayoutApplied])
 
-  // Sélection d'un type dans la roue radiale
+  // Sélection d'un type dans la roue radiale (INV-6 : création atomique unique)
   const handleSelectRadialShape = useCallback(
     (shapeType: ShapePrimitiveType) => {
-      if (!radialMenu) return
-      const flowPos = screenToFlowPosition({ x: radialMenu.clientX, y: radialMenu.clientY })
-      onCreateShape?.(shapeType, flowPos)
+      const currentMenu = radialMenuRef.current
+      if (!currentMenu || isRadialActionHandledRef.current) return
+
+      isRadialActionHandledRef.current = true
+      hoveredSectorRef.current = null
+      radialMenuRef.current = null
       setRadialMenu(null)
+
+      const flowPos = screenToFlowPosition({ x: currentMenu.clientX, y: currentMenu.clientY })
+      onCreateShape?.(shapeType, flowPos)
     },
-    [radialMenu, screenToFlowPosition, onCreateShape],
+    [screenToFlowPosition, onCreateShape],
   )
 
   // Raccourci direct clavier (R, C, T)
@@ -357,12 +381,16 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
         const clampedX = Math.max(95, Math.min(rect.width - 95, relativeX))
         const clampedY = Math.max(95, Math.min(rect.height - 95, relativeY))
 
-        setRadialMenu({
+        const newMenu: RadialMenuState = {
           x: clampedX,
           y: clampedY,
           clientX,
           clientY,
-        })
+        }
+        isRadialActionHandledRef.current = false
+        hoveredSectorRef.current = null
+        radialMenuRef.current = newMenu
+        setRadialMenu(newMenu)
         return
       }
 
@@ -386,6 +414,8 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
       // Fermeture par Échap
       if (e.key === 'Escape') {
         hoveredSectorRef.current = null
+        radialMenuRef.current = null
+        isRadialActionHandledRef.current = false
         setRadialMenu(null)
       }
     }
@@ -393,23 +423,28 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.key === 'a' || e.key === 'A' || e.key === 'Tab') {
         const shapeToCreate = hoveredSectorRef.current
-        hoveredSectorRef.current = null
+        const currentMenu = radialMenuRef.current
 
-        setRadialMenu((currentMenu) => {
-          if (currentMenu && shapeToCreate) {
-            const clientPos = latestMouseRef.current?.inside
-              ? { x: latestMouseRef.current.clientX, y: latestMouseRef.current.clientY }
-              : { x: currentMenu.clientX, y: currentMenu.clientY }
-            const flowPos = screenToFlowPosition(clientPos)
-            onCreateShape?.(shapeToCreate, flowPos)
-          }
-          return null
-        })
+        hoveredSectorRef.current = null
+        radialMenuRef.current = null
+        setRadialMenu(null)
+
+        // INV-6 : Extraction hors setState et vérification du verrou d'action unique
+        if (currentMenu && shapeToCreate && !isRadialActionHandledRef.current) {
+          isRadialActionHandledRef.current = true
+          const clientPos = latestMouseRef.current?.inside
+            ? { x: latestMouseRef.current.clientX, y: latestMouseRef.current.clientY }
+            : { x: currentMenu.clientX, y: currentMenu.clientY }
+          const flowPos = screenToFlowPosition(clientPos)
+          onCreateShape?.(shapeToCreate, flowPos)
+        }
       }
     }
 
     const handleWindowBlur = () => {
       hoveredSectorRef.current = null
+      radialMenuRef.current = null
+      isRadialActionHandledRef.current = false
       setRadialMenu(null)
     }
 
@@ -541,6 +576,8 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
           }}
           onClose={() => {
             hoveredSectorRef.current = null
+            radialMenuRef.current = null
+            isRadialActionHandledRef.current = false
             setRadialMenu(null)
           }}
         />

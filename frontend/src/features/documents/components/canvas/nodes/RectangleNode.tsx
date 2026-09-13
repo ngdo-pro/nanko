@@ -6,11 +6,18 @@ import { BlueprintTooltip } from '../tooltip/BlueprintTooltip'
 import { useHoverTooltip } from '../tooltip/useHoverTooltip'
 import styles from './RectangleNode.module.css'
 
+import type {
+  DistributedHandleDescriptor,
+  NodeScaleState,
+} from '../utils/anchorDistribution'
+
 export interface NankoNodeData {
   label: string
   desc?: string | null
   shapeType?: string
   nodeId?: string
+  handles?: DistributedHandleDescriptor[]
+  scale?: NodeScaleState
   [key: string]: unknown
 }
 
@@ -19,6 +26,8 @@ export const RectangleNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const label = nodeData?.label || id
   const desc = nodeData?.desc || null
   const displayId = nodeData?.nodeId || id
+  const handles = nodeData?.handles ?? []
+  const scale = nodeData?.scale
   const {
     isVisible,
     handleMouseEnter,
@@ -29,7 +38,12 @@ export const RectangleNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
   return (
     <div
-      className={clsx(styles.nodeRectangle, selected && styles.isSelected)}
+      className={clsx(
+        styles.nodeRectangle,
+        selected && styles.isSelected,
+        scale?.isVerticalScaled && styles.isScaledY,
+        scale?.isHorizontalScaled && styles.isScaledX,
+      )}
       data-qa={`canvas-node-${id}`}
       data-testid={`canvas-node-${id}`}
       data-node-id={id}
@@ -76,6 +90,39 @@ export const RectangleNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         isConnectableEnd={true}
         className="nanko-handle nanko-handle-auto"
       />
+
+      {handles.map((h) => {
+        const position =
+          h.side === 'left'
+            ? Position.Left
+            : h.side === 'right'
+              ? Position.Right
+              : h.side === 'top'
+                ? Position.Top
+                : Position.Bottom
+
+        const style: React.CSSProperties =
+          h.side === 'left' || h.side === 'right'
+            ? { top: `${h.offsetPercentage}%` }
+            : { left: `${h.offsetPercentage}%` }
+
+        return (
+          <Handle
+            key={h.id}
+            type="source"
+            position={position}
+            id={h.id}
+            isConnectable={false}
+            isConnectableStart={false}
+            isConnectableEnd={false}
+            style={style}
+            className={clsx(
+              'nanko-passive-anchor',
+              `nanko-passive-anchor-${h.side}`,
+            )}
+          />
+        )
+      })}
 
       <div className={styles.nodeHeader}>
         <span className={clsx(styles.nodeBadge, 'nanko-node-badge')} data-qa="node-rectangle">rectangle</span>

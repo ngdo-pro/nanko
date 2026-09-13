@@ -124,4 +124,55 @@ describe('CircleNode', () => {
     expect(container.querySelector('.nanko-handle-bottom')).toBeInTheDocument()
     expect(container.querySelector('.nanko-handle-auto')).toBeInTheDocument()
   })
+
+  it('rend les poignées réparties sur l arc et applique isScaledDiameter (INV-1, INV-3)', () => {
+    const { container } = render(
+      <ReactFlowProvider>
+        <CircleNode
+          id="authCircle"
+          data={{
+            label: 'Auth',
+            nodeId: 'authCircle',
+            handles: [
+              {
+                id: 'left-1',
+                side: 'left',
+                offsetPercentage: 25,
+                circleLeftPercentage: 6.7,
+                circleTopPercentage: 25,
+              },
+            ],
+            scale: {
+              isVerticalScaled: true,
+              isHorizontalScaled: false,
+              isCircleScaled: true,
+            },
+          }}
+          selected={false}
+          zIndex={1}
+          isConnectable={true}
+          positionAbsoluteX={0}
+          positionAbsoluteY={0}
+          type="circle"
+          dragging={false}
+          selectable={true}
+          deletable={true}
+          draggable={true}
+        />
+      </ReactFlowProvider>,
+    )
+
+    // INV-5 : Strictement 5 handles de création interactives (.nanko-handle)
+    const handles = container.querySelectorAll('.nanko-handle')
+    expect(handles).toHaveLength(5)
+
+    // L'ancre passive sur l'arc circulaire
+    const arcAnchor = container.querySelector('.nanko-passive-anchor-circle')
+    expect(arcAnchor).toBeInTheDocument()
+    expect(arcAnchor).not.toHaveClass('nanko-handle')
+
+    const nodeEl = screen.getByTestId('canvas-node-authCircle')
+    expect(nodeEl.className).toContain('isScaledDiameter')
+  })
 })
+

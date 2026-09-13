@@ -193,6 +193,19 @@
   transform: translate(-50%, -50%) scale(1.4) !important;
 }
 
+/* Points d'attache passifs distribués (INV-5) : strictement invisibles et non interactifs */
+:global(.nanko-passive-anchor) {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 1px !important;
+  height: 1px !important;
+  border: none !important;
+  background: transparent !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+
 /* Labels d'arêtes */
 :global(.react-flow__edgelabel-renderer) {
   /* Override z-index de la couche EdgeLabelRenderer de React Flow pour garder les labels au-dessus des arêtes SVG */
