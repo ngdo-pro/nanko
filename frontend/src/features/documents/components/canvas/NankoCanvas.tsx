@@ -30,6 +30,11 @@ import { RadialMenu } from './radial/RadialMenu'
 import styles from './NankoCanvas.module.css'
 import { calculateDagreLayout } from './utils/dagreLayout'
 import { isValidNankoConnection } from './utils/isValidConnection'
+import {
+  getOptimalConnectorSides,
+  isCardinalSide,
+  type AnchorSide,
+} from './utils/connectorGeometry'
 import type { ShapePrimitiveType } from './utils/insertShapeToSource'
 import type { NankoAst } from '@/features/documents'
 
@@ -49,7 +54,11 @@ export interface NankoCanvasProps {
   onNodePositionChange?: (nodeId: string, position: { x: number; y: number }) => void
   onAutoLayoutApplied?: (layout: Record<string, { x: number; y: number }>) => void
   onCreateShape?: (shapeType: ShapePrimitiveType, position: { x: number; y: number }) => void
-  onConnectorCreated?: (source: string, target: string) => void
+  onConnectorCreated?: (
+    source: string,
+    target: string,
+    options?: { from?: AnchorSide | null; to?: AnchorSide | null },
+  ) => void
 }
 
 function buildNodesFromAst(ast: NankoAst): Node[] {
@@ -85,21 +94,68 @@ function buildNodesFromAst(ast: NankoAst): Node[] {
   return rawNodes
 }
 
-function buildEdgesFromAst(ast: NankoAst, colorMode: 'dark' | 'light'): Edge[] {
-  return (ast?.connectors ?? []).map((connector) => ({
-    id: `${connector.source}->${connector.target}`,
-    source: connector.source,
-    target: connector.target,
-    type: 'nanko',
-    label: connector.label ?? undefined,
-    data: { label: connector.label, desc: connector.desc },
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      width: 14,
-      height: 14,
-      color: colorMode === 'dark' ? '#5EEAD4' : '#2C4A3B',
-    },
-  }))
+function buildEdgesFromAst(
+  ast: NankoAst,
+  nodes: Node[],
+  colorMode: 'dark' | 'light',
+): Edge[] {
+  const edgeLayout = (ast?.edgeLayout ?? {}) as Record<
+    string,
+    { from?: AnchorSide; to?: AnchorSide }
+  >
+  const nodeMap = new Map<string, Node>()
+  for (const n of nodes) {
+    nodeMap.set(n.id, n)
+  }
+
+  return (ast?.connectors ?? []).map((connector) => {
+    const edgeKey = `${connector.source}->${connector.target}`
+    const layoutEntry = edgeLayout[edgeKey]
+    const sNode = nodeMap.get(connector.source)
+    const tNode = nodeMap.get(connector.target)
+
+    let sourceHandle: string =
+      layoutEntry?.from && isCardinalSide(layoutEntry.from) ? layoutEntry.from : 'right'
+    let targetHandle: string =
+      layoutEntry?.to && isCardinalSide(layoutEntry.to) ? layoutEntry.to : 'left'
+
+    if (
+      sNode &&
+      tNode &&
+      (!isCardinalSide(layoutEntry?.from) || !isCardinalSide(layoutEntry?.to))
+    ) {
+      const sWidth = sNode.measured?.width ?? (sNode.type === 'circle' ? 120 : 160)
+      const sHeight = sNode.measured?.height ?? (sNode.type === 'circle' ? 120 : 60)
+      const tWidth = tNode.measured?.width ?? (tNode.type === 'circle' ? 120 : 160)
+      const tHeight = tNode.measured?.height ?? (tNode.type === 'circle' ? 120 : 60)
+
+      const optimal = getOptimalConnectorSides(
+        { x: sNode.position.x, y: sNode.position.y, width: sWidth, height: sHeight },
+        { x: tNode.position.x, y: tNode.position.y, width: tWidth, height: tHeight },
+        layoutEntry?.from,
+        layoutEntry?.to,
+      )
+      sourceHandle = optimal.sourceSide
+      targetHandle = optimal.targetSide
+    }
+
+    return {
+      id: edgeKey,
+      source: connector.source,
+      target: connector.target,
+      sourceHandle,
+      targetHandle,
+      type: 'nanko',
+      label: connector.label ?? undefined,
+      data: { label: connector.label, desc: connector.desc },
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        width: 14,
+        height: 14,
+        color: colorMode === 'dark' ? '#5EEAD4' : '#2C4A3B',
+      },
+    }
+  })
 }
 
 function isInputFocused(): boolean {
@@ -174,7 +230,7 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
   const effectiveAst = syntaxError ? lastValidAst : ast
 
   const [nodes, setNodes] = useState<Node[]>(() => buildNodesFromAst(effectiveAst))
-  const [edges, setEdges] = useState<Edge[]>(() => buildEdgesFromAst(effectiveAst, colorMode))
+  const [edges, setEdges] = useState<Edge[]>(() => buildEdgesFromAst(effectiveAst, nodes, colorMode))
 
   if (!syntaxError && ast !== lastValidAst) {
     setLastValidAst(ast)
@@ -183,13 +239,20 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
   if (effectiveAst !== prevAst || colorMode !== prevColorMode) {
     setPrevAst(effectiveAst)
     setPrevColorMode(colorMode)
-    setNodes(buildNodesFromAst(effectiveAst))
-    setEdges(buildEdgesFromAst(effectiveAst, colorMode))
+    const nextNodes = buildNodesFromAst(effectiveAst)
+    setNodes(nextNodes)
+    setEdges(buildEdgesFromAst(effectiveAst, nextNodes, colorMode))
   }
 
   const onNodesChange: OnNodesChange = useCallback(
-    (changes) => setNodes((nds) => applyNodeChanges(changes, nds)),
-    [],
+    (changes) => {
+      setNodes((nds) => {
+        const nextNodes = applyNodeChanges(changes, nds)
+        setEdges(buildEdgesFromAst(effectiveAst, nextNodes, colorMode))
+        return nextNodes
+      })
+    },
+    [effectiveAst, colorMode],
   )
 
   const onEdgesChange: OnEdgesChange = useCallback(
@@ -207,7 +270,12 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
   const handleConnect = useCallback(
     (connection: Connection) => {
       if (!isValidNankoConnection(connection, edges)) return
-      onConnectorCreated?.(connection.source, connection.target)
+      const sourceHandle = (connection.sourceHandle as AnchorSide) ?? 'auto'
+      const targetHandle = (connection.targetHandle as AnchorSide) ?? 'auto'
+      onConnectorCreated?.(connection.source, connection.target, {
+        from: sourceHandle,
+        to: targetHandle,
+      })
     },
     [edges, onConnectorCreated],
   )
@@ -224,6 +292,7 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
   const handleAutoLayout = useCallback(() => {
     const layoutedNodes = calculateDagreLayout(nodes, edges)
     setNodes(layoutedNodes)
+    setEdges(buildEdgesFromAst(effectiveAst, layoutedNodes, colorMode))
 
     const newPositions: Record<string, { x: number; y: number }> = {}
     for (const n of layoutedNodes) {
@@ -231,7 +300,7 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
     }
 
     onAutoLayoutApplied?.(newPositions)
-  }, [nodes, edges, onAutoLayoutApplied])
+  }, [nodes, edges, effectiveAst, colorMode, onAutoLayoutApplied])
 
   // Sélection d'un type dans la roue radiale
   const handleSelectRadialShape = useCallback(

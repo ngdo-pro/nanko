@@ -238,4 +238,24 @@ NANKO;
         self::assertCount(0, $ast->connectors);
         self::assertCount(0, $ast->layout);
     }
+
+    public function testParsesEdgeLayoutInLayoutBlock(): void
+    {
+        $code = <<<'NANKO'
+rectangle front label="Front"
+circle back label="Back"
+front -> back
+
+!LAYOUT
+front: x=100, y=100
+back: x=300, y=100
+front->back: from=top, to=left
+!END
+NANKO;
+
+        $ast = NankoParser::parse($code);
+
+        self::assertArrayHasKey('front->back', $ast->edgeLayout);
+        self::assertSame(['from' => 'top', 'to' => 'left'], $ast->edgeLayout['front->back']);
+    }
 }

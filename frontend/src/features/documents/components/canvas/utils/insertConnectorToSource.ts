@@ -1,3 +1,11 @@
+import { isCardinalSide, type AnchorSide } from './connectorGeometry'
+import { updateNankoSourceEdgeLayout } from './syncLayoutToSource'
+
+export interface InsertConnectorOptions {
+  from?: AnchorSide | null
+  to?: AnchorSide | null
+}
+
 export interface InsertConnectorResult {
   newSourceCode: string
   alreadyExists: boolean
@@ -26,16 +34,23 @@ export function checkConnectorExists(sourceCode: string, source: string, target:
 /**
  * Insère une déclaration de connecteur "source -> target" dans le corps sémantique du code .nanko.
  * Les connecteurs sont regroupés après les shapes et après les connecteurs existants, en amont du bloc !LAYOUT.
- * Si le connecteur existe déjà, l'opération est un no-op avec alreadyExists: true.
+ * Si des ancres fixes (cardinales) sont fournies dans options, elles sont enregistrées dans le bloc !LAYOUT.
+ * Si le connecteur existe déjà, l'opération est un no-op avec alreadyExists: true (sauf mise à jour d'ancres).
  */
 export function insertConnectorToSource(
   sourceCode: string,
   source: string,
   target: string,
+  options?: InsertConnectorOptions,
 ): InsertConnectorResult {
   if (checkConnectorExists(sourceCode, source, target)) {
+    const hasCardinalAnchor = options && (isCardinalSide(options.from) || isCardinalSide(options.to))
+    const finalCode = hasCardinalAnchor
+      ? updateNankoSourceEdgeLayout(sourceCode, source, target, options)
+      : sourceCode
+
     return {
-      newSourceCode: sourceCode,
+      newSourceCode: finalCode,
       alreadyExists: true,
     }
   }
@@ -87,8 +102,14 @@ export function insertConnectorToSource(
     updatedBody = declaration
   }
 
+  let fullCode = `${updatedBody}${layoutSuffix}`
+
+  if (options && (isCardinalSide(options.from) || isCardinalSide(options.to))) {
+    fullCode = updateNankoSourceEdgeLayout(fullCode, source, target, options)
+  }
+
   return {
-    newSourceCode: `${updatedBody}${layoutSuffix}`,
+    newSourceCode: fullCode,
     alreadyExists: false,
   }
 }

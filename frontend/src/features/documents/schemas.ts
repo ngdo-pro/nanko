@@ -21,12 +21,26 @@ export const nodeCoordinatesSchema = z.object({
 
 export const nankoAstLayoutSchema = z.record(z.string(), nodeCoordinatesSchema)
 
+export const anchorSideSchema = z.enum(['top', 'bottom', 'left', 'right', 'auto'])
+export type AnchorSide = z.infer<typeof anchorSideSchema>
+
+export const edgeAnchorLayoutSchema = z.object({
+  from: anchorSideSchema.optional().nullable(),
+  to: anchorSideSchema.optional().nullable(),
+})
+
+export const nankoAstEdgeLayoutSchema = z.record(z.string(), edgeAnchorLayoutSchema)
+
 export const nankoAstSchema = z.object({
   dslVersion: z.number().int().default(1),
   shapes: z.array(nankoAstShapeSchema).default([]),
   connectors: z.array(nankoAstConnectorSchema).default([]),
   layout: z
-    .union([nankoAstLayoutSchema, z.array(z.any()).transform(() => ({}))])
+    .preprocess((val) => (Array.isArray(val) && val.length === 0 ? {} : val), nankoAstLayoutSchema)
+    .optional()
+    .default({}),
+  edgeLayout: z
+    .preprocess((val) => (Array.isArray(val) && val.length === 0 ? {} : val), nankoAstEdgeLayoutSchema)
     .optional()
     .default({}),
 })
@@ -80,7 +94,16 @@ export type NankoAstShape = z.infer<typeof nankoAstShapeSchema>
 export type NankoAstConnector = z.infer<typeof nankoAstConnectorSchema>
 export type NodeCoordinates = z.infer<typeof nodeCoordinatesSchema>
 export type NankoAstLayout = z.infer<typeof nankoAstLayoutSchema>
-export type NankoAst = z.infer<typeof nankoAstSchema>
+export type EdgeAnchorLayout = z.infer<typeof edgeAnchorLayoutSchema>
+export type NankoAstEdgeLayout = z.infer<typeof nankoAstEdgeLayoutSchema>
+
+export interface NankoAst {
+  dslVersion: number
+  shapes: NankoAstShape[]
+  connectors: NankoAstConnector[]
+  layout?: NankoAstLayout
+  edgeLayout?: NankoAstEdgeLayout
+}
 export type DocumentListItem = z.infer<typeof documentListItemSchema>
 export type DocumentDetail = z.infer<typeof documentDetailSchema>
 export type CreateDocumentInput = z.infer<typeof createDocumentSchema>

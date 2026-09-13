@@ -107,4 +107,33 @@ describe('RectangleNode', () => {
     })
     expect(screen.queryByTestId('node-tooltip-arch')).not.toBeInTheDocument()
   })
+
+  it('dispose de 4 poignées cardinales et 1 poignée centrale auto (INV-1, INV-5)', () => {
+    const { container } = render(
+      <ReactFlowProvider>
+        <RectangleNode
+          id="node1"
+          data={{ label: 'Node 1', desc: null, nodeId: 'node1' }}
+          selected={false}
+          zIndex={1}
+          isConnectable={true}
+          positionAbsoluteX={0}
+          positionAbsoluteY={0}
+          type="rectangle"
+          dragging={false}
+          selectable={true}
+          deletable={true}
+          draggable={true}
+        />
+      </ReactFlowProvider>,
+    )
+
+    const handles = container.querySelectorAll('.nanko-handle')
+    expect(handles).toHaveLength(5)
+    expect(container.querySelector('.nanko-handle-left')).toBeInTheDocument()
+    expect(container.querySelector('.nanko-handle-top')).toBeInTheDocument()
+    expect(container.querySelector('.nanko-handle-right')).toBeInTheDocument()
+    expect(container.querySelector('.nanko-handle-bottom')).toBeInTheDocument()
+    expect(container.querySelector('.nanko-handle-auto')).toBeInTheDocument()
+  })
 })

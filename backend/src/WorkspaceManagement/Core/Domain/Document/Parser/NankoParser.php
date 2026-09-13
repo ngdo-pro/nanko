@@ -22,6 +22,8 @@ final class NankoParser
         $connectors = [];
         /** @var array<string, mixed> $layout */
         $layout = [];
+        /** @var array<string, array{from?: string, to?: string}> $edgeLayout */
+        $edgeLayout = [];
         $dslVersion = 1;
 
         $inLayout = false;
@@ -46,7 +48,24 @@ final class NankoParser
             }
 
             if ($inLayout) {
-                // Parsing d'une entrée layout (ex: "app: x=100, y=200" ou "app: 100, 200")
+                // 1. Parsing d'un ancrage d'arête (ex: "front->back: from=top, to=left")
+                if (preg_match('/^([a-zA-Z0-9_-]+)->([a-zA-Z0-9_-]+)\s*:\s*(.*)$/', $line, $matches)) {
+                    $edgeKey = $matches[1] . '->' . $matches[2];
+                    $attrStr = trim($matches[3]);
+                    $edgeItem = [];
+                    if (preg_match('/from\s*=\s*(top|bottom|left|right|auto)/', $attrStr, $fromMatch)) {
+                        $edgeItem['from'] = $fromMatch[1];
+                    }
+                    if (preg_match('/to\s*=\s*(top|bottom|left|right|auto)/', $attrStr, $toMatch)) {
+                        $edgeItem['to'] = $toMatch[1];
+                    }
+                    if (!empty($edgeItem)) {
+                        $edgeLayout[$edgeKey] = $edgeItem;
+                    }
+                    continue;
+                }
+
+                // 2. Parsing d'une entrée layout shape (ex: "app: x=100, y=200" ou "app: 100, 200")
                 if (preg_match('/^([a-zA-Z0-9_-]+)\s*:\s*(?:x=)?(-?\d+)\s*,\s*(?:y=)?(-?\d+)/', $line, $matches)) {
                     $layout[$matches[1]] = [
                         'x' => (int) $matches[2],
@@ -168,6 +187,7 @@ final class NankoParser
             connectors: $connectors,
             layout: $layout,
             dslVersion: $dslVersion,
+            edgeLayout: $edgeLayout,
         );
     }
 

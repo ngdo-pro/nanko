@@ -154,18 +154,19 @@ describe('NankoCanvas', () => {
     expect(screen.queryByTestId('radial-menu')).not.toBeInTheDocument()
   })
 
-  it('rend 4 poignées d\'ancrage .nanko-handle sur chaque forme du canvas', () => {
+  it('rend 5 poignées d\'ancrage (4 cardinales + 1 auto) sur chaque forme du canvas', () => {
     render(<NankoCanvas ast={sampleAst} />)
 
     const frontNode = screen.getByTestId('canvas-node-front')
     const handles = frontNode.querySelectorAll('.nanko-handle')
-    expect(handles.length).toBe(4)
+    expect(handles.length).toBe(5)
 
     // Vérification des classes directionnelles Blueprint
     expect(frontNode.querySelector('.nanko-handle-left')).toBeInTheDocument()
     expect(frontNode.querySelector('.nanko-handle-top')).toBeInTheDocument()
     expect(frontNode.querySelector('.nanko-handle-right')).toBeInTheDocument()
     expect(frontNode.querySelector('.nanko-handle-bottom')).toBeInTheDocument()
+    expect(frontNode.querySelector('.nanko-handle-auto')).toBeInTheDocument()
   })
 
   describe('isValidNankoConnection [INV-3]', () => {

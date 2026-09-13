@@ -12,6 +12,7 @@ import {
   updateNankoSourceBulkLayout,
   insertShapeToSource,
   insertConnectorToSource,
+  type AnchorSide,
   type ShapePrimitiveType,
   parseNankoSource,
   type NankoAst,
@@ -113,9 +114,13 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
     })
   }
 
-  const handleConnectorCreated = (source: string, target: string) => {
+  const handleConnectorCreated = (
+    source: string,
+    target: string,
+    options?: { from?: AnchorSide | null; to?: AnchorSide | null },
+  ) => {
     setCode((prevCode) => {
-      const { newSourceCode } = insertConnectorToSource(prevCode, source, target)
+      const { newSourceCode } = insertConnectorToSource(prevCode, source, target, options)
       return newSourceCode
     })
   }

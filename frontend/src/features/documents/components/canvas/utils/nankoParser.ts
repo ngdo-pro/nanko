@@ -128,6 +128,7 @@ export function parseNankoSource(sourceCode: string): ParseNankoResult {
   const shapes: NankoAstShape[] = []
   const connectors: NankoAstConnector[] = []
   const layout: Record<string, { x: number; y: number }> = {}
+  const edgeLayout: Record<string, { from?: 'top' | 'bottom' | 'left' | 'right' | 'auto'; to?: 'top' | 'bottom' | 'left' | 'right' | 'auto' }> = {}
   const shapeIds = new Set<string>()
   let dslVersion = 1
 
@@ -154,6 +155,27 @@ export function parseNankoSource(sourceCode: string): ParseNankoResult {
     }
 
     if (inLayout) {
+      // 1. Ancrage d'arêtes : "source->target: from=top, to=left"
+      const edgeLayoutMatch = line.match(/^([a-zA-Z0-9_-]+)\s*->\s*([a-zA-Z0-9_-]+)\s*:\s*(.*)$/)
+      if (edgeLayoutMatch && edgeLayoutMatch[1] && edgeLayoutMatch[2]) {
+        const source = edgeLayoutMatch[1]
+        const target = edgeLayoutMatch[2]
+        const attrStr = edgeLayoutMatch[3]?.trim() ?? ''
+        const edgeKey = `${source}->${target}`
+
+        const fromMatch = attrStr.match(/from\s*=\s*(top|bottom|left|right|auto)/)
+        const toMatch = attrStr.match(/to\s*=\s*(top|bottom|left|right|auto)/)
+
+        if (fromMatch || toMatch) {
+          edgeLayout[edgeKey] = {
+            ...(fromMatch ? { from: fromMatch[1] as 'top' | 'bottom' | 'left' | 'right' | 'auto' } : {}),
+            ...(toMatch ? { to: toMatch[1] as 'top' | 'bottom' | 'left' | 'right' | 'auto' } : {}),
+          }
+        }
+        continue
+      }
+
+      // 2. Coordonnées de nœuds : "nodeId: x=100, y=200"
       const layoutMatch = line.match(/^([a-zA-Z0-9_-]+)\s*:\s*(?:x=)?(-?\d+)\s*,\s*(?:y=)?(-?\d+)/)
       if (layoutMatch && layoutMatch[1] && layoutMatch[2] && layoutMatch[3]) {
         layout[layoutMatch[1]] = {
@@ -171,7 +193,7 @@ export function parseNankoSource(sourceCode: string): ParseNankoResult {
         const val = dslVersionMatch[1]?.trim() ?? ''
         if (!/^\d+$/.test(val) || parseInt(val, 10) !== 1) {
           return {
-            ast: { dslVersion, shapes, connectors, layout },
+            ast: { dslVersion, shapes, connectors, layout, edgeLayout },
             syntaxError: `Ligne ${lineNumber}: Version de DSL non supportée : '${val}'. Seule la version 1 est actuellement supportée.`,
           }
         }
@@ -183,7 +205,7 @@ export function parseNankoSource(sourceCode: string): ParseNankoResult {
         continue
       }
       return {
-        ast: { dslVersion, shapes, connectors, layout },
+        ast: { dslVersion, shapes, connectors, layout, edgeLayout },
         syntaxError: `Ligne ${lineNumber}: Directive métadonnée non reconnue : "${line}"`,
       }
     }
@@ -197,7 +219,7 @@ export function parseNankoSource(sourceCode: string): ParseNankoResult {
 
       if (!attrString) {
         return {
-          ast: { dslVersion, shapes, connectors, layout },
+          ast: { dslVersion, shapes, connectors, layout, edgeLayout },
           syntaxError: `Ligne ${lineNumber}: L'attribut 'label' est obligatoire pour la shape '${id}'.`,
         }
       }
@@ -205,7 +227,7 @@ export function parseNankoSource(sourceCode: string): ParseNankoResult {
       const { attributes, error } = parseAttributes(attrString)
       if (error) {
         return {
-          ast: { dslVersion, shapes, connectors, layout },
+          ast: { dslVersion, shapes, connectors, layout, edgeLayout },
           syntaxError: `Ligne ${lineNumber}: ${error}`,
         }
       }
@@ -213,7 +235,7 @@ export function parseNankoSource(sourceCode: string): ParseNankoResult {
       const label = attributes['label']
       if (!label || label.trim() === '') {
         return {
-          ast: { dslVersion, shapes, connectors, layout },
+          ast: { dslVersion, shapes, connectors, layout, edgeLayout },
           syntaxError: `Ligne ${lineNumber}: L'attribut 'label' est obligatoire pour la shape '${id}'.`,
         }
       }
@@ -221,7 +243,7 @@ export function parseNankoSource(sourceCode: string): ParseNankoResult {
       for (const attrKey of Object.keys(attributes)) {
         if (attrKey !== 'label' && attrKey !== 'desc') {
           return {
-            ast: { dslVersion, shapes, connectors, layout },
+            ast: { dslVersion, shapes, connectors, layout, edgeLayout },
             syntaxError: `Ligne ${lineNumber}: Attribut non supporté '${attrKey}' pour la shape '${id}'.`,
           }
         }
@@ -229,7 +251,7 @@ export function parseNankoSource(sourceCode: string): ParseNankoResult {
 
       if (shapeIds.has(id)) {
         return {
-          ast: { dslVersion, shapes, connectors, layout },
+          ast: { dslVersion, shapes, connectors, layout, edgeLayout },
           syntaxError: `Ligne ${lineNumber}: Une Shape avec l'identifiant "${id}" est déjà déclarée.`,
         }
       }
@@ -253,14 +275,14 @@ export function parseNankoSource(sourceCode: string): ParseNankoResult {
 
       if (!shapeIds.has(source)) {
         return {
-          ast: { dslVersion, shapes, connectors, layout },
+          ast: { dslVersion, shapes, connectors, layout, edgeLayout },
           syntaxError: `Ligne ${lineNumber}: Le connecteur référence une Shape source non déclarée : "${source}".`,
         }
       }
 
       if (!shapeIds.has(target)) {
         return {
-          ast: { dslVersion, shapes, connectors, layout },
+          ast: { dslVersion, shapes, connectors, layout, edgeLayout },
           syntaxError: `Ligne ${lineNumber}: Le connecteur référence une Shape cible non déclarée : "${target}".`,
         }
       }
@@ -272,7 +294,7 @@ export function parseNankoSource(sourceCode: string): ParseNankoResult {
         const { attributes, error } = parseAttributes(attrString)
         if (error) {
           return {
-            ast: { dslVersion, shapes, connectors, layout },
+            ast: { dslVersion, shapes, connectors, layout, edgeLayout },
             syntaxError: `Ligne ${lineNumber}: ${error}`,
           }
         }
@@ -280,7 +302,7 @@ export function parseNankoSource(sourceCode: string): ParseNankoResult {
         for (const attrKey of Object.keys(attributes)) {
           if (attrKey !== 'label' && attrKey !== 'desc') {
             return {
-              ast: { dslVersion, shapes, connectors, layout },
+              ast: { dslVersion, shapes, connectors, layout, edgeLayout },
               syntaxError: `Ligne ${lineNumber}: Attribut non supporté '${attrKey}' pour le connecteur.`,
             }
           }
@@ -288,7 +310,7 @@ export function parseNankoSource(sourceCode: string): ParseNankoResult {
 
         if (attributes['desc'] !== undefined && attributes['label'] === undefined) {
           return {
-            ast: { dslVersion, shapes, connectors, layout },
+            ast: { dslVersion, shapes, connectors, layout, edgeLayout },
             syntaxError: `Ligne ${lineNumber}: Un connecteur ne peut pas déclarer de description ('desc') sans libellé ('label').`,
           }
         }
@@ -303,13 +325,13 @@ export function parseNankoSource(sourceCode: string): ParseNankoResult {
 
     // Ligne non reconnue
     return {
-      ast: { dslVersion, shapes, connectors, layout },
+      ast: { dslVersion, shapes, connectors, layout, edgeLayout },
       syntaxError: `Ligne ${lineNumber}: Instruction non reconnue : "${line}".`,
     }
   }
 
   return {
-    ast: { dslVersion, shapes, connectors, layout },
+    ast: { dslVersion, shapes, connectors, layout, edgeLayout },
     syntaxError: null,
   }
 }

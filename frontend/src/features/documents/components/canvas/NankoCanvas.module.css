@@ -170,6 +170,29 @@
   bottom: -4px !important;
 }
 
+/* Ancre centrale dynamique 'auto' (motif concentric target ◎) */
+:global(.nanko-handle-auto) {
+  top: 50% !important;
+  left: 50% !important;
+  width: 14px !important;
+  height: 14px !important;
+  transform: translate(-50%, -50%) !important;
+  border-radius: 50% !important;
+  border: 1.5px solid var(--brand) !important;
+  background-color: var(--surface) !important;
+  box-shadow: inset 0 0 0 2px var(--surface), inset 0 0 0 4px var(--brand);
+}
+
+:global(.nanko-handle-auto:hover) {
+  background-color: var(--brand) !important;
+  transform: translate(-50%, -50%) scale(1.3) !important;
+}
+
+:global(.nanko-handle-auto.valid) {
+  background-color: var(--brand) !important;
+  transform: translate(-50%, -50%) scale(1.4) !important;
+}
+
 /* Labels d'arêtes */
 :global(.react-flow__edgelabel-renderer) {
   /* Override z-index de la couche EdgeLabelRenderer de React Flow pour garder les labels au-dessus des arêtes SVG */

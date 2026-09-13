@@ -3,6 +3,7 @@ import {
   BaseEdge,
   getSmoothStepPath,
   EdgeLabelRenderer,
+  Position,
   type EdgeProps,
 } from '@xyflow/react'
 import clsx from 'clsx'
@@ -25,7 +26,7 @@ export const NankoEdge: React.FC<EdgeProps> = ({
   label,
   data,
 }) => {
-  const [edgePath, labelX, labelY] = getSmoothStepPath({
+  const [edgePath, defaultLabelX, defaultLabelY] = getSmoothStepPath({
     sourceX,
     sourceY,
     sourcePosition,
@@ -34,6 +35,32 @@ export const NankoEdge: React.FC<EdgeProps> = ({
     targetPosition,
     borderRadius: 0, // Coins droits pour le look Blueprint
   })
+
+  // Positionnement déterministe à 36px de la source le long du tracé (INV-6)
+  const dist = Math.hypot(targetX - sourceX, targetY - sourceY)
+  let badgeX = defaultLabelX
+  let badgeY = defaultLabelY
+
+  if (dist >= 72) {
+    switch (sourcePosition) {
+      case Position.Right:
+        badgeX = sourceX + 36
+        badgeY = sourceY
+        break
+      case Position.Left:
+        badgeX = sourceX - 36
+        badgeY = sourceY
+        break
+      case Position.Bottom:
+        badgeX = sourceX
+        badgeY = sourceY + 36
+        break
+      case Position.Top:
+        badgeX = sourceX
+        badgeY = sourceY - 36
+        break
+    }
+  }
 
   const edgeData = data as { label?: string | null; desc?: string | null } | undefined
   const edgeLabel = (label as string) || (edgeData?.label as string) || ''
@@ -66,7 +93,7 @@ export const NankoEdge: React.FC<EdgeProps> = ({
             className={clsx(styles.edgeLabelContainer, edgeLabel && styles.hasLabel, 'nanko-edge-label-container')}
             style={{
               position: 'absolute',
-              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              transform: `translate(-50%, -50%) translate(${badgeX}px,${badgeY}px)`,
               pointerEvents: 'auto',
             }}
             data-qa={`ast-connector-${source}-${target}`}

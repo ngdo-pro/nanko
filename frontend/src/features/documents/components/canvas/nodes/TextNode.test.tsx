@@ -95,4 +95,33 @@ describe('TextNode', () => {
     expect(tooltip).toBeInTheDocument()
     expect(tooltip).toHaveTextContent('Détails de conception v1')
   })
+
+  it('dispose de 4 poignées cardinales et 1 poignée centrale auto (INV-1, INV-5)', () => {
+    const { container } = render(
+      <ReactFlowProvider>
+        <TextNode
+          id="t1"
+          data={{ label: 'T1', desc: null, nodeId: 't1' }}
+          selected={false}
+          zIndex={1}
+          isConnectable={true}
+          positionAbsoluteX={0}
+          positionAbsoluteY={0}
+          type="text"
+          dragging={false}
+          selectable={true}
+          deletable={true}
+          draggable={true}
+        />
+      </ReactFlowProvider>,
+    )
+
+    const handles = container.querySelectorAll('.nanko-handle')
+    expect(handles).toHaveLength(5)
+    expect(container.querySelector('.nanko-handle-left')).toBeInTheDocument()
+    expect(container.querySelector('.nanko-handle-top')).toBeInTheDocument()
+    expect(container.querySelector('.nanko-handle-right')).toBeInTheDocument()
+    expect(container.querySelector('.nanko-handle-bottom')).toBeInTheDocument()
+    expect(container.querySelector('.nanko-handle-auto')).toBeInTheDocument()
+  })
 })
