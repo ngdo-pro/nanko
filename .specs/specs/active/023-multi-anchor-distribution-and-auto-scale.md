@@ -1,11 +1,11 @@
 # Spec : 023 - Distribution Multi-Ports & Redimensionnement Automatique
 
 ## Métadonnées
-* **Statut :** `Livré & Archivé ✅`
+* **Statut :** `Prêt pour Implémentation 🚀`
 * **Domaine concerné :** `studio-modeling` ([Architecture Technique](../../knowledge/domains/studio-modeling/tech.md) · [Comportement Produit](../../knowledge/domains/studio-modeling/behavior.md))
-* **Type de changement :** `Évolution`
-* **Cible :** `frontend` (React Flow, Nœuds, Handles, Layout Dagre, Géométrie de connecteurs) + `tests-e2e` (Playwright)
-* **Feature parente :** [09-multi-anchor-distribution-and-auto-scale](../../initiatives/active/studio-modeling/archive/09-multi-anchor-distribution-and-auto-scale.md)
+* **Type de changement :** `Évolution & Stabilisation`
+* **Cible :** `frontend` (React Flow, Nœuds, Handles, Layout Dagre, Roue Radiale, Géométrie de connecteurs) + `tests-e2e` (Playwright)
+* **Feature parente :** [09-multi-anchor-distribution-and-auto-scale](../../initiatives/active/studio-modeling/active/09-multi-anchor-distribution-and-auto-scale.md)
 * **Complexité :** `Medium`
 
 ---
@@ -13,21 +13,26 @@
 ## 1. Intention & Contexte (*The Why*)
 
 * **Problème résolu / Besoin :**
-  Lorsque plusieurs connecteurs se branchent sur le même flanc d'une Shape, la convergence sur un point d'ancrage unique engendre une superposition illisible (« effet hérisson »). Par ailleurs, au-delà d'un certain nombre de connexions, la densité visuelle sature le composant.
+  1. Lorsque plusieurs connecteurs se branchent sur le même flanc d'une Shape, la convergence sur un point d'ancrage unique engendre une superposition illisible (« effet hérisson »).
+  2. Cependant, la distribution spatiale des connecteurs existants ne doit **jamais** être confondue avec les poignées interactives de création : l'utilisateur ne doit avoir à sa disposition que les 5 handles canoniques lorsqu'il désire créer ou brancher un flux, sans que des poignées superflues n'apparaissent au survol.
+  3. Au-delà d'un certain nombre de connexions (seuil de 8 flux), la densité visuelle sature le composant, justifiant un agrandissement automatique $\times 2$.
+  4. Enfin, l'insertion de forme assistée par la roue radiale (`A` + pointage) doit être rigoureusement unitaire et atomique (élimination de tout double appel créant deux formes).
 * **Impact utilisateur :**
-  * Sur chaque flanc accueillant $N$ connecteurs, les points d'attache sont automatiquement redistribués à intervalles réguliers ($\frac{1}{N+1}, \dots, \frac{N}{N+1}$) le long du segment, supprimant toute superposition.
-  * Les connecteurs sont ordonnés le long de la face pour minimiser les croisements (trié selon la position des formes opposées sur l'axe orthogonal).
-  * Dès lors que le nombre total de connecteurs sur un flanc dépasse la capacité nominale de 8 flux :
+  * **Distribution spatiale transparente :** Sur chaque flanc accueillant $N$ connecteurs, les points d'attache passifs sont redistribués à intervalles réguliers ($\frac{1}{N+1}, \dots, \frac{N}{N+1}$) le long du segment, supprimant toute superposition.
+  * **Clarté d'interaction (5 Handles uniquement) :** Au survol d'une Shape ou lors du glisser pour créer un connecteur, **seules les 5 poignées canoniques** (`top`, `bottom`, `left`, `right` et centrale `auto`) sont visibles et interactives. Les points d'attache distribués existants restent strictement passifs, invisibles au survol et non connectables.
+  * **Création atomique garantie (Roue radiale) :** Maintenir `A` (ou `Tab`), survoler un secteur (ex: `rectangle`) et relâcher la touche insère exactement une seule forme sans doublon, y compris en mode développement React StrictMode.
+  * **Auto-Scale adaptatif :** Dès lors que le nombre total de connecteurs sur un flanc dépasse la capacité nominale de 8 flux :
     - Flanc vertical (`left` ou `right`) : la hauteur de la Shape double automatiquement ($\times 2$).
     - Flanc horizontal (`top` ou `bottom`) : la largeur de la Shape double automatiquement ($\times 2$).
-    - Forme circulaire (`circle`) : le diamètre double automatiquement ($\times 2$, 260px au lieu de 130px) dès qu'un flanc dépasse 8 flux.
+    - Forme circulaire (`circle`) : le diamètre double automatiquement ($\times 2$, 260px au lieu de 130px).
     - Forme textuelle (`text`) : redimensionnement correspondant.
   * L'algorithme Dagre prend en compte ces dimensions élargies lors de l'action « Réorganiser » de la barre d'outils pour décongestionner le graphe sans chevauchement.
 * **In Scope (Ce qui est ajouté / modifié) :**
   * Module utilitaire `anchorDistribution.ts` pour le calcul déterministe des créneaux d'ancrage le long de chaque flanc et la détection du seuil d'auto-scale (8 flux).
-  * Adaptation de `RectangleNode.tsx`, `CircleNode.tsx` et `TextNode.tsx` pour projeter les poignées distribuées (`.nanko-handle-distributed`) et appliquer les styles d'échelle $\times 2$.
+  * Adaptation de `RectangleNode.tsx`, `CircleNode.tsx` et `TextNode.tsx` pour isoler strictement les 5 poignées interactives de création des points d'ancrage distribués passifs (`isConnectable={false}`, invisibles au survol, sans classe `.nanko-handle`).
+  * Fiabilisation atomique de la création de forme dans `NankoCanvas.tsx` (extraction de l'effet hors des callbacks `setState` pour neutraliser le doublement StrictMode, et déduplication événementielle clic/relâchement).
   * Adaptation de `dagreLayout.ts` pour intégrer les dimensions scalées des nœuds lors du réagencement automatique.
-  * Adaptation de `NankoCanvas.tsx` pour alimenter les nœuds avec leurs poignées distribuées et relier les arêtes React Flow à leurs points d'ancrage assignés.
+  * Adaptation de `NankoCanvas.tsx` pour alimenter les arêtes React Flow avec leurs points d'ancrage distribués passifs respectifs.
   * Tests unitaires exhaustifs (Vitest) et tests End-to-End (Playwright).
 * **Out of Scope (Exclusions strictes) :**
   * Poignées redimensionnables manuellement à la souris par étirement (*Resize handles* aux 4 coins).
@@ -104,11 +109,17 @@ tests-e2e/tests/app/
     - Si $N > 8$ : active le flag de redimensionnement (`scaleY` pour flanc vertical, `scaleX` pour horizontal, `scaleDiameter` pour cercle).
   - Assigne à chaque arête ses identifiants de poignée précis (`sourceHandle`, `targetHandle`).
 * **Composants Nœuds (`RectangleNode`, `CircleNode`, `TextNode`) :**
-  - Maintiennent les 4 poignées cardinales canoniques (`left`, `top`, `right`, `bottom`) et la poignée centrale `auto`.
-  - Quand $N > 1$ connecteurs sont raccordés sur un flanc, génèrent les poignées dynamiques d'ancrage `<Handle id={`${side}-${edgeKey}`} ... style={...} />`.
-  - Pour `CircleNode`, le positionnement tient compte de l'équation du cercle pour que les poignées épousent parfaitement le bord courbé :
+  - **Handles de création :** Maintiennent strictement les 4 poignées cardinales canoniques (`left`, `top`, `right`, `bottom`) et la poignée centrale `auto` (`isConnectable = true`, classe `.nanko-handle`).
+  - **Points d'attache passifs :** Quand $N > 1$ connecteurs sont raccordés sur un flanc, génèrent les poignées dynamiques d'ancrage `<Handle id={`${side}-${edgeKey}`} isConnectable={false} style={{ ... }} />` :
+    - Strictement non connectables (`isConnectable={false}`, `isConnectableStart={false}`, `isConnectableEnd={false}`).
+    - Invisibles et intouchables (`opacity: 0 !important; pointer-events: none !important;`).
+    - Ne portent JAMAIS la classe `.nanko-handle` (évitant ainsi tout affichage au survol ou sélection du nœud).
+  - Pour `CircleNode`, le positionnement passif tient compte de l'équation du cercle pour que les terminaisons épousent parfaitement le bord courbé :
     $x_{rel} = \sqrt{R^2 - y_{rel}^2}$ avec $R = 50\%$.
   - Appliquent les classes CSS d'échelle doublée lorsque les seuils de capacité sont franchis.
+* **Canvas & Roue Radiale (`NankoCanvas.tsx`) :**
+  - Fiabilisation de la création de formes : extraction de `onCreateShape` hors de tout callback `setState` (évitant la double invocation induite par React `<StrictMode>`).
+  - Déduplication événementielle : garde d'état empêchant qu'un clic sur un secteur suivi du relâchement de la touche `A` ne déclenche deux fois `onCreateShape`.
 
 ---
 
@@ -130,13 +141,21 @@ tests-e2e/tests/app/
   L'espacement spatial après redimensionnement est assuré par le calcul hiérarchique acyclique Dagre prenant en compte les nouvelles largeurs et hauteurs des nœuds.
   ↳ *Couvert par : `dagreLayout.ts`, `NankoCanvas.tsx`.*
 
+* **`INV-5` (Isolement strict : 5 handles de création vs points d'attache passifs) :**
+  Chaque nœud expose strictement 5 poignées interactives connectables (`left`, `top`, `right`, `bottom`, `auto`). Les points d'attache distribués existants sont 100% passifs (`isConnectable = false`), invisibles au survol (`opacity: 0; pointer-events: none`), et ne portent pas la classe `.nanko-handle`.
+  ↳ *Couvert par : `RectangleNode.tsx`, `CircleNode.tsx`, `TextNode.tsx`, `NankoCanvas.module.css`.*
+
+* **`INV-6` (Création atomique et unitaire via la roue radiale) :**
+  L'action de création de forme via la roue radiale (`A` + pointage) ou raccourcis directs crée strictement et uniquement une seule forme sans doublon, y compris sous React `<StrictMode>`.
+  ↳ *Couvert par : `NankoCanvas.tsx`.*
+
 ---
 
 ## 6. Risques & Points de Vigilance Techniques
 
-1. **Stabilité des IDs de Handles :** Les IDs de handles doivent être déterministes (`${side}-${source}-${target}`) afin que React Flow puisse relier l'arête à la bonne ancre sans perte d'état lors des re-renders.
-2. **Préservation du Tracé Glisser-Déposer :** Lorsqu'un utilisateur initie un nouveau connecteur depuis une poignée existante ou distribuée, le flanc canonique d'origine (`left`, `right`, `top`, `bottom` ou `auto`) doit être extrait fidèlement pour la persistance dans `!LAYOUT`.
-3. **Courbure Circulaire :** Sur `CircleNode`, les poignées ne doivent pas flotter en dehors du cercle ou être coupées : le calcul trigonométrique garantit leur tangence exacte sur le périmètre.
+1. **Stabilité des IDs de Handles :** Les IDs de points d'attache passifs doivent être déterministes (`${side}-${source}-${target}`) afin que React Flow puisse relier l'arête à la bonne ancre sans perte d'état lors des re-renders.
+2. **Pureté des Effets de Bord React :** Tout appel provoquant une mutation du document (`onCreateShape`) doit résider dans un gestionnaire d'événement impératif et jamais dans une fonction de mise à jour d'état fonctionnelle `setState(prev => ...)`.
+3. **Confusion Visuelle Utilisateur :** Aucun point d'attache distribué passif ne doit réagir au survol (`:hover`) ou devenir une source/cible de glisser-déposer. Seules les 5 poignées canoniques demeurent visibles.
 4. **Non-Régression sur les Sélecteurs E2E :** Les poignées cardinales de base continuent d'exister pour préserver tous les tests E2E et interactions existantes.
 
 ---
@@ -182,6 +201,20 @@ Feature: Distribution Multi-Ports & Redimensionnement Automatique (Spec 023)
     When l'utilisateur clique sur le bouton "Réorganiser"
     Then l'algorithme Dagre utilise la largeur et hauteur doublées pour calculer les positions
     And aucun nœud voisin ne chevauche le nœud agrandi
+
+  @INV-5
+  Scenario: Présence exclusive des 5 poignées interactives de création
+    Given une Shape avec plusieurs connecteurs distribués sur son flanc droit
+    When l'utilisateur survole la Shape pour initier un nouveau connecteur
+    Then seules les 5 poignées canoniques (top, bottom, left, right, auto) sont visibles et connectables
+    And les points d'attache distribués existants restent invisibles et non connectables
+
+  @INV-6
+  Scenario: Création unitaire et atomique d'un rectangle via la roue radiale
+    Given l'utilisateur survole le canvas
+    When il maintient la touche A, survole le secteur "rectangle" et relâche la touche A
+    Then exactement un seul rectangle est inséré dans le document .nanko
+    And aucun doublon n'est généré
 ```
 
 ### 8.2. Commandes de Validation & Quality Gates

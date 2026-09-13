@@ -1,7 +1,7 @@
 # Feature : Distribution Multi-Ports & Redimensionnement Automatique (09-multi-anchor-distribution-and-auto-scale)
 
 > **Parent Initiative :** `studio-modeling`  
-> **Status :** Delivered & Archived ✅  
+> **Status :** In Progress 🚀  
 > **Author(s) :** Nicolas & Nanko Core Team  
 > **Last Updated :** 2026-09-13  
 
@@ -10,6 +10,8 @@
 ## 1. Problem & Trigger
 
 Lorsque plusieurs connecteurs se branchent sur le même côté d'une Shape, la superposition sur un point unique engendre un effet « hérisson » confus, tandis qu'une concentration excessive de flux sature visuellement le composant. L'utilisateur déclenche cette mécanique en reliant de multiples flux sur une même face : le système répartit harmonieusement les points d'attache le long du bord et double automatiquement les dimensions de la Shape ($\times 2$) dès lors que la capacité nominale d'accueil de la face est dépassée.
+
+De surcroît, cette mécanique ne doit en aucun cas créer de confusion ergonomique : les poignées interactives servant à tracer un connecteur demeurent strictement limitées aux 5 points canoniques, et l'insertion de formes via la roue radiale (`A` + curseur) doit être unitaire et exempte de création dupliquée.
 
 ---
 
@@ -29,6 +31,15 @@ RÉPARTITION HARMONIEUSE MULTI-PORTS            DÉPASSEMENT DE CAPACITÉ (AUTO-
                                                      |   jusqu'à 16      | ───────>
                                                      |   flux réguliers] | ───────>
                                                      +-------------------+ ───────>
+
+ISOLEMENT STRICT HANDLES VS POINTS D'ATTACHE (INV-5) :
+Au survol pour créer un connecteur, SEULES les 5 poignées cardinales + auto sont visibles :
+               [Top]
+          +---------------+
+   [Left] |  [Auto (C)]   | [Right]    <-- 5 poignées interactives de création UNIQUEMENT
+          +---------------+
+              [Bottom]
+(Les points d'attache distribués existants restent passifs, invisibles et non connectables)
 ```
 
 ---
@@ -37,9 +48,11 @@ RÉPARTITION HARMONIEUSE MULTI-PORTS            DÉPASSEMENT DE CAPACITÉ (AUTO-
 
 1. **Déclenchement (Trigger) :** L'utilisateur connecte un nouveau flux entrant ou sortant sur une face comptant déjà un ou plusieurs connecteurs.
 2. **Interaction & Affichage (Interaction & Display) :**
-   * Les poignées d'ancrage de la face se redistribuent automatiquement à intervalles réguliers le long du segment (ex: à $\frac{1}{N+1}, \frac{2}{N+1} \dots$ de la longueur du bord), éliminant toute superposition.
+   * Les points d'attache de la face se redistribuent automatiquement à intervalles réguliers le long du segment (ex: à $\frac{1}{N+1}, \frac{2}{N+1} \dots$ de la longueur du bord), éliminant toute superposition.
+   * Ces points d'attache sont strictement passifs pour les flux déjà raccordés ; l'utilisateur continue d'initier ou d'accueillir de nouveaux tracés exclusivement depuis/vers les 5 poignées canoniques (`top`, `bottom`, `left`, `right`, `auto`).
    * Si le nombre total de connecteurs sur un flanc dépasse le seuil de capacité nominale (seuil fixé à 8 connecteurs par flanc standard), la forme s'agrandit automatiquement d'un facteur 2 sur la dimension correspondante.
-3. **Validation & Persistance (Validation & Persistence) :** Les nouvelles dimensions sont répercutées dans l'état du nœud. En cas de chevauchement spatial avec les composants voisins consécutif au redimensionnement, l'utilisateur rétablit instantanément l'espacement optimal via le bouton « Réorganiser » (Dagre).
+3. **Création unitaire par la Roue Radiale :** L'utilisateur peut à tout moment appuyer sur `A`, survoler un secteur (ex: `rectangle`) et relâcher la touche : exactement un unique composant est inséré sans aucun doublon.
+4. **Validation & Persistance (Validation & Persistence) :** Les nouvelles dimensions sont répercutées dans l'état du nœud. En cas de chevauchement spatial avec les composants voisins consécutif au redimensionnement, l'utilisateur rétablit instantanément l'espacement optimal via le bouton « Réorganiser » (Dagre).
 
 ---
 
@@ -52,6 +65,11 @@ RÉPARTITION HARMONIEUSE MULTI-PORTS            DÉPASSEMENT DE CAPACITÉ (AUTO-
   * Dès le 9ᵉ connecteur raccordé sur un flanc horizontal (`top` ou `bottom`), la largeur de la forme est multipliée par 2.
 * **INV-3 (Universalité des formes) :** La règle d'auto-agrandissement s'applique à l'ensemble des formes (`rectangle`, `circle` par doublement de son diamètre, et `text`).
 * **INV-4 (Désengorgement par réorganisation Dagre) :** Le redimensionnement n'active pas de moteur physique de répulsion dynamique en temps réel ; la résolution des chevauchements spatiaux éventuels est déléguée à l'action de réorganisation Dagre de la barre d'outils.
+* **INV-5 (Strict isolement des 5 handles de création vs points d'attache passifs) :**
+  * Il n'y a que 5 poignées interactives de création sur une Shape (`top`, `bottom`, `left`, `right`, et `auto` centrale).
+  * Les points d'attache distribués pour les flux existants sont 100% passifs (`isConnectable = false`), invisibles au survol (`opacity: 0; pointer-events: none`), et ne portent pas la classe de création `.nanko-handle`.
+* **INV-6 (Création atomique et unitaire via la roue radiale) :**
+  * L'insertion de forme déclenchée par la roue radiale (`A` ou `Tab` maintenu + survol de secteur ou clic) crée strictement une seule forme. Aucun doublon ne doit être produit, y compris sous React `<StrictMode>` ou lors d'interactions combinées clavier/souris.
 
 ---
 
@@ -65,4 +83,4 @@ RÉPARTITION HARMONIEUSE MULTI-PORTS            DÉPASSEMENT DE CAPACITÉ (AUTO-
 
 ## 6. Implementation Spec(s)
  
-* [023-multi-anchor-distribution-and-auto-scale.md](../../../specs/archive/023-multi-anchor-distribution-and-auto-scale.md)
+* [023-multi-anchor-distribution-and-auto-scale.md](../../../specs/active/023-multi-anchor-distribution-and-auto-scale.md)
