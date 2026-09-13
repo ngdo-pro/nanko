@@ -1,11 +1,11 @@
 # Spec : 024 - Pontets de Croisement des Connecteurs & Hiérarchie Z-Index
 
 ## Métadonnées
-* **Statut :** `En cours 🚀`
+* **Statut :** `Livré & Archivé ✅`
 * **Domaine concerné :** `studio-modeling` ([Architecture Technique](../../knowledge/domains/studio-modeling/tech.md) · [Comportement Produit](../../knowledge/domains/studio-modeling/behavior.md))
 * **Type de changement :** `Évolution Visuelle & Ergonomie`
 * **Cible :** `frontend` (React Flow, Arêtes NankoEdge, Calculs Géométriques LineJumps, NankoCanvas) + `tests-e2e` (Playwright)
-* **Feature parente :** [14-connector-line-jumps](../../initiatives/active/studio-modeling/active/14-connector-line-jumps.md)
+* **Feature parente :** [14-connector-line-jumps](../../initiatives/active/studio-modeling/archive/14-connector-line-jumps.md)
 * **Complexité :** `Medium`
 
 ---

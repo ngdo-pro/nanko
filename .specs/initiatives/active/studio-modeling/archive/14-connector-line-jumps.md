@@ -1,7 +1,7 @@
 # Feature : Pontets de Croisement des Connecteurs (14-connector-line-jumps)
 
 > **Parent Initiative :** `studio-modeling`  
-> **Status :** Active 🚀  
+> **Status :** Livré & Archivé ✅  
 > **Author(s) :** Nicolas & Nanko Core Team  
 > **Last Updated :** 2026-09-13  
 
@@ -73,4 +73,4 @@ SURVOL INTERACTIF : ÉLÉVATION DYNAMIQUE AU PREMIER PLAN
 
 ## 6. Implementation Spec(s)
 
-* [Spec 024 - Pontets de Croisement des Connecteurs & Hiérarchie Z-Index](../../../../specs/active/024-connector-line-jumps.md)
+* [Spec 024 - Pontets de Croisement des Connecteurs & Hiérarchie Z-Index](../../../../specs/archive/024-connector-line-jumps.md)

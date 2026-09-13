@@ -57,6 +57,7 @@ flowchart TD
 | `JRN-06` | Insertion rapide via Menu Radial | Utilisateur | Clic contextuel | Roue radiale d'actions immédiates (rect, circle, flux) |
 | `JRN-07` | Tracé de Connecteur par Glisser & Magnétisme | Utilisateur | Glisser depuis une poignée révélée | Fil élastique, aimantation cible (< 32px), injection `source -> target` |
 | `JRN-08` | Distribution Multi-Ports & Redimensionnement Automatique | Utilisateur | Multiples flux connectés sur un même flanc | Répartition uniforme sans collision, auto-scale x2 si > 8 flux |
+| `JRN-09` | Pontets de Croisement (Line Jumps) & Hiérarchie Z-Index | Utilisateur | Croisement orthogonal de connecteurs / Survol | Arc semi-circulaire (r=6px) sur l'arête au premier plan ; survol élevant temporairement l'arête |
 
 ---
 
@@ -120,6 +121,15 @@ flowchart TD
   3. Dès lors que le nombre de connecteurs sur un flanc dépasse la capacité nominale de 8 flux, la dimension correspondante (hauteur pour flancs verticaux, largeur pour flancs horizontaux, diamètre pour cercle) double automatiquement ($\times 2$).
   4. En cas de chevauchement spatial consécutif au redimensionnement, l'utilisateur rétablit l'espacement optimal en un clic sur le bouton « Réorganiser » (Dagre).
 
+### `JRN-09` : Pontets de Croisement des Connecteurs (Line Jumps) & Hiérarchie Z-Index
+* **Contexte :** Croisement visuel de connecteurs orthogonaux indépendants sur le canvas.
+* **Flux Nominal :**
+  1. Lorsque deux connecteurs orthogonaux se croisent sur le canvas sans partager d'extrémité, le système calcule le point d'intersection transverse.
+  2. Le connecteur disposant du z-index effectif supérieur (ordre d'apparition dans l'AST ou survol actif) injecte un arc demi-cercle régulier ($r = 6\text{px}$) orienté dans le sens du tracé.
+  3. Le connecteur inférieur conserve un tracé rectiligne continu passant « sous le pont ».
+  4. Au survol d'un connecteur avec le pointeur (`:hover`), son z-index s'élève immédiatement (`zIndex: 1000`) : le pontet s'inverse instantanément et ce flux enjambe désormais tous les connecteurs traversés pour une traçabilité visuelle immédiate.
+  5. Les angles droits Blueprint (`borderRadius: 0`), le déport du label (36px) et le contact périmétrique circulaire (`INV-7`) sont rigoureusement préservés.
+
 ---
 
 ## 5. Invariants Fonctionnels & Règles Métier
@@ -131,6 +141,7 @@ flowchart TD
 * **`INV-BUS-05` (Omnidirectionnalité & Ancrage Dynamique) :** Les 4 poignées cardinales de toute forme autorisent indifféremment l'émission et la réception de flux. L'ancre centrale `auto` recalcule les flancs de contact optimaux en temps réel lors du déplacement des nœuds.
 * **`INV-BUS-06` (Positionnement Déterministe du Label de Flux) :** Le libellé du connecteur est positionné à une distance fixe de 36px de la poignée source le long du tracé (borné au milieu si distance < 72px).
 * **`INV-BUS-07` (Répartition Uniforme Multi-Ports, Auto-Scale $\times 2$ & Contact Périmétrique) :** Chaque connecteur raccordé sur un flanc disposant de $N$ flux se voit allouer un point d'attache dédié équidistant à $\frac{i+1}{N+1}$. Seules les 5 poignées canoniques (`top`, `bottom`, `left`, `right`, `auto`) sont interactives pour la création de flux ; les points d'attache distribués existants sont strictement passifs et invisibles au survol. Les connecteurs se dirigent vers le centre et s'arrêtent net sur la frontière réelle de la forme affichée (découpe sur le rayon $R$ pour `circle` sur les 4 flancs, contact direct pour `rectangle`), éliminant tout décollement visuel. L'insertion via la roue radiale (`A` + curseur) est atomique et produit strictement une forme unique. Dès le 9ᵉ flux sur un flanc, la forme s'agrandit automatiquement d'un facteur 2 sur la dimension correspondante (hauteur, largeur ou diamètre).
+* **`INV-BUS-08` (Pontets de Croisement Orthogonaux & Priorité Z-Index) :** Seuls les croisements transversaux stricts entre segments orthogonaux engendrent un pontet semi-circulaire régulier ($r = 6\text{px}$). C'est exclusivement l'arête de rang supérieur (ordre AST ou élévation active au survol) qui porte l'arc SVG ; l'arête inférieure demeure rectiligne continue. Les segments colinéaires et les connexions partageant un handle sont rigoureusement exclus.
 
 ---
 
@@ -142,3 +153,4 @@ flowchart TD
 | **Boucle Circulaire de Dépendance** | Références croisées complexes | Dagre applique une inversion temporaire d'arête pour garantir un layout acyclique sans crash | Visualisation de l'arête avec flèche bi-directionnelle |
 | **Texte de Description Très Long** | Contenu documentaire dense | La troncature à 2 lignes évite la déformation du nœud ; le tooltip prend le relais | Lecture fluide avec ascenseur dans l'infobulle Blueprint |
 | **Connexion Invalide ou Doublon** | Tentative d'auto-boucle ou lien identique | `isValidConnection` retourne `false` ; le fil est annulé sans altération du code source | Relâcher sur une forme ou poignée valide |
+| **Croisement Proche d'un Coude / Angle** | Intersection située à moins de 12px d'un virage orthogonal | Le calcul applique une tolérance géométrique de dégagement pour éviter toute déformation ou écrasement de l'arc de saut | Le connecteur conserve un tracé lisible sans repliement d'arc |
