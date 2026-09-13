@@ -144,14 +144,15 @@ tests-e2e/tests/app/
 ## 4. Spécifications Détaillées par Couche
 
 ### 4.2. Couche Présentation & Frontend
-* **`shapeGeometry.ts` :**
-  - Définit le contrat `ShapeGeometry` avec `getPerimeterContact(side, offsetPercentage, dimensions, shapeType)`.
-  - Pour `rectangle` et `text` : le point de contact correspond directement au point de slot sur la boîte.
-  - Pour `circle` : le point d'impact est calculé par intersection entre la ligne de visée orientée vers le centre et le cercle de rayon $R = \frac{\min(w, h)}{2}$ :
-    - Flanc `left` : $x_{\text{rel}} = 50\% - \sqrt{\max(0, 0.25 - y_{\text{rel}}^2)} \times 100$, $y_{\text{rel}} = \text{offsetPercentage}$.
-    - Flanc `right` : $x_{\text{rel}} = 50\% + \sqrt{\max(0, 0.25 - y_{\text{rel}}^2)} \times 100$, $y_{\text{rel}} = \text{offsetPercentage}$.
-    - Flanc `top` : $y_{\text{rel}} = 50\% - \sqrt{\max(0, 0.25 - x_{\text{rel}}^2)} \times 100$, $x_{\text{rel}} = \text{offsetPercentage}$.
-    - Flanc `bottom` : $y_{\text{rel}} = 50\% + \sqrt{\max(0, 0.25 - x_{\text{rel}}^2)} \times 100$, $x_{\text{rel}} = \text{offsetPercentage}$.
+* **`shapeGeometry.ts` & `NankoEdge.tsx` :**
+  - Définit le contrat `PerimeterContactResult` avec `getPerimeterContact(side, offsetPercentage, shapeType)`.
+  - Pour `rectangle` et `text` : la boîte de manipulation et la forme affichée se confondent ($P_{\text{box}} = P_{\text{contact}}$, delta nul).
+  - Pour `circle` : le connecteur arrive au point de slot $P_{\text{box}}$ sur l'arrête du rectangle englobant, puis est orienté en ligne droite vers le centre $C = (50\%, 50\%)$ de la forme affichée et s'arrête pile sur le périmètre circulaire de rayon $R = 50\%$ :
+    - Vecteur de visée vers le centre : $\vec{v} = P_{\text{box}} - C$.
+    - Distance au centre : $L = \|\vec{v}\| = \sqrt{v_x^2 + v_y^2}$.
+    - Point de contact sur le cercle : $P_{\text{contact}} = C + \frac{R}{L} \cdot \vec{v}$.
+    - Décalage vectoriel : $\vec{\delta} = P_{\text{contact}} - P_{\text{box}}$.
+  - Dans `NankoEdge.tsx`, le tracé orthogonal (SmoothStep) rejoint $P_{\text{box}}$, puis un segment terminal rectiligne `L (targetX + dx) (targetY + dy)` est ajouté en direction du centre, garantissant que la flèche (`markerEnd`) touche directement le contour du cercle avec l'orientation vers le centre.
 * **`anchorDistribution.ts` :**
   - Entrées : `ast.shapes`, `ast.connectors`, `ast.edgeLayout`, positions des nœuds.
   - Ordonne les connecteurs le long de chaque flanc selon la coordonnée du nœud opposé.

@@ -140,7 +140,12 @@ function buildEdgesFromAst(
       targetHandle,
       type: 'nanko',
       label: connector.label ?? undefined,
-      data: { label: connector.label, desc: connector.desc },
+      data: {
+        label: connector.label,
+        desc: connector.desc,
+        sourceContactOffset: assignment?.sourceContactOffset,
+        targetContactOffset: assignment?.targetContactOffset,
+      },
       markerEnd: {
         type: MarkerType.ArrowClosed,
         width: 14,

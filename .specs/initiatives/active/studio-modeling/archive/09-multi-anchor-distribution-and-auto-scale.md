@@ -114,4 +114,4 @@ Flux 2     |                       (Centre)                        |
 
 ## 6. Implementation Spec(s)
  
-* [023-multi-anchor-distribution-and-auto-scale.md](../../../specs/active/023-multi-anchor-distribution-and-auto-scale.md)
+* [023-multi-anchor-distribution-and-auto-scale.md](../../../specs/archive/023-multi-anchor-distribution-and-auto-scale.md)

@@ -62,7 +62,12 @@ export const NankoEdge: React.FC<EdgeProps> = ({
     }
   }
 
-  const edgeData = data as { label?: string | null; desc?: string | null } | undefined
+  const edgeData = data as {
+    label?: string | null
+    desc?: string | null
+    sourceContactOffset?: { dx: number; dy: number }
+    targetContactOffset?: { dx: number; dy: number }
+  } | undefined
   const edgeLabel = (label as string) || (edgeData?.label as string) || ''
   const edgeDesc = edgeData?.desc || null
   const {
@@ -75,11 +80,26 @@ export const NankoEdge: React.FC<EdgeProps> = ({
 
   const hasBadge = Boolean(edgeLabel || edgeDesc)
 
+  let finalPath = edgePath
+  const targetOffset = edgeData?.targetContactOffset
+  const sourceOffset = edgeData?.sourceContactOffset
+
+  if (targetOffset && (targetOffset.dx !== 0 || targetOffset.dy !== 0)) {
+    finalPath = `${finalPath} L ${targetX + targetOffset.dx} ${targetY + targetOffset.dy}`
+  }
+
+  if (sourceOffset && (sourceOffset.dx !== 0 || sourceOffset.dy !== 0)) {
+    const sx = sourceX + sourceOffset.dx
+    const sy = sourceY + sourceOffset.dy
+    const restOfPath = finalPath.replace(/^M\s*[-0-9.]+[,\s]+[-0-9.]+/, '')
+    finalPath = `M ${sx} ${sy} L ${sourceX} ${sourceY}${restOfPath}`
+  }
+
   return (
     <>
       <BaseEdge
         id={id}
-        path={edgePath}
+        path={finalPath}
         markerEnd={markerEnd}
         style={{
           stroke: 'var(--brand)',

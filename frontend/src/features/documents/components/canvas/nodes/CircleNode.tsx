@@ -86,10 +86,10 @@ export const CircleNode: React.FC<NodeProps> = ({ id, data, selected }) => {
                 ? Position.Top
                 : Position.Bottom
 
-        const style: React.CSSProperties = {
-          left: h.circleLeftPercentage !== undefined ? `${h.circleLeftPercentage}%` : undefined,
-          top: h.circleTopPercentage !== undefined ? `${h.circleTopPercentage}%` : undefined,
-        }
+        const style: React.CSSProperties =
+          h.side === 'left' || h.side === 'right'
+            ? { top: `${h.offsetPercentage}%` }
+            : { left: `${h.offsetPercentage}%` }
 
         return (
           <Handle

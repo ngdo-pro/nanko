@@ -224,11 +224,11 @@ describe('anchorDistribution', () => {
     // On top flank, circleTopPercentage must be > 0 (curved inward from top edge y=0)
     expect(topHandles[0].circleTopPercentage).toBeGreaterThan(0)
     expect(topHandles[0].circleTopPercentage).toBeLessThan(50)
-    expect(topHandles[0].circleLeftPercentage).toBe(33.33)
+    expect(topHandles[0].circleLeftPercentage).toBeCloseTo(34.19, 1)
 
     // On bottom flank, circleTopPercentage must be < 100 (curved inward from bottom edge y=100)
     expect(bottomHandles[0].circleTopPercentage).toBeLessThan(100)
     expect(bottomHandles[0].circleTopPercentage).toBeGreaterThan(50)
-    expect(bottomHandles[0].circleLeftPercentage).toBe(33.33)
+    expect(bottomHandles[0].circleLeftPercentage).toBeCloseTo(34.19, 1)
   })
 })

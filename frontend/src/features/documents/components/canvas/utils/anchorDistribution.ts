@@ -20,11 +20,18 @@ export interface NodeScaleState {
   isCircleScaled: boolean
 }
 
+export interface ContactOffset {
+  dx: number
+  dy: number
+}
+
 export interface EdgeAnchorAssignment {
   sourceHandle: string
   targetHandle: string
   sourceSide: CardinalAnchorSide
   targetSide: CardinalAnchorSide
+  sourceContactOffset?: ContactOffset
+  targetContactOffset?: ContactOffset
 }
 
 export interface AnchorDistributionResult {
@@ -39,13 +46,15 @@ interface ConnectedEdgeRef {
   oppositeNodeId: string
 }
 
-function getNodeBounds(node: Node | undefined): NodeBounds {
+function getNodeBounds(node: Node | undefined, isScaled: boolean = false): NodeBounds {
   if (!node) {
     return { x: 0, y: 0, width: 160, height: 60 }
   }
   const isCircle = node.type === 'circle'
-  const width = node.measured?.width ?? (isCircle ? 130 : 160)
-  const height = node.measured?.height ?? (isCircle ? 130 : 60)
+  const defaultW = isCircle ? (isScaled ? 260 : 130) : 160
+  const defaultH = isCircle ? (isScaled ? 260 : 130) : 60
+  const width = Math.max(node.measured?.width ?? defaultW, defaultW)
+  const height = Math.max(node.measured?.height ?? defaultH, defaultH)
   return {
     x: node.position.x,
     y: node.position.y,
@@ -241,8 +250,24 @@ export function computeAnchorDistribution(
         if (assignment) {
           if (edgeRef.isSource) {
             assignment.sourceHandle = handleId
+            if (isCircle) {
+              const contact = getPerimeterContact(side, offsetPercentage, 'circle')
+              const bounds = getNodeBounds(node, isCircleScaled)
+              assignment.sourceContactOffset = {
+                dx: Math.round((contact.deltaXPercentage / 100) * bounds.width * 100) / 100,
+                dy: Math.round((contact.deltaYPercentage / 100) * bounds.height * 100) / 100,
+              }
+            }
           } else {
             assignment.targetHandle = handleId
+            if (isCircle) {
+              const contact = getPerimeterContact(side, offsetPercentage, 'circle')
+              const bounds = getNodeBounds(node, isCircleScaled)
+              assignment.targetContactOffset = {
+                dx: Math.round((contact.deltaXPercentage / 100) * bounds.width * 100) / 100,
+                dy: Math.round((contact.deltaYPercentage / 100) * bounds.height * 100) / 100,
+              }
+            }
           }
         }
       }
