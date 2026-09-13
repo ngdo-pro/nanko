@@ -47,8 +47,8 @@ export function calculateDagreLayout<T extends Record<string, unknown> = Record<
       if (scale?.isVerticalScaled) defaultH *= 2
     }
 
-    const width = node.measured?.width ?? defaultW
-    const height = node.measured?.height ?? defaultH
+    const width = Math.max(node.measured?.width ?? defaultW, defaultW)
+    const height = Math.max(node.measured?.height ?? defaultH, defaultH)
     dagreGraph.setNode(node.id, { width, height })
   }
 
@@ -76,8 +76,8 @@ export function calculateDagreLayout<T extends Record<string, unknown> = Record<
       if (scale?.isVerticalScaled) defaultH *= 2
     }
 
-    const width = node.measured?.width ?? defaultW
-    const height = node.measured?.height ?? defaultH
+    const width = Math.max(node.measured?.width ?? defaultW, defaultW)
+    const height = Math.max(node.measured?.height ?? defaultH, defaultH)
 
     // Dagre positionne par rapport au centre, React Flow par rapport au coin supérieur gauche
     return {

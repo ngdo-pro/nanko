@@ -1,6 +1,7 @@
 import type { Node } from '@xyflow/react'
 import type { CardinalAnchorSide, NodeBounds } from './connectorGeometry'
 import { getOptimalConnectorSides, isCardinalSide } from './connectorGeometry'
+import { getPerimeterContact } from './shapeGeometry'
 import type { NankoAst } from '@/features/documents'
 
 export const CAPACITY_THRESHOLD = 8
@@ -174,8 +175,8 @@ export function computeAnchorDistribution(
     const isCircleScaled = isVerticalScaled || isHorizontalScaled
 
     nodeScale.set(nodeId, {
-      isVerticalScaled,
-      isHorizontalScaled,
+      isVerticalScaled: isCircle ? isCircleScaled : isVerticalScaled,
+      isHorizontalScaled: isCircle ? isCircleScaled : isHorizontalScaled,
       isCircleScaled,
     })
 
@@ -222,20 +223,9 @@ export function computeAnchorDistribution(
         let circleTopPercentage: number | undefined
 
         if (isCircle) {
-          // Calcul trigonométrique sur l'arc du cercle (centre = 50%, rayon = 50%)
-          if (side === 'left' || side === 'right') {
-            const yRel = ratio - 0.5
-            const xOffset = Math.sqrt(Math.max(0, 0.25 - yRel * yRel))
-            const xRel = side === 'left' ? -xOffset : xOffset
-            circleLeftPercentage = Math.round((0.5 + xRel) * 10000) / 100
-            circleTopPercentage = offsetPercentage
-          } else {
-            const xRel = ratio - 0.5
-            const yOffset = Math.sqrt(Math.max(0, 0.25 - xRel * xRel))
-            const yRel = side === 'top' ? -yOffset : yOffset
-            circleLeftPercentage = offsetPercentage
-            circleTopPercentage = Math.round((0.5 + yRel) * 10000) / 100
-          }
+          const contact = getPerimeterContact(side, offsetPercentage, 'circle')
+          circleLeftPercentage = Math.round(contact.xPercentage * 100) / 100
+          circleTopPercentage = Math.round(contact.yPercentage * 100) / 100
         }
 
         handlesList.push({

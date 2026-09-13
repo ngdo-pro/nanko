@@ -178,4 +178,57 @@ describe('anchorDistribution', () => {
     expect(routerScale?.isHorizontalScaled).toBe(true)
     expect(routerScale?.isVerticalScaled).toBe(false)
   })
+
+  it('calculates perimeter contact points on top and bottom flanks for circle shapes (INV-7)', () => {
+    const ast: NankoAst = {
+      shapes: [
+        { id: 'center', type: 'circle', label: 'Center', desc: null },
+        { id: 'top1', type: 'rectangle', label: 'Top 1', desc: null },
+        { id: 'top2', type: 'rectangle', label: 'Top 2', desc: null },
+        { id: 'bottom1', type: 'rectangle', label: 'Bottom 1', desc: null },
+        { id: 'bottom2', type: 'rectangle', label: 'Bottom 2', desc: null },
+      ],
+      connectors: [
+        { source: 'center', target: 'top1', label: null, desc: null },
+        { source: 'center', target: 'top2', label: null, desc: null },
+        { source: 'center', target: 'bottom1', label: null, desc: null },
+        { source: 'center', target: 'bottom2', label: null, desc: null },
+      ],
+      edgeLayout: {
+        'center->top1': { from: 'top', to: 'bottom' },
+        'center->top2': { from: 'top', to: 'bottom' },
+        'center->bottom1': { from: 'bottom', to: 'top' },
+        'center->bottom2': { from: 'bottom', to: 'top' },
+      },
+      dslVersion: 1,
+    }
+
+    const nodes: Node[] = [
+      { id: 'center', type: 'circle', position: { x: 200, y: 200 }, data: {} },
+      { id: 'top1', type: 'rectangle', position: { x: 100, y: 0 }, data: {} },
+      { id: 'top2', type: 'rectangle', position: { x: 300, y: 0 }, data: {} },
+      { id: 'bottom1', type: 'rectangle', position: { x: 100, y: 400 }, data: {} },
+      { id: 'bottom2', type: 'rectangle', position: { x: 300, y: 400 }, data: {} },
+    ]
+
+    const result = computeAnchorDistribution(ast, nodes)
+    const handles = result.nodeHandles.get('center') ?? []
+
+    // 2 on top (slots at 33.33% and 66.67%), 2 on bottom (slots at 33.33% and 66.67%)
+    const topHandles = handles.filter((h) => h.side === 'top')
+    const bottomHandles = handles.filter((h) => h.side === 'bottom')
+
+    expect(topHandles.length).toBe(2)
+    expect(bottomHandles.length).toBe(2)
+
+    // On top flank, circleTopPercentage must be > 0 (curved inward from top edge y=0)
+    expect(topHandles[0].circleTopPercentage).toBeGreaterThan(0)
+    expect(topHandles[0].circleTopPercentage).toBeLessThan(50)
+    expect(topHandles[0].circleLeftPercentage).toBe(33.33)
+
+    // On bottom flank, circleTopPercentage must be < 100 (curved inward from bottom edge y=100)
+    expect(bottomHandles[0].circleTopPercentage).toBeLessThan(100)
+    expect(bottomHandles[0].circleTopPercentage).toBeGreaterThan(50)
+    expect(bottomHandles[0].circleLeftPercentage).toBe(33.33)
+  })
 })

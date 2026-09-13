@@ -206,10 +206,8 @@
 }
 
 :global(.nanko-passive-anchor-circle) {
-  left: unset !important;
-  right: unset !important;
-  top: unset !important;
-  bottom: unset !important;
+  right: auto !important;
+  bottom: auto !important;
   transform: translate(-50%, -50%) !important;
 }
 

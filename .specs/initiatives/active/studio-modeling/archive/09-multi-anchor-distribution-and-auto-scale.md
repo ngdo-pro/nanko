@@ -1,7 +1,7 @@
 # Feature : Distribution Multi-Ports & Redimensionnement Automatique (09-multi-anchor-distribution-and-auto-scale)
 
 > **Parent Initiative :** `studio-modeling`  
-> **Status :** In Progress 🚀  
+> **Status :** Livré & Archivé ✅  
 > **Author(s) :** Nicolas & Nanko Core Team  
 > **Last Updated :** 2026-09-13  
 
