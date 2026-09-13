@@ -9,6 +9,7 @@ import {
 import clsx from 'clsx'
 import { BlueprintTooltip } from '../tooltip/BlueprintTooltip'
 import { useHoverTooltip } from '../tooltip/useHoverTooltip'
+import { applyLineJumpsToPath, type LineJumpDescriptor } from '../utils/lineJumps'
 import styles from './NankoEdge.module.css'
 
 export const NankoEdge: React.FC<EdgeProps> = ({
@@ -67,6 +68,7 @@ export const NankoEdge: React.FC<EdgeProps> = ({
     desc?: string | null
     sourceContactOffset?: { dx: number; dy: number }
     targetContactOffset?: { dx: number; dy: number }
+    jumps?: LineJumpDescriptor[]
   } | undefined
   const edgeLabel = (label as string) || (edgeData?.label as string) || ''
   const edgeDesc = edgeData?.desc || null
@@ -81,6 +83,10 @@ export const NankoEdge: React.FC<EdgeProps> = ({
   const hasBadge = Boolean(edgeLabel || edgeDesc)
 
   let finalPath = edgePath
+  if (edgeData?.jumps && edgeData.jumps.length > 0) {
+    finalPath = applyLineJumpsToPath(finalPath, edgeData.jumps)
+  }
+
   const targetOffset = edgeData?.targetContactOffset
   const sourceOffset = edgeData?.sourceContactOffset
 

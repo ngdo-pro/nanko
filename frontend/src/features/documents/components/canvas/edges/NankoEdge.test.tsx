@@ -220,4 +220,78 @@ describe('NankoEdge', () => {
     // Le tracé doit débuter au point d'impact sur le cercle et passer par la boîte de manipulation
     expect(d).toMatch(/^M\s*93.14\s+96.57\s+L\s+100\s+100/)
   })
+
+  it('insère les arcs de pontet SVG quand data.jumps est fourni (INV-3)', () => {
+    const { container } = render(
+      <svg>
+        <NankoEdge
+          id="a->b"
+          source="a"
+          target="b"
+          sourceX={100}
+          sourceY={100}
+          targetX={300}
+          targetY={100}
+          sourcePosition={Position.Right}
+          targetPosition={Position.Left}
+          label=""
+          data={{
+            label: null,
+            desc: null,
+            jumps: [
+              {
+                x: 200,
+                y: 100,
+                segmentIndex: 0,
+                orientation: 'horizontal',
+                direction: 'positive',
+              },
+            ],
+          }}
+        />
+      </svg>,
+    )
+
+    const path = container.querySelector('.react-flow__edge-path')
+    const d = path?.getAttribute('d') ?? ''
+    expect(d).toContain('A 6 6 0 0 1')
+  })
+
+  it('préserve les pontets et le segment terminal circulaire (INV-5)', () => {
+    const { container } = render(
+      <svg>
+        <NankoEdge
+          id="gw->circle"
+          source="gw"
+          target="circle"
+          sourceX={100}
+          sourceY={100}
+          targetX={300}
+          targetY={100}
+          sourcePosition={Position.Right}
+          targetPosition={Position.Left}
+          label=""
+          data={{
+            label: null,
+            desc: null,
+            targetContactOffset: { dx: 10, dy: 5 },
+            jumps: [
+              {
+                x: 200,
+                y: 100,
+                segmentIndex: 0,
+                orientation: 'horizontal',
+                direction: 'positive',
+              },
+            ],
+          }}
+        />
+      </svg>,
+    )
+
+    const path = container.querySelector('.react-flow__edge-path')
+    const d = path?.getAttribute('d') ?? ''
+    expect(d).toContain('A 6 6 0 0 1')
+    expect(d).toContain('L 310 105')
+  })
 })

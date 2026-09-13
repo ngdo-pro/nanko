@@ -253,6 +253,38 @@ describe('NankoCanvas', () => {
     expect(coreNode.className).toContain('isScaledY')
   })
 
+  it('calcule et applique les pontets de croisement de connecteurs (Line Jumps Spec 024)', async () => {
+    const lineJumpsModule = await import('./utils/lineJumps')
+    const spy = vi.spyOn(lineJumpsModule, 'computeAstEdgeCrossovers')
+
+    const crossingAst: NankoAst = {
+      dslVersion: 1,
+      shapes: [
+        { id: 'leftNode', type: 'rectangle', label: 'Left', desc: null },
+        { id: 'rightNode', type: 'rectangle', label: 'Right', desc: null },
+        { id: 'topNode', type: 'rectangle', label: 'Top', desc: null },
+        { id: 'bottomNode', type: 'rectangle', label: 'Bottom', desc: null },
+      ],
+      connectors: [
+        { source: 'leftNode', target: 'rightNode', label: null, desc: null },
+        { source: 'topNode', target: 'bottomNode', label: null, desc: null },
+      ],
+      layout: {
+        leftNode: { x: 0, y: 200 },
+        rightNode: { x: 400, y: 200 },
+        topNode: { x: 200, y: 0 },
+        bottomNode: { x: 200, y: 400 },
+      },
+      edgeLayout: {
+        'leftNode->rightNode': { from: 'right', to: 'left' },
+        'topNode->bottomNode': { from: 'bottom', to: 'top' },
+      },
+    }
+
+    render(<NankoCanvas ast={crossingAst} />)
+    expect(spy).toHaveBeenCalled()
+    spy.mockRestore()
+  })
 
   describe('isValidNankoConnection [INV-3]', () => {
     const existingEdges = [
