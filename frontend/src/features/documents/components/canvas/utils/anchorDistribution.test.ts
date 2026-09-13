@@ -231,4 +231,28 @@ describe('anchorDistribution', () => {
     expect(bottomHandles[0].circleTopPercentage).toBeGreaterThan(50)
     expect(bottomHandles[0].circleLeftPercentage).toBeCloseTo(34.19, 1)
   })
+
+  it('calculates sourceContactOffset on circle source with multiple distributed connectors (INV-7)', () => {
+    const connectors: NankoAst['connectors'] = []
+    const shapes: NankoAst['shapes'] = [{ id: 'app', type: 'circle', label: 'test', desc: null }]
+    const nodes: Node[] = [{ id: 'app', type: 'circle', position: { x: -217, y: 521 }, data: {} }]
+    const edgeLayout: NonNullable<NankoAst['edgeLayout']> = {}
+
+    for (let i = 1; i <= 8; i++) {
+      const id = `rect_${i}`
+      shapes.push({ id, type: 'rectangle', label: `Rectangle ${i}`, desc: null })
+      connectors.push({ source: 'app', target: id, label: null, desc: null })
+      nodes.push({ id, type: 'rectangle', position: { x: 410, y: 1170 - i * 140 }, data: {} })
+      edgeLayout[`app->${id}`] = { from: 'right', to: 'left' }
+    }
+
+    const ast: NankoAst = { shapes, connectors, edgeLayout, dslVersion: 1 }
+    const result = computeAnchorDistribution(ast, nodes)
+
+    const assignment8 = result.edgeAssignments.get('app->rect_8')
+    expect(assignment8?.sourceHandle).toBe('right-app->rect_8')
+    expect(assignment8?.sourceContactOffset).toBeDefined()
+    expect(assignment8?.sourceContactOffset?.dx).toBeLessThan(0)
+    expect(assignment8?.sourceContactOffset?.dy).toBeGreaterThan(0)
+  })
 })

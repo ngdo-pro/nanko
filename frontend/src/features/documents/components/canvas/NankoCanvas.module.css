@@ -205,11 +205,6 @@
   min-height: 0 !important;
 }
 
-:global(.nanko-passive-anchor-circle) {
-  right: auto !important;
-  bottom: auto !important;
-  transform: translate(-50%, -50%) !important;
-}
 
 /* Labels d'arêtes */
 :global(.react-flow__edgelabel-renderer) {
