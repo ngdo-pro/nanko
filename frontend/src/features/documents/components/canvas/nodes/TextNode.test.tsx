@@ -124,4 +124,45 @@ describe('TextNode', () => {
     expect(container.querySelector('.nanko-handle-bottom')).toBeInTheDocument()
     expect(container.querySelector('.nanko-handle-auto')).toBeInTheDocument()
   })
+
+  it('rend les poignées distribuées et applique les classes isScaledX et isScaledY (INV-1, INV-2)', () => {
+    const { container } = render(
+      <ReactFlowProvider>
+        <TextNode
+          id="note"
+          data={{
+            label: 'Note',
+            nodeId: 'note',
+            handles: [
+              { id: 'top-1', side: 'top', offsetPercentage: 33.33 },
+              { id: 'top-2', side: 'top', offsetPercentage: 66.67 },
+            ],
+            scale: {
+              isVerticalScaled: true,
+              isHorizontalScaled: true,
+              isCircleScaled: false,
+            },
+          }}
+          selected={false}
+          zIndex={1}
+          isConnectable={true}
+          positionAbsoluteX={0}
+          positionAbsoluteY={0}
+          type="text"
+          dragging={false}
+          selectable={true}
+          deletable={true}
+          draggable={true}
+        />
+      </ReactFlowProvider>,
+    )
+
+    const handles = container.querySelectorAll('.nanko-handle')
+    expect(handles).toHaveLength(7) // 5 base + 2 distributed
+
+    const nodeEl = screen.getByTestId('canvas-node-note')
+    expect(nodeEl.className).toContain('isScaledX')
+    expect(nodeEl.className).toContain('isScaledY')
+  })
 })
+

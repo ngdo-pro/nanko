@@ -169,6 +169,66 @@ describe('NankoCanvas', () => {
     expect(frontNode.querySelector('.nanko-handle-auto')).toBeInTheDocument()
   })
 
+  it('rend des poignées distribuées sur une face comptant plusieurs connecteurs (INV-1)', () => {
+    const multiAst: NankoAst = {
+      shapes: [
+        { id: 'gw', type: 'rectangle', label: 'Gateway', desc: null },
+        { id: 's1', type: 'rectangle', label: 'S1', desc: null },
+        { id: 's2', type: 'rectangle', label: 'S2', desc: null },
+        { id: 's3', type: 'rectangle', label: 'S3', desc: null },
+      ],
+      connectors: [
+        { source: 'gw', target: 's1', label: null, desc: null },
+        { source: 'gw', target: 's2', label: null, desc: null },
+        { source: 'gw', target: 's3', label: null, desc: null },
+      ],
+      layout: {
+        gw: { x: 0, y: 100 },
+        s1: { x: 300, y: 0 },
+        s2: { x: 300, y: 100 },
+        s3: { x: 300, y: 200 },
+      },
+      edgeLayout: {
+        'gw->s1': { from: 'right', to: 'left' },
+        'gw->s2': { from: 'right', to: 'left' },
+        'gw->s3': { from: 'right', to: 'left' },
+      },
+      dslVersion: 1,
+    }
+
+    render(<NankoCanvas ast={multiAst} />)
+
+    const gwNode = screen.getByTestId('canvas-node-gw')
+    // 5 base + 3 distribuées = 8
+    const handles = gwNode.querySelectorAll('.nanko-handle')
+    expect(handles.length).toBe(8)
+
+    const distributed = gwNode.querySelectorAll('.nanko-handle-distributed')
+    expect(distributed.length).toBe(3)
+  })
+
+  it('active l auto-scale x2 lorsqu un flanc dépasse 8 connecteurs (INV-2, INV-3)', () => {
+    const shapes: NankoAst['shapes'] = [{ id: 'core', type: 'rectangle', label: 'Core', desc: null }]
+    const connectors: NankoAst['connectors'] = []
+    const layout: Record<string, { x: number; y: number }> = { core: { x: 0, y: 0 } }
+    const edgeLayout: NonNullable<NankoAst['edgeLayout']> = {}
+
+    for (let i = 1; i <= 9; i++) {
+      const id = `c${i}`
+      shapes.push({ id, type: 'rectangle', label: `C${i}`, desc: null })
+      connectors.push({ source: 'core', target: id, label: null, desc: null })
+      layout[id] = { x: 300, y: i * 40 }
+      edgeLayout[`core->${id}`] = { from: 'right', to: 'left' }
+    }
+
+    const ast: NankoAst = { shapes, connectors, layout, edgeLayout, dslVersion: 1 }
+    render(<NankoCanvas ast={ast} />)
+
+    const coreNode = screen.getByTestId('canvas-node-core')
+    expect(coreNode.className).toContain('isScaledY')
+  })
+
+
   describe('isValidNankoConnection [INV-3]', () => {
     const existingEdges = [
       { source: 'front', target: 'db' },

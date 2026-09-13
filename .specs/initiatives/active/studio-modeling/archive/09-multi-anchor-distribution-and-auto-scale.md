@@ -1,7 +1,7 @@
 # Feature : Distribution Multi-Ports & Redimensionnement Automatique (09-multi-anchor-distribution-and-auto-scale)
 
 > **Parent Initiative :** `studio-modeling`  
-> **Status :** Planned *(Framed ✅ — Backlog Feature)*  
+> **Status :** Delivered & Archived ✅  
 > **Author(s) :** Nicolas & Nanko Core Team  
 > **Last Updated :** 2026-09-13  
 
@@ -64,5 +64,5 @@ RÉPARTITION HARMONIEUSE MULTI-PORTS            DÉPASSEMENT DE CAPACITÉ (AUTO-
 ---
 
 ## 6. Implementation Spec(s)
-
-*No execution specs linked yet.*
+ 
+* [023-multi-anchor-distribution-and-auto-scale.md](../../../specs/archive/023-multi-anchor-distribution-and-auto-scale.md)

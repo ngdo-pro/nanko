@@ -193,6 +193,25 @@
   transform: translate(-50%, -50%) scale(1.4) !important;
 }
 
+/* Poignées distribuées sur l'arc circulaire de CircleNode */
+:global(.nanko-handle-circle-arc) {
+  left: unset !important;
+  right: unset !important;
+  top: unset !important;
+  bottom: unset !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+:global(.nanko-handle-circle-arc:hover) {
+  background-color: var(--brand) !important;
+  transform: translate(-50%, -50%) scale(1.4) !important;
+}
+
+:global(.nanko-handle-circle-arc.valid) {
+  background-color: var(--brand) !important;
+  transform: translate(-50%, -50%) scale(1.5) !important;
+}
+
 /* Labels d'arêtes */
 :global(.react-flow__edgelabel-renderer) {
   /* Override z-index de la couche EdgeLabelRenderer de React Flow pour garder les labels au-dessus des arêtes SVG */

@@ -18,6 +18,15 @@
   user-select: none;
 }
 
+.isScaledDiameter {
+  width: 260px !important;
+  height: 260px !important;
+  min-width: 260px !important;
+  min-height: 260px !important;
+  max-width: 260px !important;
+  max-height: 260px !important;
+}
+
 .nodeCircle:active {
   cursor: grabbing;
 }

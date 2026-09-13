@@ -136,4 +136,49 @@ describe('RectangleNode', () => {
     expect(container.querySelector('.nanko-handle-bottom')).toBeInTheDocument()
     expect(container.querySelector('.nanko-handle-auto')).toBeInTheDocument()
   })
+
+  it('rend les poignées distribuées et applique les classes d échelle x2 (INV-1, INV-2)', () => {
+    const { container } = render(
+      <ReactFlowProvider>
+        <RectangleNode
+          id="gateway"
+          data={{
+            label: 'Gateway',
+            nodeId: 'gateway',
+            handles: [
+              { id: 'right-1', side: 'right', offsetPercentage: 25 },
+              { id: 'right-2', side: 'right', offsetPercentage: 50 },
+              { id: 'right-3', side: 'right', offsetPercentage: 75 },
+            ],
+            scale: {
+              isVerticalScaled: true,
+              isHorizontalScaled: true,
+              isCircleScaled: false,
+            },
+          }}
+          selected={false}
+          zIndex={1}
+          isConnectable={true}
+          positionAbsoluteX={0}
+          positionAbsoluteY={0}
+          type="rectangle"
+          dragging={false}
+          selectable={true}
+          deletable={true}
+          draggable={true}
+        />
+      </ReactFlowProvider>,
+    )
+
+    // 5 de base + 3 distribuées = 8 poignées
+    const handles = container.querySelectorAll('.nanko-handle')
+    expect(handles).toHaveLength(8)
+
+    const distributedHandles = container.querySelectorAll('.nanko-handle-distributed')
+    expect(distributedHandles).toHaveLength(3)
+
+    const nodeEl = screen.getByTestId('canvas-node-gateway')
+    expect(nodeEl.className).toContain('isScaledY')
+    expect(nodeEl.className).toContain('isScaledX')
+  })
 })

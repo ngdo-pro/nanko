@@ -32,8 +32,21 @@ export function calculateDagreLayout<T extends Record<string, unknown> = Record<
 
   for (const node of nodes) {
     const isCircle = node.type === 'circle'
-    const defaultW = isCircle ? 130 : nodeWidth
-    const defaultH = isCircle ? 130 : nodeHeight
+    const scale = (node.data as Record<string, unknown> | undefined)?.scale as
+      | { isVerticalScaled?: boolean; isHorizontalScaled?: boolean; isCircleScaled?: boolean }
+      | undefined
+
+    let defaultW = isCircle ? 130 : nodeWidth
+    let defaultH = isCircle ? 130 : nodeHeight
+
+    if (scale?.isCircleScaled) {
+      defaultW = 260
+      defaultH = 260
+    } else {
+      if (scale?.isHorizontalScaled) defaultW *= 2
+      if (scale?.isVerticalScaled) defaultH *= 2
+    }
+
     const width = node.measured?.width ?? defaultW
     const height = node.measured?.height ?? defaultH
     dagreGraph.setNode(node.id, { width, height })
@@ -48,8 +61,21 @@ export function calculateDagreLayout<T extends Record<string, unknown> = Record<
   return nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id)
     const isCircle = node.type === 'circle'
-    const defaultW = isCircle ? 130 : nodeWidth
-    const defaultH = isCircle ? 130 : nodeHeight
+    const scale = (node.data as Record<string, unknown> | undefined)?.scale as
+      | { isVerticalScaled?: boolean; isHorizontalScaled?: boolean; isCircleScaled?: boolean }
+      | undefined
+
+    let defaultW = isCircle ? 130 : nodeWidth
+    let defaultH = isCircle ? 130 : nodeHeight
+
+    if (scale?.isCircleScaled) {
+      defaultW = 260
+      defaultH = 260
+    } else {
+      if (scale?.isHorizontalScaled) defaultW *= 2
+      if (scale?.isVerticalScaled) defaultH *= 2
+    }
+
     const width = node.measured?.width ?? defaultW
     const height = node.measured?.height ?? defaultH
 

@@ -56,6 +56,7 @@ flowchart TD
 | `JRN-05` | Réorganisation automatique (Auto-Layout) | Utilisateur | Clic « Réorganiser » | Disposition ordonnée sans chevauchement via Dagre |
 | `JRN-06` | Insertion rapide via Menu Radial | Utilisateur | Clic contextuel | Roue radiale d'actions immédiates (rect, circle, flux) |
 | `JRN-07` | Tracé de Connecteur par Glisser & Magnétisme | Utilisateur | Glisser depuis une poignée révélée | Fil élastique, aimantation cible (< 32px), injection `source -> target` |
+| `JRN-08` | Distribution Multi-Ports & Redimensionnement Automatique | Utilisateur | Multiples flux connectés sur un même flanc | Répartition uniforme sans collision, auto-scale x2 si > 8 flux |
 
 ---
 
@@ -111,6 +112,14 @@ flowchart TD
   6. Le badge de libellé (`label`) se positionne automatiquement à 36px du point de départ le long du tracé, qualifiant immédiatement le flux sortant.
 * **Variantes & Erreurs :** En cas d'auto-connexion (`source === target`) ou de doublon d'arête dans le même sens, la tentative est silencieusement annulée sans modifier le code source.
 
+### `JRN-08` : Répartition Multi-Ports & Redimensionnement Automatique (Auto-Scale)
+* **Contexte :** Connexion de multiples flux entrants ou sortants sur une même face d'une Shape.
+* **Flux Nominal :**
+  1. Lorsqu'un flanc compte $N$ connecteurs, les points d'attache sont automatiquement redistribués à intervalles réguliers ($\frac{1}{N+1}, \dots, \frac{N}{N+1}$) le long du bord.
+  2. L'ordre des connecteurs le long de la face est calculé pour minimiser les croisements (selon la position de la forme opposée).
+  3. Dès lors que le nombre de connecteurs sur un flanc dépasse la capacité nominale de 8 flux, la dimension correspondante (hauteur pour flancs verticaux, largeur pour flancs horizontaux, diamètre pour cercle) double automatiquement ($\times 2$).
+  4. En cas de chevauchement spatial consécutif au redimensionnement, l'utilisateur rétablit l'espacement optimal en un clic sur le bouton « Réorganiser » (Dagre).
+
 ---
 
 ## 5. Invariants Fonctionnels & Règles Métier
@@ -121,6 +130,7 @@ flowchart TD
 * **`INV-BUS-04` (Intégrité des Connexions & Rejet des Doublons) :** Les auto-connexions (`source === target`) et les arêtes dupliquées dans le même sens sont strictement neutralisées au niveau du canvas et du moteur de sérialisation.
 * **`INV-BUS-05` (Omnidirectionnalité & Ancrage Dynamique) :** Les 4 poignées cardinales de toute forme autorisent indifféremment l'émission et la réception de flux. L'ancre centrale `auto` recalcule les flancs de contact optimaux en temps réel lors du déplacement des nœuds.
 * **`INV-BUS-06` (Positionnement Déterministe du Label de Flux) :** Le libellé du connecteur est positionné à une distance fixe de 36px de la poignée source le long du tracé (borné au milieu si distance < 72px).
+* **`INV-BUS-07` (Répartition Uniforme Multi-Ports & Auto-Scale $\times 2$) :** Chaque connecteur raccordé sur un flanc disposant de $N$ flux se voit allouer une poignée dédiée équidistante à $\frac{i+1}{N+1}$. Dès le 9ᵉ flux sur un flanc, la forme s'agrandit automatiquement d'un facteur 2 sur la dimension correspondante (hauteur, largeur ou diamètre).
 
 ---
 

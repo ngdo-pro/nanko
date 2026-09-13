@@ -208,4 +208,130 @@ upper: x=100, y=100
     await expect(textarea).toHaveValue(/lower\s*->\s*upper/)
     await expect(textarea).toHaveValue(/lower->upper:\s*from=top,\s*to=bottom/)
   })
+
+  test('Distribution multi-ports et redimensionnement automatique x2 (Spec 023)', async ({ page }) => {
+    const uniqueSuffix = Date.now().toString().slice(-6)
+    const baseUser = await getOrSetupTestUser()
+    const isLocal = !env.testUser.username
+
+    const email = isLocal ? `connector-multi-${uniqueSuffix}@nanko.dev` : baseUser.email
+    const password = baseUser.password
+    if (isLocal) {
+      await createOrResetKeycloakUser(email, password)
+    }
+
+    const docName = `Multi Distribution ${uniqueSuffix}`
+    const docSlug = `multi-dist-${uniqueSuffix}`
+
+    await page.goto('/')
+    const loginButton = page.getByTestId('login-button')
+    await expect(loginButton).toBeVisible()
+    await loginButton.click()
+
+    await expect(page).toHaveURL(/.*\/realms\/nanko\/protocol\/openid-connect\/auth.*/)
+    await page.locator('#username').fill(email)
+    await page.locator('#password').fill(password)
+    await page.locator('#kc-login').click()
+    await expect(page).toHaveURL(/.*localhost:45173.*|.*app.*nanko\.dev.*/)
+
+    const newDocButton = page.getByTestId('new-document-button')
+    await expect(newDocButton).toBeVisible()
+    await newDocButton.click()
+
+    await page.getByTestId('document-name-input').fill(docName)
+    await page.getByTestId('document-slug-input').fill(docSlug)
+    await page.getByTestId('submit-create-document').click()
+
+    await expect(page).toHaveURL(/.*\/projects\/[0-9a-f-]+\/documents\/[0-9a-f-]+/)
+    const textarea = page.getByTestId('source-code-textarea')
+    await expect(textarea).toBeVisible()
+
+    // 1. Déclarer 1 gateway et 3 services reliés sur le flanc droit
+    const multiDsl = `rectangle gateway label="API Gateway"
+rectangle svc1 label="Service 1"
+rectangle svc2 label="Service 2"
+rectangle svc3 label="Service 3"
+
+gateway -> svc1
+gateway -> svc2
+gateway -> svc3
+
+!LAYOUT
+gateway: x=50, y=150
+svc1: x=400, y=50
+svc2: x=400, y=150
+svc3: x=400, y=250
+gateway->svc1: from=right, to=left
+gateway->svc2: from=right, to=left
+gateway->svc3: from=right, to=left
+!END
+`
+    await textarea.fill(multiDsl)
+
+    const nodeGateway = page.getByTestId('canvas-node-gateway')
+    await expect(nodeGateway).toBeVisible()
+
+    // 2. Vérifier la présence des 3 poignées distribuées (INV-1)
+    const distributedHandles = nodeGateway.locator('.nanko-handle-distributed')
+    await expect(distributedHandles).toHaveCount(3)
+
+    // 3. Ajouter 6 connecteurs supplémentaires sur le flanc droit (total = 9 > seuil 8)
+    const saturatedDsl = `rectangle gateway label="API Gateway"
+rectangle svc1 label="Service 1"
+rectangle svc2 label="Service 2"
+rectangle svc3 label="Service 3"
+rectangle svc4 label="Service 4"
+rectangle svc5 label="Service 5"
+rectangle svc6 label="Service 6"
+rectangle svc7 label="Service 7"
+rectangle svc8 label="Service 8"
+rectangle svc9 label="Service 9"
+
+gateway -> svc1
+gateway -> svc2
+gateway -> svc3
+gateway -> svc4
+gateway -> svc5
+gateway -> svc6
+gateway -> svc7
+gateway -> svc8
+gateway -> svc9
+
+!LAYOUT
+gateway: x=50, y=250
+svc1: x=400, y=0
+svc2: x=400, y=50
+svc3: x=400, y=100
+svc4: x=400, y=150
+svc5: x=400, y=200
+svc6: x=400, y=250
+svc7: x=400, y=300
+svc8: x=400, y=350
+svc9: x=400, y=400
+gateway->svc1: from=right, to=left
+gateway->svc2: from=right, to=left
+gateway->svc3: from=right, to=left
+gateway->svc4: from=right, to=left
+gateway->svc5: from=right, to=left
+gateway->svc6: from=right, to=left
+gateway->svc7: from=right, to=left
+gateway->svc8: from=right, to=left
+gateway->svc9: from=right, to=left
+!END
+`
+    await textarea.fill(saturatedDsl)
+
+    // 4. Vérifier que la forme adopte la classe isScaledY (INV-2)
+    await expect(nodeGateway).toHaveClass(/isScaledY/)
+
+    // 5. Décongestionner via le bouton Réorganiser (INV-4)
+    const autoLayoutBtn = page.getByTestId('auto-layout-button')
+    await expect(autoLayoutBtn).toBeVisible()
+    await autoLayoutBtn.click()
+
+    // Vérifier que le statut passe à non sauvegardé suite à l'auto-layout
+    const saveButton = page.getByTestId('save-document-button')
+    await saveButton.click()
+    await expect(page.getByTestId('saved-status-badge')).toBeVisible()
+  })
 })

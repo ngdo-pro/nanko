@@ -31,10 +31,13 @@ import styles from './NankoCanvas.module.css'
 import { calculateDagreLayout } from './utils/dagreLayout'
 import { isValidNankoConnection } from './utils/isValidConnection'
 import {
-  getOptimalConnectorSides,
-  isCardinalSide,
+  extractCanonicalSide,
   type AnchorSide,
 } from './utils/connectorGeometry'
+import {
+  computeAnchorDistribution,
+  type AnchorDistributionResult,
+} from './utils/anchorDistribution'
 import type { ShapePrimitiveType } from './utils/insertShapeToSource'
 import type { NankoAst } from '@/features/documents'
 
@@ -79,7 +82,17 @@ function buildNodesFromAst(ast: NankoAst): Node[] {
     }
   })
 
-  // Si des nœuds n'ont pas de coordonnées dans layout, on utilise dagre pour les placer
+  // Calcul initial de distribution et échelle pour Dagre
+  const initialDist = computeAnchorDistribution(ast, rawNodes)
+  const nodesWithScale = rawNodes.map((n) => ({
+    ...n,
+    data: {
+      ...n.data,
+      handles: initialDist.nodeHandles.get(n.id) ?? [],
+      scale: initialDist.nodeScale.get(n.id),
+    },
+  }))
+
   const edgesForLayout: Edge[] = (ast?.connectors ?? []).map((c) => ({
     id: `${c.source}->${c.target}`,
     source: c.source,
@@ -87,57 +100,37 @@ function buildNodesFromAst(ast: NankoAst): Node[] {
   }))
 
   const missingLayout = rawNodes.some((n) => !layoutDict[n.id])
+  let positionedNodes = nodesWithScale
   if (missingLayout && rawNodes.length > 0) {
-    return calculateDagreLayout(rawNodes, edgesForLayout)
+    positionedNodes = calculateDagreLayout(nodesWithScale, edgesForLayout)
   }
 
-  return rawNodes
+  // Recalculer les positions des poignées après positionnement
+  const finalDist = computeAnchorDistribution(ast, positionedNodes)
+  return positionedNodes.map((n) => ({
+    ...n,
+    data: {
+      ...n.data,
+      handles: finalDist.nodeHandles.get(n.id) ?? [],
+      scale: finalDist.nodeScale.get(n.id),
+    },
+  }))
 }
 
 function buildEdgesFromAst(
   ast: NankoAst,
   nodes: Node[],
   colorMode: 'dark' | 'light',
+  precomputedDist?: AnchorDistributionResult,
 ): Edge[] {
-  const edgeLayout = (ast?.edgeLayout ?? {}) as Record<
-    string,
-    { from?: AnchorSide; to?: AnchorSide }
-  >
-  const nodeMap = new Map<string, Node>()
-  for (const n of nodes) {
-    nodeMap.set(n.id, n)
-  }
+  const distribution = precomputedDist ?? computeAnchorDistribution(ast, nodes)
 
   return (ast?.connectors ?? []).map((connector) => {
     const edgeKey = `${connector.source}->${connector.target}`
-    const layoutEntry = edgeLayout[edgeKey]
-    const sNode = nodeMap.get(connector.source)
-    const tNode = nodeMap.get(connector.target)
+    const assignment = distribution.edgeAssignments.get(edgeKey)
 
-    let sourceHandle: string =
-      layoutEntry?.from && isCardinalSide(layoutEntry.from) ? layoutEntry.from : 'right'
-    let targetHandle: string =
-      layoutEntry?.to && isCardinalSide(layoutEntry.to) ? layoutEntry.to : 'left'
-
-    if (
-      sNode &&
-      tNode &&
-      (!isCardinalSide(layoutEntry?.from) || !isCardinalSide(layoutEntry?.to))
-    ) {
-      const sWidth = sNode.measured?.width ?? (sNode.type === 'circle' ? 120 : 160)
-      const sHeight = sNode.measured?.height ?? (sNode.type === 'circle' ? 120 : 60)
-      const tWidth = tNode.measured?.width ?? (tNode.type === 'circle' ? 120 : 160)
-      const tHeight = tNode.measured?.height ?? (tNode.type === 'circle' ? 120 : 60)
-
-      const optimal = getOptimalConnectorSides(
-        { x: sNode.position.x, y: sNode.position.y, width: sWidth, height: sHeight },
-        { x: tNode.position.x, y: tNode.position.y, width: tWidth, height: tHeight },
-        layoutEntry?.from,
-        layoutEntry?.to,
-      )
-      sourceHandle = optimal.sourceSide
-      targetHandle = optimal.targetSide
-    }
+    const sourceHandle = assignment?.sourceHandle ?? 'right'
+    const targetHandle = assignment?.targetHandle ?? 'left'
 
     return {
       id: edgeKey,
@@ -248,8 +241,17 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
     (changes) => {
       setNodes((nds) => {
         const nextNodes = applyNodeChanges(changes, nds)
-        setEdges(buildEdgesFromAst(effectiveAst, nextNodes, colorMode))
-        return nextNodes
+        const dist = computeAnchorDistribution(effectiveAst, nextNodes)
+        const enrichedNodes = nextNodes.map((n) => ({
+          ...n,
+          data: {
+            ...n.data,
+            handles: dist.nodeHandles.get(n.id) ?? [],
+            scale: dist.nodeScale.get(n.id),
+          },
+        }))
+        setEdges(buildEdgesFromAst(effectiveAst, enrichedNodes, colorMode, dist))
+        return enrichedNodes
       })
     },
     [effectiveAst, colorMode],
@@ -270,8 +272,8 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
   const handleConnect = useCallback(
     (connection: Connection) => {
       if (!isValidNankoConnection(connection, edges)) return
-      const sourceHandle = (connection.sourceHandle as AnchorSide) ?? 'auto'
-      const targetHandle = (connection.targetHandle as AnchorSide) ?? 'auto'
+      const sourceHandle = extractCanonicalSide(connection.sourceHandle)
+      const targetHandle = extractCanonicalSide(connection.targetHandle)
       onConnectorCreated?.(connection.source, connection.target, {
         from: sourceHandle,
         to: targetHandle,
@@ -291,11 +293,20 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
   // Action d'auto-layout
   const handleAutoLayout = useCallback(() => {
     const layoutedNodes = calculateDagreLayout(nodes, edges)
-    setNodes(layoutedNodes)
-    setEdges(buildEdgesFromAst(effectiveAst, layoutedNodes, colorMode))
+    const dist = computeAnchorDistribution(effectiveAst, layoutedNodes)
+    const enrichedNodes = layoutedNodes.map((n) => ({
+      ...n,
+      data: {
+        ...n.data,
+        handles: dist.nodeHandles.get(n.id) ?? [],
+        scale: dist.nodeScale.get(n.id),
+      },
+    }))
+    setNodes(enrichedNodes)
+    setEdges(buildEdgesFromAst(effectiveAst, enrichedNodes, colorMode, dist))
 
     const newPositions: Record<string, { x: number; y: number }> = {}
-    for (const n of layoutedNodes) {
+    for (const n of enrichedNodes) {
       newPositions[n.id] = { x: n.position.x, y: n.position.y }
     }
 

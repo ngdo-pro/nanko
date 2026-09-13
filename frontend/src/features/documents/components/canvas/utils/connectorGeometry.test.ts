@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getOptimalConnectorSides, isCardinalSide } from './connectorGeometry'
+import { getOptimalConnectorSides, isCardinalSide, extractCanonicalSide } from './connectorGeometry'
 
 describe('connectorGeometry', () => {
   const sourceBounds = { x: 0, y: 0, width: 100, height: 60 }
@@ -58,4 +58,15 @@ describe('connectorGeometry', () => {
     expect(res.sourceSide).toBe('right')
     expect(res.targetSide).toBe('left')
   })
+
+  it('extrait fidèlement le flanc canonique depuis un handleId standard ou distribué', () => {
+    expect(extractCanonicalSide('left')).toBe('left')
+    expect(extractCanonicalSide('right-a-b')).toBe('right')
+    expect(extractCanonicalSide('top-edge-key')).toBe('top')
+    expect(extractCanonicalSide('bottom-123')).toBe('bottom')
+    expect(extractCanonicalSide('auto')).toBe('auto')
+    expect(extractCanonicalSide(null)).toBe('auto')
+    expect(extractCanonicalSide(undefined)).toBe('auto')
+  })
 })
+

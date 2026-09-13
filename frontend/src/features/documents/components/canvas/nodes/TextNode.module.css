@@ -1,5 +1,7 @@
 .nodeText {
   min-width: 140px;
+  display: flex;
+  flex-direction: column;
   background-color: color-mix(in srgb, var(--surface) 75%, transparent);
   border: 1px dashed var(--border-soft);
   border-radius: 0;
@@ -8,6 +10,14 @@
   box-sizing: border-box;
   cursor: grab;
   user-select: none;
+}
+
+.isScaledY {
+  min-height: 120px;
+}
+
+.isScaledX {
+  min-width: 280px;
 }
 
 .nodeText:active {
@@ -52,6 +62,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
+  flex: 1;
 }
 
 .nodeLabel {

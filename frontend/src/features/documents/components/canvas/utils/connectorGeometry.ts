@@ -15,6 +15,19 @@ export function isCardinalSide(side: unknown): side is CardinalAnchorSide {
 }
 
 /**
+ * Extrait le flanc canonique ('top' | 'bottom' | 'left' | 'right' | 'auto')
+ * à partir d'un identifiant de poignée (ex: 'left', 'left-edgeKey', 'auto').
+ */
+export function extractCanonicalSide(handleId?: string | null): AnchorSide {
+  if (!handleId || handleId === 'auto') return 'auto'
+  if (handleId.startsWith('left')) return 'left'
+  if (handleId.startsWith('right')) return 'right'
+  if (handleId.startsWith('top')) return 'top'
+  if (handleId.startsWith('bottom')) return 'bottom'
+  return 'auto'
+}
+
+/**
  * Calcule les faces de contact optimales (top, bottom, left, right)
  * entre deux nœuds, particulièrement lorsqu'au moins une extrémité est en mode 'auto'.
  */

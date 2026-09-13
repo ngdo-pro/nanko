@@ -12,6 +12,8 @@ export const CircleNode: React.FC<NodeProps> = ({ id, data, selected }) => {
   const label = nodeData?.label || id
   const desc = nodeData?.desc || null
   const displayId = nodeData?.nodeId || id
+  const handles = nodeData?.handles ?? []
+  const scale = nodeData?.scale
   const {
     isVisible,
     handleMouseEnter,
@@ -22,7 +24,11 @@ export const CircleNode: React.FC<NodeProps> = ({ id, data, selected }) => {
 
   return (
     <div
-      className={clsx(styles.nodeCircle, selected && styles.isSelected)}
+      className={clsx(
+        styles.nodeCircle,
+        selected && styles.isSelected,
+        scale?.isCircleScaled && styles.isScaledDiameter,
+      )}
       data-qa={`canvas-node-${id}`}
       data-testid={`canvas-node-${id}`}
       data-node-id={id}
@@ -69,6 +75,40 @@ export const CircleNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         isConnectableEnd={true}
         className="nanko-handle nanko-handle-auto"
       />
+
+      {handles.map((h) => {
+        const position =
+          h.side === 'left'
+            ? Position.Left
+            : h.side === 'right'
+              ? Position.Right
+              : h.side === 'top'
+                ? Position.Top
+                : Position.Bottom
+
+        const style: React.CSSProperties = {
+          left: h.circleLeftPercentage !== undefined ? `${h.circleLeftPercentage}%` : undefined,
+          top: h.circleTopPercentage !== undefined ? `${h.circleTopPercentage}%` : undefined,
+        }
+
+        return (
+          <Handle
+            key={h.id}
+            type="source"
+            position={position}
+            id={h.id}
+            isConnectableStart={true}
+            isConnectableEnd={true}
+            style={style}
+            className={clsx(
+              'nanko-handle',
+              `nanko-handle-${h.side}`,
+              'nanko-handle-distributed',
+              'nanko-handle-circle-arc',
+            )}
+          />
+        )
+      })}
 
       <div className={styles.circleInner}>
         <div className={styles.nodeHeader}>
