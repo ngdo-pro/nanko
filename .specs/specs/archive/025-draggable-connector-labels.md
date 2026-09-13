@@ -137,6 +137,13 @@ serviceA->serviceB: from=top, to=left, labelX=310, labelY=85
 * Le conteneur du label possède la classe `nodrag` et intercepte `pointerdown` avec `e.stopPropagation()`.
 * React Flow ne déclenche aucun déplacement de nœud parent, aucune sélection multiple au lasso, ni aucun panoramique du canvas pendant le drag du label.
 
+### 4.4. Contrainte Stricte sur le Tracé du Connecteur (Centrage Obligatoire)
+
+* Le badge de libellé ne peut pas flotter librement dans l'espace 2D du canvas.
+* Tout déplacement de la souris est immédiatement projeté orthogonalement sur les segments horizontaux et verticaux du tracé SVG du connecteur (`projectPointOnEdgePath` dans `edgeLabelGeometry.ts`).
+* Le badge reste continuellement centré sur le trait (`transform: translate(-50%, -50%)`) le long du chemin du connecteur.
+* En cas de virage à angle droit, le badge suit le coude de manière fluide dès que la projection la plus proche bascule sur le segment adjacent.
+
 ---
 
 ## 5. Invariants Fonctionnels & Règles Métier

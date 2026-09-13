@@ -321,10 +321,11 @@ describe('NankoEdge', () => {
     )
 
     const labelContainer = screen.getByTestId('ast-connector-front-db')
-    expect(labelContainer).toHaveStyle('transform: translate(-50%, -50%) translate(222px,77px)')
+    // Le badge est projeté et centré sur le trait horizontal Y=100
+    expect(labelContainer).toHaveStyle('transform: translate(-50%, -50%) translate(222px,100px)')
   })
 
-  it('déclenche onLabelPositionChange après un glisser-déposer du badge', () => {
+  it('déclenche onLabelPositionChange après un glisser-déposer du badge contraint sur le trait', () => {
     const onLabelPositionChange = vi.fn()
 
     render(
@@ -374,7 +375,8 @@ describe('NankoEdge', () => {
     })
 
     expect(onLabelPositionChange).toHaveBeenCalledTimes(1)
-    expect(onLabelPositionChange).toHaveBeenCalledWith('front->db', { x: 186, y: 120 })
+    // Le badge ne bouge que le long du connecteur horizontal : Y reste strictement 100
+    expect(onLabelPositionChange).toHaveBeenCalledWith('front->db', { x: 186, y: 100 })
   })
 
   it('déclenche onLabelPositionReset lors d un double-clic sur le badge', () => {

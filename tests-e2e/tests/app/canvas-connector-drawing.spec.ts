@@ -489,8 +489,8 @@ srcNode->dstNode: from=right, to=left
     await page.mouse.move(startX + 60, startY - 40, { steps: 5 })
     await page.mouse.up()
 
-    // 3. Vérifier que labelX et labelY ont été enregistrés dans le DSL !LAYOUT
-    await expect(textarea).toHaveValue(/srcNode->dstNode:\s*from=right,\s*to=left,\s*labelX=\d+,\s*labelY=\d+/)
+    // 3. Vérifier que labelX et labelY ont été enregistrés dans le DSL !LAYOUT (labelY=184 car contraint sur le trait horizontal à mi-hauteur du rectangle)
+    await expect(textarea).toHaveValue(/srcNode->dstNode:\s*from=right,\s*to=left,\s*labelX=\d+,\s*labelY=184/)
 
     // 4. Double-cliquer pour réinitialiser la position du badge
     await labelBadge.dblclick()
