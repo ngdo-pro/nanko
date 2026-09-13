@@ -20,12 +20,18 @@
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
+  touch-action: none;
   pointer-events: auto;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .edgeLabel:hover {
   border-color: var(--brand);
+}
+
+.edgeLabelText {
+  pointer-events: none;
+  user-select: none;
 }
 
 .isDragging {
@@ -36,9 +42,9 @@
   z-index: 1001;
 }
 
-
 .edgeDescIndicator {
   color: var(--brand);
   font-weight: 700;
   margin-left: 2px;
+  pointer-events: none;
 }

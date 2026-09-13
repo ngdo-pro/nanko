@@ -93,6 +93,7 @@ export const NankoEdge: React.FC<EdgeProps> = ({
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return
     e.stopPropagation()
+    e.preventDefault()
     try {
       e.currentTarget.setPointerCapture(e.pointerId)
     } catch {
@@ -219,11 +220,12 @@ export const NankoEdge: React.FC<EdgeProps> = ({
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerUp}
               onDoubleClick={handleDoubleClick}
             >
               {edgeLabel ? (
                 <span
-                  className="nanko-edge-label-text"
+                  className={clsx(styles.edgeLabelText, 'nanko-edge-label-text')}
                   data-qa={`canvas-edge-label-${source}-${target}`}
                 >
                   {edgeLabel}

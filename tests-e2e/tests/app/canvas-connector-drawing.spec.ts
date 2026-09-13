@@ -474,7 +474,11 @@ srcNode->dstNode: from=right, to=left
     await expect(labelBadge).toBeVisible()
     await expect(labelBadge).toHaveText('Appel gRPC')
 
-    // 2. Glisser-déposer interactif du badge
+    // 2. Survol du badge : le curseur doit être 'grab' et le badge au premier plan
+    await labelBadge.hover()
+    await expect(labelBadge).toHaveCSS('cursor', 'grab')
+
+    // 3. Glisser-déposer interactif du badge
     const box = await labelBadge.boundingBox()
     expect(box).not.toBeNull()
     const startX = (box?.x ?? 0) + (box?.width ?? 0) / 2
