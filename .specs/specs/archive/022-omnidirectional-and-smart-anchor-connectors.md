@@ -375,18 +375,21 @@ Feature: Poignées Omnidirectionnelles et Ancrage Dynamique Intelligent
 ### 8.2. Commandes d'Exécution & Quality Gates
 
 ```bash
-# 1. Tests unitaires frontend ciblés
+# 1. Tests unitaires frontend (ciblés + suite globale complète)
 pnpm --filter frontend test frontend/src/features/documents/components/canvas/utils/connectorGeometry.test.ts frontend/src/features/documents/components/canvas/utils/insertConnectorToSource.test.ts frontend/src/features/documents/components/canvas/utils/nankoParser.test.ts frontend/src/features/documents/components/canvas/edges/NankoEdge.test.tsx
+pnpm --filter frontend test
 
-# 2. Tests unitaires backend ciblés
+# 2. Tests unitaires backend & architecture
 make test-backend
+make deptrac
 
 # 3. Validation TypeScript & Linter
 pnpm --filter frontend typecheck
 pnpm --filter frontend lint
 
-# 4. Tests E2E Playwright en local
+# 4. Tests E2E Playwright en local (ciblé feature + suite globale non-régression)
 pnpm --filter tests-e2e test canvas-connector-drawing
+pnpm --filter tests-e2e test
 ```
 
 ---
