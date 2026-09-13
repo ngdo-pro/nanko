@@ -139,6 +139,15 @@ flowchart TD
   3. Au relâchement du pointeur, si le déplacement excède le seuil anti-tremblement (3px), les coordonnées entières `labelX` et `labelY` sont persistées dans la section `!LAYOUT` du code source `.nanko` (`source->target: labelX=..., labelY=...`).
   4. Un double-clic sur le badge réinitialise sa position : `labelX` et `labelY` sont retirés du bloc `!LAYOUT` et le badge reprend son décalage canonique par défaut de 36px.
 
+### `JRN-11` : Création Rapide Connectée par Dépôt dans le Vide (Miro Quick Spawn)
+* **Contexte :** Modélisation rapide par extension de graphe : l'utilisateur tire un connecteur dans le vide pour créer et lier instantanément une nouvelle forme.
+* **Flux Nominal :**
+  1. L'utilisateur clique et étire un câble depuis une poignée d'une forme existante.
+  2. Il relâche le câble dans une zone vide du canvas (hors nœud et hors poignée).
+  3. Le mini-menu contextuel `QuickSpawnMenu` apparaît instantanément sous le curseur, proposant `[R] Rectangle` et `[C] Cercle`.
+  4. L'utilisateur clique sur la forme souhaitée ou presse la touche correspondante (`R` ou `C`) : la nouvelle forme est immédiatement créée, centrée sous le point de dépôt, et reliée depuis la source en une unique transaction atomique dans le code source `.nanko` (un seul `Cmd+Z` pour tout annuler).
+  5. Si l'utilisateur clique en dehors du menu ou appuie sur `Escape`, le menu se referme sans altérer le document.
+
 ---
 
 ## 5. Invariants Fonctionnels & Règles Métier
@@ -152,6 +161,7 @@ flowchart TD
 * **`INV-BUS-07` (Répartition Uniforme Multi-Ports, Auto-Scale $\times 2$ & Contact Périmétrique) :** Chaque connecteur raccordé sur un flanc disposant de $N$ flux se voit allouer un point d'attache dédié équidistant à $\frac{i+1}{N+1}$. Seules les 5 poignées canoniques (`top`, `bottom`, `left`, `right`, `auto`) sont interactives pour la création de flux ; les points d'attache distribués existants sont strictement passifs et invisibles au survol. Les connecteurs se dirigent vers le centre et s'arrêtent net sur la frontière réelle de la forme affichée (découpe sur le rayon $R$ pour `circle` sur les 4 flancs, contact direct pour `rectangle`), éliminant tout décollement visuel. L'insertion via la roue radiale (`A` + curseur) est atomique et produit strictement une forme unique. Dès le 9ᵉ flux sur un flanc, la forme s'agrandit automatiquement d'un facteur 2 sur la dimension correspondante (hauteur, largeur ou diamètre).
 * **`INV-BUS-08` (Pontets de Croisement Orthogonaux & Priorité Z-Index) :** Seuls les croisements transversaux stricts entre segments orthogonaux engendrent un pontet semi-circulaire régulier ($r = 6\text{px}$). C'est exclusivement l'arête de rang supérieur (ordre AST ou élévation active au survol) qui porte l'arc SVG ; l'arête inférieure demeure rectiligne continue. Les segments colinéaires et les connexions partageant un handle sont rigoureusement exclus.
 * **`INV-BUS-09` (Repositionnement Manuel des Labels Contraint sur le Trait & Persistance Layout) :** Tout déplacement manuel d'un badge de libellé est strictement contraint le long du connecteur par projection orthogonale sur ses segments et reste continuellement centré sur le trait (aucun décrochage spatial libre). Les coordonnées projetées sont enregistrées sous la forme `labelX=..., labelY=...` dans l'arête correspondante du bloc `!LAYOUT`. Le double-clic supprime ces clés et rétablit le calcul automatique à 36px. Si une ligne d'arête dans `!LAYOUT` ne comporte plus aucune propriété (`from`, `to`, `labelX`, `labelY`), la ligne est proprement élaguée.
+* **`INV-BUS-10` (Création Rapide Connectée Atomique & Raccordement Automatique par Ancre Opposée) :** Le dépôt d'un fil de connexion dans le vide ouvre un sélecteur contextuel minimal (`QuickSpawnMenu`). La sélection d'une primitive déclenche une mutation textuelle atomique unique : déclaration de la forme avec identifiant unique incrémental (`rect_N` ou `circle_N`), positionnement centré sur le point de largage dans `!LAYOUT`, et déclaration du connecteur orienté de la source vers la cible avec l'ancre opposée canonique (`right` $\rightarrow$ `left`, `top` $\rightarrow$ `bottom`, etc.). L'annulation (touche `Escape` ou clic hors cadre) préserve rigoureusement l'état antérieur du document sans résidu textuel.
 
 ---
 
@@ -164,3 +174,5 @@ flowchart TD
 | **Texte de Description Très Long** | Contenu documentaire dense | La troncature à 2 lignes évite la déformation du nœud ; le tooltip prend le relais | Lecture fluide avec ascenseur dans l'infobulle Blueprint |
 | **Connexion Invalide ou Doublon** | Tentative d'auto-boucle ou lien identique | `isValidConnection` retourne `false` ; le fil est annulé sans altération du code source | Relâcher sur une forme ou poignée valide |
 | **Croisement Proche d'un Coude / Angle** | Intersection située à moins de 12px d'un virage orthogonal | Le calcul applique une tolérance géométrique de dégagement pour éviter toute déformation ou écrasement de l'arc de saut | Le connecteur conserve un tracé lisible sans repliement d'arc |
+| **Dépôt Accidentel dans le Vide** | Relâchement involontaire du câble sans intention de créer une forme | Le menu `QuickSpawnMenu` s'ouvre mais aucune mutation n'a lieu tant qu'aucun choix n'est validé | Fermeture instantanée via `Escape` ou clic n'importe où sur le canvas |
+

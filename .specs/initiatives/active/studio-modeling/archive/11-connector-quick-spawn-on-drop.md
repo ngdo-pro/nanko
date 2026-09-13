@@ -1,7 +1,7 @@
 # Feature : Création Rapide Connectée par Dépôt dans le Vide (11-connector-quick-spawn-on-drop)
 
 > **Parent Initiative :** `studio-modeling`  
-> **Status :** Planned *(Framed ✅ — Backlog Feature)*  
+> **Status :** Active 🚀  
 > **Author(s) :** Nicolas & Nanko Core Team  
 > **Last Updated :** 2026-09-13  
 
@@ -62,4 +62,5 @@ Actuellement, relâcher un connecteur en cours de tracé dans le vide annule l'o
 
 ## 6. Implementation Spec(s)
 
-*No execution specs linked yet.*
+* [Spec 026 - Création Rapide Connectée par Dépôt dans le Vide (Quick Spawn on Drop)](../../../../specs/active/026-connector-quick-spawn-on-drop.md)
+

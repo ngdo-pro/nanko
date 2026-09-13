@@ -74,8 +74,8 @@
   ↳ *Fichier :* [`archive/09-multi-anchor-distribution-and-auto-scale.md`](./archive/09-multi-anchor-distribution-and-auto-scale.md) *(Livré & Archivé ✅ — Spec 023)*
 - [x] **`10-draggable-connector-labels`** : Repositionnement manuel par glisser des labels de connecteurs et persistance `!LAYOUT`  
   ↳ *Fichier :* [`archive/10-draggable-connector-labels.md`](./archive/10-draggable-connector-labels.md) *(Livré & Archivé ✅ — Spec 025)*
-- [ ] **`11-connector-quick-spawn-on-drop`** : Création rapide de shape connectée par glisser-déposer dans le vide (Miro Quick Spawn)  
-  ↳ *Fichier :* [`planned/11-connector-quick-spawn-on-drop.md`](./planned/11-connector-quick-spawn-on-drop.md) *(Cadré ✅ — Backlog Feature)*
+- [x] **`11-connector-quick-spawn-on-drop`** : Création rapide de shape connectée par glisser-déposer dans le vide (Miro Quick Spawn)  
+  ↳ *Fichier :* [`archive/11-connector-quick-spawn-on-drop.md`](./archive/11-connector-quick-spawn-on-drop.md) *(Livré & Archivé ✅ — Spec 026)*
 - [ ] **`12-connector-selection-and-deletion`** : Sélection visuelle, surbrillance et suppression directe au clavier (`Backspace`/`Delete`)  
   ↳ *Fichier :* [`planned/12-connector-selection-and-deletion.md`](./planned/12-connector-selection-and-deletion.md) *(Cadré ✅ — Backlog Feature)*
 - [ ] **`13-connector-reconnection`** : Reconnexion interactive et ré-ancrage d'extrémités existantes par glisser  

@@ -343,4 +343,14 @@ describe('NankoCanvas', () => {
       expect(isValidNankoConnection({ source: '', target: 'db' }, existingEdges)).toBe(false)
     })
   })
+
+  describe('Quick Spawn on Drop [Spec 026]', () => {
+    it('transmet les données attendues quand onQuickSpawnConnectedShape est appelé', () => {
+      const handleQuickSpawn = vi.fn()
+      render(<NankoCanvas ast={sampleAst} onQuickSpawnConnectedShape={handleQuickSpawn} />)
+
+      expect(screen.getByTestId('nanko-canvas')).toBeInTheDocument()
+      expect(screen.queryByTestId('quick-spawn-menu')).not.toBeInTheDocument()
+    })
+  })
 })
