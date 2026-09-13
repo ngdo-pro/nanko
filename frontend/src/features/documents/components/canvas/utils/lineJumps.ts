@@ -180,10 +180,10 @@ export function computeEdgeCrossovers(
     jumpsMap.set(edge.id, [])
   }
 
-  // Extraire les segments pour chaque arête
+  // Extraire les segments pour chaque arête en simplifiant les points colinéaires
   const edgeSegments = new Map<string, OrthogonalSegment[]>()
   for (const edge of edges) {
-    const points = extractPathPoints(edge.path)
+    const points = simplifyCollinearPoints(extractPathPoints(edge.path))
     edgeSegments.set(edge.id, extractOrthogonalSegments(points))
   }
 
@@ -207,45 +207,32 @@ export function computeEdgeCrossovers(
           const clearanceA = getSegmentClearance(segA, intersection)
           const clearanceB = getSegmentClearance(segB, intersection)
 
-          const canAJump = clearanceA >= minClearance
-          const canBJump = clearanceB >= minClearance
+          // Règle de dégagement stricte : les DEUX arêtes doivent disposer d'un dégagement minimal
+          // par rapport à leurs virages/extrémités. Si l'un des deux connecteurs tourne dans la zone
+          // du pontet (< minClearance), aucun saut n'est généré (croisement orthogonal propre sans déformation).
+          if (clearanceA < minClearance || clearanceB < minClearance) continue
 
-          // Si aucun segment n'a de dégagement suffisant (croisement trop proche de deux coins), aucun pontet n'est tracé
-          if (!canAJump && !canBJump) continue
+          // Arbitrage selon le z-index effectif
+          const zA = edgeA.id === activeEdgeId ? 1000 : edgeA.zIndex
+          const zB = edgeB.id === activeEdgeId ? 1000 : edgeB.zIndex
 
           let winnerEdgeId: string
           let winnerSeg: OrthogonalSegment
           let winnerSegIndex: number
 
-          if (canAJump && !canBJump) {
-            // Seule l'arête A a le dégagement nécessaire (B est en plein coude/virage)
+          if (zA > zB) {
             winnerEdgeId = edgeA.id
             winnerSeg = segA
             winnerSegIndex = sAi
-          } else if (!canAJump && canBJump) {
-            // Seule l'arête B a le dégagement nécessaire (A est en plein coude/virage)
+          } else if (zB > zA) {
             winnerEdgeId = edgeB.id
             winnerSeg = segB
             winnerSegIndex = sBi
           } else {
-            // Les deux arêtes sont dégagées : arbitrage standard selon le z-index effectif
-            const zA = edgeA.id === activeEdgeId ? 1000 : edgeA.zIndex
-            const zB = edgeB.id === activeEdgeId ? 1000 : edgeB.zIndex
-
-            if (zA > zB) {
-              winnerEdgeId = edgeA.id
-              winnerSeg = segA
-              winnerSegIndex = sAi
-            } else if (zB > zA) {
-              winnerEdgeId = edgeB.id
-              winnerSeg = segB
-              winnerSegIndex = sBi
-            } else {
-              // Départage déterministe : la deuxième arête (index plus élevé) gagne
-              winnerEdgeId = edgeB.id
-              winnerSeg = segB
-              winnerSegIndex = sBi
-            }
+            // Départage déterministe : la deuxième arête gagne
+            winnerEdgeId = edgeB.id
+            winnerSeg = segB
+            winnerSegIndex = sBi
           }
 
           const isHorizontal = winnerSeg.orientation === 'horizontal'
@@ -288,12 +275,38 @@ export function applyLineJumpsToPath(
     return svgPath
   }
 
-  // Grouper les jumps par segmentIndex
+  // Grouper les jumps par segment via correspondance spatiale stricte (avec repli sur segmentIndex)
   const jumpsBySegment = new Map<number, LineJumpDescriptor[]>()
   for (const jump of jumps) {
-    const list = jumpsBySegment.get(jump.segmentIndex) ?? []
-    list.push(jump)
-    jumpsBySegment.set(jump.segmentIndex, list)
+    let matchedSegIndex = -1
+    for (let i = 0; i < points.length - 1; i++) {
+      const p1 = points[i]
+      const p2 = points[i + 1]
+      const isH = Math.abs(p1.y - p2.y) < 0.001
+
+      if (isH && jump.orientation === 'horizontal') {
+        const minX = Math.min(p1.x, p2.x)
+        const maxX = Math.max(p1.x, p2.x)
+        if (Math.abs(p1.y - jump.y) < 0.5 && jump.x >= minX - 0.5 && jump.x <= maxX + 0.5) {
+          matchedSegIndex = i
+          break
+        }
+      } else if (!isH && jump.orientation === 'vertical') {
+        const minY = Math.min(p1.y, p2.y)
+        const maxY = Math.max(p1.y, p2.y)
+        if (Math.abs(p1.x - jump.x) < 0.5 && jump.y >= minY - 0.5 && jump.y <= maxY + 0.5) {
+          matchedSegIndex = i
+          break
+        }
+      }
+    }
+
+    const segIdx = matchedSegIndex !== -1 ? matchedSegIndex : jump.segmentIndex
+    if (segIdx >= 0 && segIdx < points.length - 1) {
+      const list = jumpsBySegment.get(segIdx) ?? []
+      list.push(jump)
+      jumpsBySegment.set(segIdx, list)
+    }
   }
 
   let resultPath = `M ${points[0].x} ${points[0].y}`

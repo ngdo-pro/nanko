@@ -165,9 +165,9 @@ describe('lineJumps utility', () => {
       })
     })
 
-    it('redirige le saut vers l arête droite lorsque l autre arête est dans un virage/coin', () => {
+    it('ne génère aucun saut si l une des arêtes est dans un virage/coin (< MIN_CORNER_CLEARANCE)', () => {
       // edgeBend tourne juste au-dessus du croisement (distance au coin = 5px < MIN_CORNER_CLEARANCE)
-      // Malgré un zIndex supérieur (10 vs 1), elle ne doit PAS recevoir le saut pour ne pas déformer le coin
+      // Aucun saut ne doit être produit pour ne pas déformer le virage ou faire sauter un arc sur un coude
       const edgeStraight = {
         id: 'straight',
         path: 'M 0 50 L 100 50',
@@ -180,16 +180,8 @@ describe('lineJumps utility', () => {
       }
 
       const crossovers = computeEdgeCrossovers([edgeStraight, edgeBend])
-      const jumpsStraight = crossovers.get('straight')
-      const jumpsBend = crossovers.get('bend')
-
-      expect(jumpsBend).toHaveLength(0)
-      expect(jumpsStraight).toHaveLength(1)
-      expect(jumpsStraight![0]).toMatchObject({
-        x: 50,
-        y: 50,
-        orientation: 'horizontal',
-      })
+      expect(crossovers.get('straight')).toHaveLength(0)
+      expect(crossovers.get('bend')).toHaveLength(0)
     })
 
     it('ne génère aucun saut si les deux arêtes sont trop proches d un coin (< MIN_CORNER_CLEARANCE)', () => {
@@ -207,6 +199,36 @@ describe('lineJumps utility', () => {
       const crossovers = computeEdgeCrossovers([edgeNearCorner1, edgeNearCorner2])
       expect(crossovers.get('corner1')).toHaveLength(0)
       expect(crossovers.get('corner2')).toHaveLength(0)
+    })
+
+    it('synchronise correctement les indices de segment avec les chemins getSmoothStepPath comportant des points colinéaires', () => {
+      // Chemin avec sous-segments colinéaires typique de React Flow
+      const smoothPathA = 'M 0 100 L 20 100 L 150 100 L 150 300 L 280 300 L 300 300'
+      const smoothPathB = 'M 100 0 L 100 20 L 100 200 L 300 200'
+
+      const crossovers = computeEdgeCrossovers([
+        { id: 'edgeA', path: smoothPathA, zIndex: 2 },
+        { id: 'edgeB', path: smoothPathB, zIndex: 1 },
+      ])
+
+      const jumpsA = crossovers.get('edgeA') ?? []
+      expect(jumpsA).toHaveLength(2)
+      expect(jumpsA[0]).toMatchObject({
+        x: 100,
+        y: 100,
+        orientation: 'horizontal',
+      })
+      expect(jumpsA[1]).toMatchObject({
+        x: 150,
+        y: 200,
+        orientation: 'vertical',
+      })
+
+      // L'application des sauts sur smoothPathA doit insérer un arc horizontal et un arc vertical
+      const transformed = applyLineJumpsToPath(smoothPathA, jumpsA, 6)
+      expect(transformed).toContain('A 6 6')
+      // Et le chemin doit rester valide et continu
+      expect(transformed).toContain('300 300')
     })
   })
 
