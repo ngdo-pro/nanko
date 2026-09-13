@@ -128,7 +128,15 @@ export function parseNankoSource(sourceCode: string): ParseNankoResult {
   const shapes: NankoAstShape[] = []
   const connectors: NankoAstConnector[] = []
   const layout: Record<string, { x: number; y: number }> = {}
-  const edgeLayout: Record<string, { from?: 'top' | 'bottom' | 'left' | 'right' | 'auto'; to?: 'top' | 'bottom' | 'left' | 'right' | 'auto' }> = {}
+  const edgeLayout: Record<
+    string,
+    {
+      from?: 'top' | 'bottom' | 'left' | 'right' | 'auto'
+      to?: 'top' | 'bottom' | 'left' | 'right' | 'auto'
+      labelX?: number
+      labelY?: number
+    }
+  > = {}
   const shapeIds = new Set<string>()
   let dslVersion = 1
 
@@ -155,7 +163,7 @@ export function parseNankoSource(sourceCode: string): ParseNankoResult {
     }
 
     if (inLayout) {
-      // 1. Ancrage d'arêtes : "source->target: from=top, to=left"
+      // 1. Ancrage d'arêtes ou position de label : "source->target: from=top, to=left, labelX=180, labelY=95"
       const edgeLayoutMatch = line.match(/^([a-zA-Z0-9_-]+)\s*->\s*([a-zA-Z0-9_-]+)\s*:\s*(.*)$/)
       if (edgeLayoutMatch && edgeLayoutMatch[1] && edgeLayoutMatch[2]) {
         const source = edgeLayoutMatch[1]
@@ -165,11 +173,15 @@ export function parseNankoSource(sourceCode: string): ParseNankoResult {
 
         const fromMatch = attrStr.match(/from\s*=\s*(top|bottom|left|right|auto)/)
         const toMatch = attrStr.match(/to\s*=\s*(top|bottom|left|right|auto)/)
+        const lxMatch = attrStr.match(/labelX\s*=\s*(-?\d+)/)
+        const lyMatch = attrStr.match(/labelY\s*=\s*(-?\d+)/)
 
-        if (fromMatch || toMatch) {
+        if (fromMatch || toMatch || lxMatch || lyMatch) {
           edgeLayout[edgeKey] = {
             ...(fromMatch ? { from: fromMatch[1] as 'top' | 'bottom' | 'left' | 'right' | 'auto' } : {}),
             ...(toMatch ? { to: toMatch[1] as 'top' | 'bottom' | 'left' | 'right' | 'auto' } : {}),
+            ...(lxMatch ? { labelX: parseInt(lxMatch[1]!, 10) } : {}),
+            ...(lyMatch ? { labelY: parseInt(lyMatch[1]!, 10) } : {}),
           }
         }
         continue

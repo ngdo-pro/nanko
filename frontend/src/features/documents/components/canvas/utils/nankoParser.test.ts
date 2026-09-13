@@ -151,4 +151,22 @@ describe('parseNankoSource', () => {
       'front->back': { from: 'top', to: 'left' },
     })
   })
+
+  it('parse correctement labelX et labelY dans le bloc !LAYOUT', () => {
+    const code = [
+      'rectangle front label="Front"',
+      'rectangle back label="Back"',
+      'front -> back label="HTTPS"',
+      '',
+      '!LAYOUT',
+      'front->back: from=right, to=left, labelX=245, labelY=90',
+      '!END',
+    ].join('\n')
+
+    const result = parseNankoSource(code)
+    expect(result.syntaxError).toBeNull()
+    expect(result.ast.edgeLayout).toEqual({
+      'front->back': { from: 'right', to: 'left', labelX: 245, labelY: 90 },
+    })
+  })
 })

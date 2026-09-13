@@ -22,7 +22,7 @@ final class NankoParser
         $connectors = [];
         /** @var array<string, mixed> $layout */
         $layout = [];
-        /** @var array<string, array{from?: string, to?: string}> $edgeLayout */
+        /** @var array<string, array{from?: string, to?: string, labelX?: int, labelY?: int}> $edgeLayout */
         $edgeLayout = [];
         $dslVersion = 1;
 
@@ -32,12 +32,12 @@ final class NankoParser
             $lineNumber = $index + 1;
             $line = trim($rawLine);
 
-            // Ignorer les lignes vides et commentaires
+            // Lignes vides ou commentaires
             if ($line === '' || str_starts_with($line, '#') || str_starts_with($line, '//')) {
                 continue;
             }
 
-            // Gestion de la section !LAYOUT / !END
+            // Gestion du bloc !LAYOUT ... !END
             if ($line === '!LAYOUT') {
                 $inLayout = true;
                 continue;
@@ -48,7 +48,7 @@ final class NankoParser
             }
 
             if ($inLayout) {
-                // 1. Parsing d'un ancrage d'arête (ex: "front->back: from=top, to=left")
+                // 1. Parsing d'un ancrage ou d'une position de label d'arête (ex: "front->back: from=top, to=left, labelX=180, labelY=95")
                 if (preg_match('/^([a-zA-Z0-9_-]+)->([a-zA-Z0-9_-]+)\s*:\s*(.*)$/', $line, $matches)) {
                     $edgeKey = $matches[1] . '->' . $matches[2];
                     $attrStr = trim($matches[3]);
@@ -58,6 +58,12 @@ final class NankoParser
                     }
                     if (preg_match('/to\s*=\s*(top|bottom|left|right|auto)/', $attrStr, $toMatch)) {
                         $edgeItem['to'] = $toMatch[1];
+                    }
+                    if (preg_match('/labelX\s*=\s*(-?\d+)/', $attrStr, $lxMatch)) {
+                        $edgeItem['labelX'] = (int) $lxMatch[1];
+                    }
+                    if (preg_match('/labelY\s*=\s*(-?\d+)/', $attrStr, $lyMatch)) {
+                        $edgeItem['labelY'] = (int) $lyMatch[1];
                     }
                     if (!empty($edgeItem)) {
                         $edgeLayout[$edgeKey] = $edgeItem;

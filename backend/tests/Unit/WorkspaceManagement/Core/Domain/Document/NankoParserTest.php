@@ -258,4 +258,29 @@ NANKO;
         self::assertArrayHasKey('front->back', $ast->edgeLayout);
         self::assertSame(['from' => 'top', 'to' => 'left'], $ast->edgeLayout['front->back']);
     }
+
+    public function testParsesEdgeLabelPositionsInLayoutBlock(): void
+    {
+        $code = <<<'NANKO'
+rectangle api label="API"
+circle db label="DB"
+api -> db label="SQL"
+
+!LAYOUT
+api: x=100, y=100
+db: x=400, y=100
+api->db: from=right, to=left, labelX=240, labelY=85
+!END
+NANKO;
+
+        $ast = NankoParser::parse($code);
+
+        self::assertArrayHasKey('api->db', $ast->edgeLayout);
+        self::assertSame([
+            'from' => 'right',
+            'to' => 'left',
+            'labelX' => 240,
+            'labelY' => 85,
+        ], $ast->edgeLayout['api->db']);
+    }
 }

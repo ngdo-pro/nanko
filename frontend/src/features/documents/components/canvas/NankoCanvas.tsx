@@ -7,7 +7,6 @@ import {
   BackgroundVariant,
   Panel,
   MiniMap,
-  MarkerType,
   applyNodeChanges,
   applyEdgeChanges,
   useReactFlow,
@@ -34,11 +33,8 @@ import {
   extractCanonicalSide,
   type AnchorSide,
 } from './utils/connectorGeometry'
-import {
-  computeAnchorDistribution,
-  type AnchorDistributionResult,
-} from './utils/anchorDistribution'
-import { computeAstEdgeCrossovers } from './utils/lineJumps'
+import { computeAnchorDistribution } from './utils/anchorDistribution'
+import { buildEdgesFromAst } from './utils/buildEdgesFromAst'
 import type { ShapePrimitiveType } from './utils/insertShapeToSource'
 import type { NankoAst } from '@/features/documents'
 
@@ -63,6 +59,8 @@ export interface NankoCanvasProps {
     target: string,
     options?: { from?: AnchorSide | null; to?: AnchorSide | null },
   ) => void
+  onEdgeLabelPositionChange?: (edgeKey: string, position: { x: number; y: number }) => void
+  onEdgeLabelPositionReset?: (edgeKey: string) => void
 }
 
 function buildNodesFromAst(ast: NankoAst): Node[] {
@@ -118,58 +116,6 @@ function buildNodesFromAst(ast: NankoAst): Node[] {
   }))
 }
 
-function buildEdgesFromAst(
-  ast: NankoAst,
-  nodes: Node[],
-  colorMode: 'dark' | 'light',
-  precomputedDist?: AnchorDistributionResult,
-  activeEdgeId?: string | null,
-): Edge[] {
-  const distribution = precomputedDist ?? computeAnchorDistribution(ast, nodes)
-  const crossovers = computeAstEdgeCrossovers(ast, nodes, distribution, activeEdgeId)
-  const edgeLayout = (ast?.edgeLayout ?? {}) as Record<
-    string,
-    { from?: string; to?: string; zIndex?: number | string }
-  >
-
-  return (ast?.connectors ?? []).map((connector, idx) => {
-    const edgeKey = `${connector.source}->${connector.target}`
-    const assignment = distribution.edgeAssignments.get(edgeKey)
-
-    const sourceHandle = assignment?.sourceHandle ?? 'right'
-    const targetHandle = assignment?.targetHandle ?? 'left'
-
-    const layoutZ = edgeLayout[edgeKey]?.zIndex
-    const explicitZ = typeof layoutZ === 'number' ? layoutZ : (typeof layoutZ === 'string' ? parseInt(layoutZ, 10) : undefined)
-    const baseZ = explicitZ ?? (idx + 1)
-    const zIndex = edgeKey === activeEdgeId ? 1000 : baseZ
-
-    return {
-      id: edgeKey,
-      source: connector.source,
-      target: connector.target,
-      sourceHandle,
-      targetHandle,
-      type: 'nanko',
-      zIndex,
-      label: connector.label ?? undefined,
-      data: {
-        label: connector.label,
-        desc: connector.desc,
-        sourceContactOffset: assignment?.sourceContactOffset,
-        targetContactOffset: assignment?.targetContactOffset,
-        jumps: crossovers.get(edgeKey) ?? [],
-      },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        width: 14,
-        height: 14,
-        color: colorMode === 'dark' ? '#5EEAD4' : '#2C4A3B',
-      },
-    }
-  })
-}
-
 function isInputFocused(): boolean {
   if (typeof document === 'undefined') return false
   const activeEl = document.activeElement
@@ -198,6 +144,8 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
   onAutoLayoutApplied,
   onCreateShape,
   onConnectorCreated,
+  onEdgeLabelPositionChange,
+  onEdgeLabelPositionReset,
 }) => {
   const [showMiniMap, setShowMiniMap] = useState<boolean>(false)
   const [colorMode, setColorMode] = useState<'dark' | 'light'>('dark')
@@ -246,7 +194,17 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
   const effectiveAst = syntaxError ? lastValidAst : ast
 
   const [nodes, setNodes] = useState<Node[]>(() => buildNodesFromAst(effectiveAst))
-  const [edges, setEdges] = useState<Edge[]>(() => buildEdgesFromAst(effectiveAst, nodes, colorMode, undefined, activeEdgeId))
+  const [edges, setEdges] = useState<Edge[]>(() =>
+    buildEdgesFromAst(
+      effectiveAst,
+      nodes,
+      colorMode,
+      undefined,
+      activeEdgeId,
+      onEdgeLabelPositionChange,
+      onEdgeLabelPositionReset,
+    ),
+  )
 
   if (!syntaxError && ast !== lastValidAst) {
     setLastValidAst(ast)
@@ -260,7 +218,17 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
     if (effectiveAst !== prevAst) {
       setNodes(nextNodes)
     }
-    setEdges(buildEdgesFromAst(effectiveAst, nextNodes, colorMode, undefined, activeEdgeId))
+    setEdges(
+      buildEdgesFromAst(
+        effectiveAst,
+        nextNodes,
+        colorMode,
+        undefined,
+        activeEdgeId,
+        onEdgeLabelPositionChange,
+        onEdgeLabelPositionReset,
+      ),
+    )
   }
 
   const onNodesChange: OnNodesChange = useCallback(
@@ -276,11 +244,21 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
             scale: dist.nodeScale.get(n.id),
           },
         }))
-        setEdges(buildEdgesFromAst(effectiveAst, enrichedNodes, colorMode, dist, activeEdgeId))
+        setEdges(
+          buildEdgesFromAst(
+            effectiveAst,
+            enrichedNodes,
+            colorMode,
+            dist,
+            activeEdgeId,
+            onEdgeLabelPositionChange,
+            onEdgeLabelPositionReset,
+          ),
+        )
         return enrichedNodes
       })
     },
-    [effectiveAst, colorMode, activeEdgeId],
+    [effectiveAst, colorMode, activeEdgeId, onEdgeLabelPositionChange, onEdgeLabelPositionReset],
   )
 
   const onEdgesChange: OnEdgesChange = useCallback(
@@ -329,7 +307,17 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
       },
     }))
     setNodes(enrichedNodes)
-    setEdges(buildEdgesFromAst(effectiveAst, enrichedNodes, colorMode, dist))
+    setEdges(
+      buildEdgesFromAst(
+        effectiveAst,
+        enrichedNodes,
+        colorMode,
+        dist,
+        activeEdgeId,
+        onEdgeLabelPositionChange,
+        onEdgeLabelPositionReset,
+      ),
+    )
 
     const newPositions: Record<string, { x: number; y: number }> = {}
     for (const n of enrichedNodes) {
@@ -337,7 +325,16 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
     }
 
     onAutoLayoutApplied?.(newPositions)
-  }, [nodes, edges, effectiveAst, colorMode, onAutoLayoutApplied])
+  }, [
+    nodes,
+    edges,
+    effectiveAst,
+    colorMode,
+    activeEdgeId,
+    onAutoLayoutApplied,
+    onEdgeLabelPositionChange,
+    onEdgeLabelPositionReset,
+  ])
 
   // Sélection d'un type dans la roue radiale (INV-6 : création atomique unique)
   const handleSelectRadialShape = useCallback(

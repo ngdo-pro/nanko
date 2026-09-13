@@ -1,7 +1,7 @@
 # Feature : Repositionnement Manuel des Labels de Connecteurs (10-draggable-connector-labels)
 
 > **Parent Initiative :** `studio-modeling`  
-> **Status :** Planned *(Framed ✅ — Backlog Feature)*  
+> **Status :** Completed & Archived ✅  
 > **Author(s) :** Nicolas & Nanko Core Team  
 > **Last Updated :** 2026-09-13  
 
@@ -47,6 +47,7 @@ gateway->auth: labelX=180, labelY=95
 * **INV-1 (Isolation événementielle) :** Le glisser du badge de label est strictement isolé des événements de canvas (pas de déclenchement de sélection multiple, ni de translation du viewport React Flow).
 * **INV-2 (Persistance conditionnelle dans `!LAYOUT`) :** Seuls les labels ayant été déplacés manuellement par l'utilisateur sont sérialisés dans `!LAYOUT`. En l'absence de coordonnées explicites dans `!LAYOUT`, la règle de positionnement déterministe par défaut (36px de la source) s'applique.
 * **INV-3 (Réinitialisation au double-clic) :** Un double-clic sur un badge de label repositionné réinitialise sa position à son ancrage déterministe par défaut et supprime l'entrée correspondante dans `!LAYOUT`.
+* **INV-4 (Contrainte stricte le long du connecteur) :** Le déplacement du label s'effectue exclusivement le long du tracé du connecteur en restant continuellement centré sur le trait (projection orthogonale sur les segments du chemin). Aucun décalage perpendiculaire ou flottement libre n'est autorisé.
 
 ---
 
@@ -59,4 +60,5 @@ gateway->auth: labelX=180, labelY=95
 
 ## 6. Implementation Spec(s)
 
-*No execution specs linked yet.*
+* [Spec 025 - Repositionnement Manuel des Labels de Connecteurs & Persistance Layout](../../../../specs/archive/025-draggable-connector-labels.md)
+

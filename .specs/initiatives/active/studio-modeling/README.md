@@ -72,8 +72,8 @@
   ↳ *Fichier :* [`archive/08-omnidirectional-and-smart-anchor-connectors.md`](./archive/08-omnidirectional-and-smart-anchor-connectors.md) *(Livré & Archivé ✅ — Spec 022)*
 - [x] **`09-multi-anchor-distribution-and-auto-scale`** : Répartition spatiale harmonieuse multi-ports par flanc et redimensionnement automatique $\times 2$  
   ↳ *Fichier :* [`archive/09-multi-anchor-distribution-and-auto-scale.md`](./archive/09-multi-anchor-distribution-and-auto-scale.md) *(Livré & Archivé ✅ — Spec 023)*
-- [ ] **`10-draggable-connector-labels`** : Repositionnement manuel par glisser des labels de connecteurs et persistance `!LAYOUT`  
-  ↳ *Fichier :* [`planned/10-draggable-connector-labels.md`](./planned/10-draggable-connector-labels.md) *(Cadré ✅ — Backlog Feature)*
+- [x] **`10-draggable-connector-labels`** : Repositionnement manuel par glisser des labels de connecteurs et persistance `!LAYOUT`  
+  ↳ *Fichier :* [`archive/10-draggable-connector-labels.md`](./archive/10-draggable-connector-labels.md) *(Livré & Archivé ✅ — Spec 025)*
 - [ ] **`11-connector-quick-spawn-on-drop`** : Création rapide de shape connectée par glisser-déposer dans le vide (Miro Quick Spawn)  
   ↳ *Fichier :* [`planned/11-connector-quick-spawn-on-drop.md`](./planned/11-connector-quick-spawn-on-drop.md) *(Cadré ✅ — Backlog Feature)*
 - [ ] **`12-connector-selection-and-deletion`** : Sélection visuelle, surbrillance et suppression directe au clavier (`Backspace`/`Delete`)  

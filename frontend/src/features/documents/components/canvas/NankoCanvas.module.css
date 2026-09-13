@@ -206,10 +206,10 @@
 }
 
 
-/* Labels d'arêtes */
+/* Labels d'arêtes : doivent toujours être au-dessus des arêtes SVG (y compris l'arête active à zIndex: 1000) */
 :global(.react-flow__edgelabel-renderer) {
-  /* Override z-index de la couche EdgeLabelRenderer de React Flow pour garder les labels au-dessus des arêtes SVG */
-  z-index: 10 !important;
+  z-index: 1001 !important;
+  pointer-events: none !important;
 }
 
 /* MiniMap React Flow : surcharge du fond et de la bordure par défaut de la librairie */

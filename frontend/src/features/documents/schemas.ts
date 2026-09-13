@@ -27,6 +27,8 @@ export type AnchorSide = z.infer<typeof anchorSideSchema>
 export const edgeAnchorLayoutSchema = z.object({
   from: anchorSideSchema.optional().nullable(),
   to: anchorSideSchema.optional().nullable(),
+  labelX: z.number().optional().nullable(),
+  labelY: z.number().optional().nullable(),
 })
 
 export const nankoAstEdgeLayoutSchema = z.record(z.string(), edgeAnchorLayoutSchema)

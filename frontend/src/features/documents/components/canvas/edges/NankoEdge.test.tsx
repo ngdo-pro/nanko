@@ -10,6 +10,9 @@ vi.mock('@xyflow/react', async (importOriginal) => {
     EdgeLabelRenderer: ({ children }: { children: React.ReactNode }) => (
       <div data-testid="edge-label-portal">{children}</div>
     ),
+    useReactFlow: () => ({
+      getViewport: () => ({ x: 0, y: 0, zoom: 1 }),
+    }),
   }
 })
 
@@ -293,5 +296,118 @@ describe('NankoEdge', () => {
     const d = path?.getAttribute('d') ?? ''
     expect(d).toContain('A 6 6 0 0 1')
     expect(d).toContain('L 310 105')
+  })
+
+  it('positionne le label selon customLabelPosition quand présent dans data', () => {
+    render(
+      <svg>
+        <NankoEdge
+          id="front->db"
+          source="front"
+          target="db"
+          sourceX={100}
+          sourceY={100}
+          targetX={300}
+          targetY={100}
+          sourcePosition={Position.Right}
+          targetPosition={Position.Left}
+          label="HTTPS"
+          data={{
+            label: 'HTTPS',
+            customLabelPosition: { x: 222, y: 77 },
+          }}
+        />
+      </svg>,
+    )
+
+    const labelContainer = screen.getByTestId('ast-connector-front-db')
+    // Le badge est projeté et centré sur le trait horizontal Y=100
+    expect(labelContainer).toHaveStyle('transform: translate(-50%, -50%) translate(222px,100px)')
+  })
+
+  it('déclenche onLabelPositionChange après un glisser-déposer du badge contraint sur le trait', () => {
+    const onLabelPositionChange = vi.fn()
+
+    render(
+      <svg>
+        <NankoEdge
+          id="front->db"
+          source="front"
+          target="db"
+          sourceX={100}
+          sourceY={100}
+          targetX={300}
+          targetY={100}
+          sourcePosition={Position.Right}
+          targetPosition={Position.Left}
+          label="HTTPS"
+          data={{
+            label: 'HTTPS',
+            customLabelPosition: { x: 136, y: 100 },
+            onLabelPositionChange,
+          }}
+        />
+      </svg>,
+    )
+
+    const badge = screen.getByText('HTTPS').closest('.nanko-edge-label')!
+    badge.setPointerCapture = vi.fn()
+    badge.releasePointerCapture = vi.fn()
+
+    // Début du drag
+    fireEvent.pointerDown(badge, {
+      button: 0,
+      pointerId: 1,
+      clientX: 100,
+      clientY: 100,
+    })
+
+    // Déplacement de +50px en X et +20px en Y
+    fireEvent.pointerMove(badge, {
+      pointerId: 1,
+      clientX: 150,
+      clientY: 120,
+    })
+
+    // Relâchement
+    fireEvent.pointerUp(badge, {
+      pointerId: 1,
+    })
+
+    expect(onLabelPositionChange).toHaveBeenCalledTimes(1)
+    // Le badge ne bouge que le long du connecteur horizontal : Y reste strictement 100
+    expect(onLabelPositionChange).toHaveBeenCalledWith('front->db', { x: 186, y: 100 })
+  })
+
+  it('déclenche onLabelPositionReset lors d un double-clic sur le badge', () => {
+    const onLabelPositionReset = vi.fn()
+
+    render(
+      <svg>
+        <NankoEdge
+          id="front->db"
+          source="front"
+          target="db"
+          sourceX={100}
+          sourceY={100}
+          targetX={300}
+          targetY={100}
+          sourcePosition={Position.Right}
+          targetPosition={Position.Left}
+          label="HTTPS"
+          data={{
+            label: 'HTTPS',
+            customLabelPosition: { x: 220, y: 80 },
+            onLabelPositionReset,
+          }}
+        />
+      </svg>,
+    )
+
+    const badge = screen.getByText('HTTPS').closest('.nanko-edge-label')!
+    fireEvent.doubleClick(badge)
+
+    expect(onLabelPositionReset).toHaveBeenCalledTimes(1)
+    expect(onLabelPositionReset).toHaveBeenCalledWith('front->db')
   })
 })
