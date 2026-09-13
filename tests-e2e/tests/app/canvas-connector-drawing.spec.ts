@@ -271,9 +271,12 @@ gateway->svc3: from=right, to=left
     const nodeGateway = page.getByTestId('canvas-node-gateway')
     await expect(nodeGateway).toBeVisible()
 
-    // 2. Vérifier la présence des 3 poignées distribuées (INV-1)
-    const distributedHandles = nodeGateway.locator('.nanko-handle-distributed')
-    await expect(distributedHandles).toHaveCount(3)
+    // 2. Vérifier l'isolement strict des 5 handles de création et des 3 points d'attache passifs (INV-1, INV-5)
+    const creationHandles = nodeGateway.locator('.nanko-handle')
+    await expect(creationHandles).toHaveCount(5)
+
+    const passiveAnchors = nodeGateway.locator('.nanko-passive-anchor')
+    await expect(passiveAnchors).toHaveCount(3)
 
     // 3. Ajouter 6 connecteurs supplémentaires sur le flanc droit (total = 9 > seuil 8)
     const saturatedDsl = `rectangle gateway label="API Gateway"

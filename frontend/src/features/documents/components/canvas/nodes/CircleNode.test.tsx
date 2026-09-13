@@ -162,11 +162,14 @@ describe('CircleNode', () => {
       </ReactFlowProvider>,
     )
 
+    // INV-5 : Strictement 5 handles de création interactives (.nanko-handle)
     const handles = container.querySelectorAll('.nanko-handle')
-    expect(handles).toHaveLength(6)
+    expect(handles).toHaveLength(5)
 
-    const arcHandle = container.querySelector('.nanko-handle-circle-arc')
-    expect(arcHandle).toBeInTheDocument()
+    // L'ancre passive sur l'arc circulaire
+    const arcAnchor = container.querySelector('.nanko-passive-anchor-circle')
+    expect(arcAnchor).toBeInTheDocument()
+    expect(arcAnchor).not.toHaveClass('nanko-handle')
 
     const nodeEl = screen.getByTestId('canvas-node-authCircle')
     expect(nodeEl.className).toContain('isScaledDiameter')

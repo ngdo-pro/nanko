@@ -170,12 +170,16 @@ describe('RectangleNode', () => {
       </ReactFlowProvider>,
     )
 
-    // 5 de base + 3 distribuées = 8 poignées
+    // INV-5 : Strictement 5 handles de création interactives (.nanko-handle)
     const handles = container.querySelectorAll('.nanko-handle')
-    expect(handles).toHaveLength(8)
+    expect(handles).toHaveLength(5)
 
-    const distributedHandles = container.querySelectorAll('.nanko-handle-distributed')
-    expect(distributedHandles).toHaveLength(3)
+    // Les points d'attache distribués sont passifs (.nanko-passive-anchor)
+    const passiveAnchors = container.querySelectorAll('.nanko-passive-anchor')
+    expect(passiveAnchors).toHaveLength(3)
+    passiveAnchors.forEach((el) => {
+      expect(el).not.toHaveClass('nanko-handle')
+    })
 
     const nodeEl = screen.getByTestId('canvas-node-gateway')
     expect(nodeEl.className).toContain('isScaledY')

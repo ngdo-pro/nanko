@@ -98,13 +98,13 @@ export const TextNode: React.FC<NodeProps> = ({ id, data, selected }) => {
             type="source"
             position={position}
             id={h.id}
-            isConnectableStart={true}
-            isConnectableEnd={true}
+            isConnectable={false}
+            isConnectableStart={false}
+            isConnectableEnd={false}
             style={style}
             className={clsx(
-              'nanko-handle',
-              `nanko-handle-${h.side}`,
-              'nanko-handle-distributed',
+              'nanko-passive-anchor',
+              `nanko-passive-anchor-${h.side}`,
             )}
           />
         )

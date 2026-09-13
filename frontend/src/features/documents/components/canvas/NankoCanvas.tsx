@@ -188,6 +188,8 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
   const isMouseOverCanvasRef = useRef<boolean>(false)
   const latestMouseRef = useRef<{ clientX: number; clientY: number; inside: boolean } | null>(null)
   const hoveredSectorRef = useRef<ShapePrimitiveType | null>(null)
+  const radialMenuRef = useRef<RadialMenuState | null>(null)
+  const isRadialActionHandledRef = useRef<boolean>(false)
 
   const { screenToFlowPosition } = useReactFlow()
 
@@ -313,15 +315,21 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
     onAutoLayoutApplied?.(newPositions)
   }, [nodes, edges, effectiveAst, colorMode, onAutoLayoutApplied])
 
-  // Sélection d'un type dans la roue radiale
+  // Sélection d'un type dans la roue radiale (INV-6 : création atomique unique)
   const handleSelectRadialShape = useCallback(
     (shapeType: ShapePrimitiveType) => {
-      if (!radialMenu) return
-      const flowPos = screenToFlowPosition({ x: radialMenu.clientX, y: radialMenu.clientY })
-      onCreateShape?.(shapeType, flowPos)
+      const currentMenu = radialMenuRef.current
+      if (!currentMenu || isRadialActionHandledRef.current) return
+
+      isRadialActionHandledRef.current = true
+      hoveredSectorRef.current = null
+      radialMenuRef.current = null
       setRadialMenu(null)
+
+      const flowPos = screenToFlowPosition({ x: currentMenu.clientX, y: currentMenu.clientY })
+      onCreateShape?.(shapeType, flowPos)
     },
-    [radialMenu, screenToFlowPosition, onCreateShape],
+    [screenToFlowPosition, onCreateShape],
   )
 
   // Raccourci direct clavier (R, C, T)
@@ -368,12 +376,16 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
         const clampedX = Math.max(95, Math.min(rect.width - 95, relativeX))
         const clampedY = Math.max(95, Math.min(rect.height - 95, relativeY))
 
-        setRadialMenu({
+        const newMenu: RadialMenuState = {
           x: clampedX,
           y: clampedY,
           clientX,
           clientY,
-        })
+        }
+        isRadialActionHandledRef.current = false
+        hoveredSectorRef.current = null
+        radialMenuRef.current = newMenu
+        setRadialMenu(newMenu)
         return
       }
 
@@ -397,6 +409,8 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
       // Fermeture par Échap
       if (e.key === 'Escape') {
         hoveredSectorRef.current = null
+        radialMenuRef.current = null
+        isRadialActionHandledRef.current = false
         setRadialMenu(null)
       }
     }
@@ -404,23 +418,28 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.key === 'a' || e.key === 'A' || e.key === 'Tab') {
         const shapeToCreate = hoveredSectorRef.current
-        hoveredSectorRef.current = null
+        const currentMenu = radialMenuRef.current
 
-        setRadialMenu((currentMenu) => {
-          if (currentMenu && shapeToCreate) {
-            const clientPos = latestMouseRef.current?.inside
-              ? { x: latestMouseRef.current.clientX, y: latestMouseRef.current.clientY }
-              : { x: currentMenu.clientX, y: currentMenu.clientY }
-            const flowPos = screenToFlowPosition(clientPos)
-            onCreateShape?.(shapeToCreate, flowPos)
-          }
-          return null
-        })
+        hoveredSectorRef.current = null
+        radialMenuRef.current = null
+        setRadialMenu(null)
+
+        // INV-6 : Extraction hors setState et vérification du verrou d'action unique
+        if (currentMenu && shapeToCreate && !isRadialActionHandledRef.current) {
+          isRadialActionHandledRef.current = true
+          const clientPos = latestMouseRef.current?.inside
+            ? { x: latestMouseRef.current.clientX, y: latestMouseRef.current.clientY }
+            : { x: currentMenu.clientX, y: currentMenu.clientY }
+          const flowPos = screenToFlowPosition(clientPos)
+          onCreateShape?.(shapeToCreate, flowPos)
+        }
       }
     }
 
     const handleWindowBlur = () => {
       hoveredSectorRef.current = null
+      radialMenuRef.current = null
+      isRadialActionHandledRef.current = false
       setRadialMenu(null)
     }
 
@@ -552,6 +571,8 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
           }}
           onClose={() => {
             hoveredSectorRef.current = null
+            radialMenuRef.current = null
+            isRadialActionHandledRef.current = false
             setRadialMenu(null)
           }}
         />

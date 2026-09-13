@@ -150,8 +150,32 @@ describe('NankoCanvas', () => {
     fireEvent.keyUp(window, { key: 'a' })
 
     // 4. La forme est créée sans clic supplémentaire, et le menu est fermé
+    expect(handleCreateShape).toHaveBeenCalledTimes(1)
     expect(handleCreateShape).toHaveBeenCalledWith('rectangle', expect.any(Object))
     expect(screen.queryByTestId('radial-menu')).not.toBeInTheDocument()
+  })
+
+  it('ne crée qu une seule forme si clic sur secteur puis relâchement de la touche A (INV-6)', () => {
+    const handleCreateShape = vi.fn()
+    render(<NankoCanvas ast={sampleAst} onCreateShape={handleCreateShape} />)
+
+    const canvas = screen.getByTestId('nanko-canvas')
+    fireEvent.pointerEnter(canvas, { clientX: 300, clientY: 250 })
+
+    // 1. Maintien de 'a'
+    fireEvent.keyDown(window, { key: 'a' })
+    const rectSector = screen.getByTestId('radial-item-rectangle')
+    fireEvent.mouseEnter(rectSector)
+
+    // 2. Clic sur le secteur
+    fireEvent.click(rectSector)
+
+    // 3. Relâchement de 'a'
+    fireEvent.keyUp(window, { key: 'a' })
+
+    // 4. Strictement 1 seul appel (aucun doublon)
+    expect(handleCreateShape).toHaveBeenCalledTimes(1)
+    expect(handleCreateShape).toHaveBeenCalledWith('rectangle', expect.any(Object))
   })
 
   it('rend 5 poignées d\'ancrage (4 cardinales + 1 auto) sur chaque forme du canvas', () => {
@@ -169,13 +193,13 @@ describe('NankoCanvas', () => {
     expect(frontNode.querySelector('.nanko-handle-auto')).toBeInTheDocument()
   })
 
-  it('rend des poignées distribuées sur une face comptant plusieurs connecteurs (INV-1)', () => {
+  it('répartit les points d attache passifs le long du flanc droit (INV-1, INV-5)', () => {
     const multiAst: NankoAst = {
       shapes: [
         { id: 'gw', type: 'rectangle', label: 'Gateway', desc: null },
-        { id: 's1', type: 'rectangle', label: 'S1', desc: null },
-        { id: 's2', type: 'rectangle', label: 'S2', desc: null },
-        { id: 's3', type: 'rectangle', label: 'S3', desc: null },
+        { id: 's1', type: 'rectangle', label: 'Service 1', desc: null },
+        { id: 's2', type: 'rectangle', label: 'Service 2', desc: null },
+        { id: 's3', type: 'rectangle', label: 'Service 3', desc: null },
       ],
       connectors: [
         { source: 'gw', target: 's1', label: null, desc: null },
@@ -199,12 +223,13 @@ describe('NankoCanvas', () => {
     render(<NankoCanvas ast={multiAst} />)
 
     const gwNode = screen.getByTestId('canvas-node-gw')
-    // 5 base + 3 distribuées = 8
+    // INV-5 : Strictement 5 handles de création interactives (.nanko-handle)
     const handles = gwNode.querySelectorAll('.nanko-handle')
-    expect(handles.length).toBe(8)
+    expect(handles.length).toBe(5)
 
-    const distributed = gwNode.querySelectorAll('.nanko-handle-distributed')
-    expect(distributed.length).toBe(3)
+    // Points d'attache distribués passifs (.nanko-passive-anchor)
+    const passive = gwNode.querySelectorAll('.nanko-passive-anchor')
+    expect(passive.length).toBe(3)
   })
 
   it('active l auto-scale x2 lorsqu un flanc dépasse 8 connecteurs (INV-2, INV-3)', () => {

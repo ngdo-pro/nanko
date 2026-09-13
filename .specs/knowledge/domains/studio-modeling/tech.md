@@ -60,7 +60,7 @@ flowchart LR
 |---|---|---|
 | [`PDR-004`](../../../decisions/product/PDR-004-radial-menu-and-contextual-handles.md) | Poignées contextuelles & Tracé magnétique | Révélation au survol/sélection, poignées carrées Blueprint, exclusion stricte d'auto-boucles |
 | [`Spec 022`](../../specs/archive/022-omnidirectional-and-smart-anchor-connectors.md) | Poignées Omnidirectionnelles & Ancrage Dynamique Intelligent | 4 poignées cardinales bidirectionnelles, cible centrale `auto`, calcul d'angle euclidien temps réel |
-| [`Spec 023`](../../specs/active/023-multi-anchor-distribution-and-auto-scale.md) | Distribution Multi-Ports & Redimensionnement Automatique | Poignées équidistantes sans collision, seuil de capacité 8 flux, facteur d'échelle $\times 2$ |
+| [`Spec 023`](../../specs/archive/023-multi-anchor-distribution-and-auto-scale.md) | Distribution Multi-Ports & Redimensionnement Automatique | Poignées équidistantes sans collision, seuil de capacité 8 flux, facteur d'échelle $\times 2$ |
 | [`ADR-0002`](../../../decisions/architecture/ADR-002-bounded-contexts-structure.md) | Monolithe Modulaire | Découplage strict entre le conteneur documentaire et le moteur de studio |
 | [`ADR-0007`](../../../decisions/architecture/ADR-007-postgres-only-for-mvp.md) | Runtime PostgreSQL unique | Stockage hybride relationnel et JSONB dénormalisé sur un seul moteur SQL |
 | [`ADR-0011`](../../../decisions/architecture/ADR-011-hexagonal-architecture-backend.md) | Hexagone & DBAL sans ORM | Parser DSL pur sans adhérence à Doctrine ORM ni au framework Symfony |

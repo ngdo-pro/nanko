@@ -1,11 +1,11 @@
 # Spec : 023 - Distribution Multi-Ports & Redimensionnement Automatique
 
 ## Métadonnées
-* **Statut :** `Prêt pour Implémentation 🚀`
+* **Statut :** `Livré & Archivé ✅`
 * **Domaine concerné :** `studio-modeling` ([Architecture Technique](../../knowledge/domains/studio-modeling/tech.md) · [Comportement Produit](../../knowledge/domains/studio-modeling/behavior.md))
 * **Type de changement :** `Évolution & Stabilisation`
 * **Cible :** `frontend` (React Flow, Nœuds, Handles, Layout Dagre, Roue Radiale, Géométrie de connecteurs) + `tests-e2e` (Playwright)
-* **Feature parente :** [09-multi-anchor-distribution-and-auto-scale](../../initiatives/active/studio-modeling/active/09-multi-anchor-distribution-and-auto-scale.md)
+* **Feature parente :** [09-multi-anchor-distribution-and-auto-scale](../../initiatives/active/studio-modeling/archive/09-multi-anchor-distribution-and-auto-scale.md)
 * **Complexité :** `Medium`
 
 ---

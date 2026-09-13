@@ -1,7 +1,7 @@
 # Feature : Distribution Multi-Ports & Redimensionnement Automatique (09-multi-anchor-distribution-and-auto-scale)
 
 > **Parent Initiative :** `studio-modeling`  
-> **Status :** In Progress 🚀  
+> **Status :** Delivered & Archived ✅  
 > **Author(s) :** Nicolas & Nanko Core Team  
 > **Last Updated :** 2026-09-13  
 
@@ -83,4 +83,4 @@ Au survol pour créer un connecteur, SEULES les 5 poignées cardinales + auto so
 
 ## 6. Implementation Spec(s)
  
-* [023-multi-anchor-distribution-and-auto-scale.md](../../../specs/active/023-multi-anchor-distribution-and-auto-scale.md)
+* [023-multi-anchor-distribution-and-auto-scale.md](../../../specs/archive/023-multi-anchor-distribution-and-auto-scale.md)

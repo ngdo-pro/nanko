@@ -157,8 +157,13 @@ describe('TextNode', () => {
       </ReactFlowProvider>,
     )
 
+    // INV-5 : Strictement 5 handles de création interactives (.nanko-handle)
     const handles = container.querySelectorAll('.nanko-handle')
-    expect(handles).toHaveLength(7) // 5 base + 2 distributed
+    expect(handles).toHaveLength(5)
+
+    // Les points d'attache distribués sont passifs (.nanko-passive-anchor)
+    const passiveAnchors = container.querySelectorAll('.nanko-passive-anchor')
+    expect(passiveAnchors).toHaveLength(2)
 
     const nodeEl = screen.getByTestId('canvas-node-note')
     expect(nodeEl.className).toContain('isScaledX')
