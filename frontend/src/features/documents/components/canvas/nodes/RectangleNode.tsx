@@ -69,10 +69,10 @@ export const RectangleNode: React.FC<NodeProps> = ({ id, data, selected }) => {
         className="nanko-handle nanko-handle-bottom"
       />
       <Handle
-        type="source"
+        type="target"
         position={Position.Top}
         id="auto"
-        isConnectableStart={true}
+        isConnectableStart={false}
         isConnectableEnd={true}
         className="nanko-handle nanko-handle-auto"
       />
