@@ -337,4 +337,82 @@ gateway->svc9: from=right, to=left
     await saveButton.click()
     await expect(page.getByTestId('saved-status-badge')).toBeVisible()
   })
+
+  test('Pontets de croisement des connecteurs orthogonaux (Line Jumps Spec 024)', async ({ page }) => {
+    const uniqueSuffix = Date.now().toString().slice(-6)
+    const baseUser = await getOrSetupTestUser()
+    const isLocal = !env.testUser.username
+
+    const email = isLocal ? `connector-jumps-${uniqueSuffix}@nanko.dev` : baseUser.email
+    const password = baseUser.password
+    if (isLocal) {
+      await createOrResetKeycloakUser(email, password)
+    }
+
+    const docName = `Line Jumps ${uniqueSuffix}`
+    const docSlug = `line-jumps-${uniqueSuffix}`
+
+    await page.goto('/')
+    const loginButton = page.getByTestId('login-button')
+    await expect(loginButton).toBeVisible()
+    await loginButton.click()
+
+    await expect(page).toHaveURL(/.*\/realms\/nanko\/protocol\/openid-connect\/auth.*/)
+    await page.locator('#username').fill(email)
+    await page.locator('#password').fill(password)
+    await page.locator('#kc-login').click()
+    await expect(page).toHaveURL(/.*localhost:45173.*|.*app.*nanko\.dev.*/)
+
+    const newDocButton = page.getByTestId('new-document-button')
+    await expect(newDocButton).toBeVisible()
+    await newDocButton.click()
+
+    await page.getByTestId('document-name-input').fill(docName)
+    await page.getByTestId('document-slug-input').fill(docSlug)
+    await page.getByTestId('submit-create-document').click()
+
+    await expect(page).toHaveURL(/.*\/projects\/[0-9a-f-]+\/documents\/[0-9a-f-]+/)
+    const textarea = page.getByTestId('source-code-textarea')
+    await expect(textarea).toBeVisible()
+
+    // Deux connecteurs perpendiculaires qui se croisent au centre
+    const crossingDsl = `rectangle nWest label="West"
+rectangle nEast label="East"
+rectangle nNorth label="North"
+rectangle nSouth label="South"
+
+nWest -> nEast
+nNorth -> nSouth
+
+!LAYOUT
+nWest: x=50, y=200
+nEast: x=450, y=200
+nNorth: x=250, y=50
+nSouth: x=250, y=350
+nWest->nEast: from=right, to=left
+nNorth->nSouth: from=bottom, to=top
+!END
+`
+    await textarea.fill(crossingDsl)
+
+    // Vérifier les deux nœuds et le canvas
+    await expect(page.getByTestId('canvas-node-nWest')).toBeVisible()
+    await expect(page.getByTestId('canvas-node-nSouth')).toBeVisible()
+
+    // Récupérer les chemins SVG des deux arêtes
+    const edgePaths = page.locator('.react-flow__edge-path')
+    await expect(edgePaths).toHaveCount(2)
+
+    const dAttrs = await edgePaths.evaluateAll((elements) =>
+      elements.map((el) => el.getAttribute('d') ?? ''),
+    )
+
+    // L'un des connecteurs (nNorth->nSouth, déclaré en 2nd) doit comporter un arc de saut A 6 6
+    const hasJumpArc = dAttrs.some((d) => d.includes('A 6 6'))
+    expect(hasJumpArc).toBe(true)
+
+    // L'autre connecteur doit être une ligne droite continue (sans arc)
+    const hasStraightLine = dAttrs.some((d) => !d.includes('A 6 6'))
+    expect(hasStraightLine).toBe(true)
+  })
 })
