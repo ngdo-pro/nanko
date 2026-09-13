@@ -29,6 +29,22 @@ export interface EdgePathInfo {
 }
 
 export const DEFAULT_LINE_JUMP_RADIUS = 6
+export const MIN_CORNER_CLEARANCE = 14
+
+/**
+ * Calcule la distance minimale d'une intersection aux deux extrémités (coins ou bornes) d'un segment.
+ */
+export function getSegmentClearance(seg: OrthogonalSegment, intersection: Point): number {
+  if (seg.orientation === 'horizontal') {
+    const distToStart = Math.abs(intersection.x - seg.start.x)
+    const distToEnd = Math.abs(intersection.x - seg.end.x)
+    return Math.min(distToStart, distToEnd)
+  } else {
+    const distToStart = Math.abs(intersection.y - seg.start.y)
+    const distToEnd = Math.abs(intersection.y - seg.end.y)
+    return Math.min(distToStart, distToEnd)
+  }
+}
 
 /**
  * Extrait les coordonnées des points composant un chemin SVG orthogonal (M ... L ...).
@@ -158,6 +174,7 @@ export function computeEdgeCrossovers(
   activeEdgeId?: string | null,
   radius: number = DEFAULT_LINE_JUMP_RADIUS,
 ): Map<string, LineJumpDescriptor[]> {
+  const minClearance = Math.max(MIN_CORNER_CLEARANCE, radius * 2 + 2)
   const jumpsMap = new Map<string, LineJumpDescriptor[]>()
   for (const edge of edges) {
     jumpsMap.set(edge.id, [])
@@ -184,30 +201,51 @@ export function computeEdgeCrossovers(
           const segA = segsA[sAi]
           const segB = segsB[sBi]
 
-          const intersection = findOrthogonalIntersection(segA, segB, radius + 2)
+          const intersection = findOrthogonalIntersection(segA, segB, 4)
           if (!intersection) continue
 
-          // Déterminer l'arête prioritaire selon le z-index effectif
-          const zA = edgeA.id === activeEdgeId ? 1000 : edgeA.zIndex
-          const zB = edgeB.id === activeEdgeId ? 1000 : edgeB.zIndex
+          const clearanceA = getSegmentClearance(segA, intersection)
+          const clearanceB = getSegmentClearance(segB, intersection)
+
+          const canAJump = clearanceA >= minClearance
+          const canBJump = clearanceB >= minClearance
+
+          // Si aucun segment n'a de dégagement suffisant (croisement trop proche de deux coins), aucun pontet n'est tracé
+          if (!canAJump && !canBJump) continue
 
           let winnerEdgeId: string
           let winnerSeg: OrthogonalSegment
           let winnerSegIndex: number
 
-          if (zA > zB) {
+          if (canAJump && !canBJump) {
+            // Seule l'arête A a le dégagement nécessaire (B est en plein coude/virage)
             winnerEdgeId = edgeA.id
             winnerSeg = segA
             winnerSegIndex = sAi
-          } else if (zB > zA) {
+          } else if (!canAJump && canBJump) {
+            // Seule l'arête B a le dégagement nécessaire (A est en plein coude/virage)
             winnerEdgeId = edgeB.id
             winnerSeg = segB
             winnerSegIndex = sBi
           } else {
-            // Départage déterministe : la deuxième arête (index plus élevé) gagne
-            winnerEdgeId = edgeB.id
-            winnerSeg = segB
-            winnerSegIndex = sBi
+            // Les deux arêtes sont dégagées : arbitrage standard selon le z-index effectif
+            const zA = edgeA.id === activeEdgeId ? 1000 : edgeA.zIndex
+            const zB = edgeB.id === activeEdgeId ? 1000 : edgeB.zIndex
+
+            if (zA > zB) {
+              winnerEdgeId = edgeA.id
+              winnerSeg = segA
+              winnerSegIndex = sAi
+            } else if (zB > zA) {
+              winnerEdgeId = edgeB.id
+              winnerSeg = segB
+              winnerSegIndex = sBi
+            } else {
+              // Départage déterministe : la deuxième arête (index plus élevé) gagne
+              winnerEdgeId = edgeB.id
+              winnerSeg = segB
+              winnerSegIndex = sBi
+            }
           }
 
           const isHorizontal = winnerSeg.orientation === 'horizontal'
@@ -292,9 +330,16 @@ export function applyLineJumpsToPath(
     }
 
     for (const jump of validJumps) {
-      const { x: jx, y: jy, orientation, direction } = jump
+      const { x: jx, y: jy, direction } = jump
 
-      if (orientation === 'horizontal') {
+      if (isHorizontal) {
+        const minX = Math.min(start.x, end.x)
+        const maxX = Math.max(start.x, end.x)
+        // Garde-fou strict : le pontet doit être entièrement compris dans le segment avec marge de 2px
+        if (jx - radius < minX + 2 || jx + radius > maxX - 2) {
+          continue
+        }
+
         if (direction === 'positive') {
           // Gauche vers droite : arc bombé vers le haut (y décroissant)
           const enterX = jx - radius
@@ -307,6 +352,13 @@ export function applyLineJumpsToPath(
           resultPath += ` L ${enterX} ${jy} A ${radius} ${radius} 0 0 0 ${exitX} ${jy}`
         }
       } else {
+        const minY = Math.min(start.y, end.y)
+        const maxY = Math.max(start.y, end.y)
+        // Garde-fou strict : le pontet doit être entièrement compris dans le segment avec marge de 2px
+        if (jy - radius < minY + 2 || jy + radius > maxY - 2) {
+          continue
+        }
+
         if (direction === 'positive') {
           // Haut vers bas : arc bombé vers la droite (x croissant)
           const enterY = jy - radius

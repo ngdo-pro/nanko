@@ -6,6 +6,8 @@ import {
   computeEdgeCrossovers,
   applyLineJumpsToPath,
   computeAstEdgeCrossovers,
+  getSegmentClearance,
+  MIN_CORNER_CLEARANCE,
   DEFAULT_LINE_JUMP_RADIUS,
 } from './lineJumps'
 
@@ -94,6 +96,34 @@ describe('lineJumps utility', () => {
     })
   })
 
+  describe('getSegmentClearance', () => {
+    it('définit une distance minimale de sécurité pour les coins', () => {
+      expect(MIN_CORNER_CLEARANCE).toBe(14)
+    })
+
+    it('calcule la distance minimale aux extrémités d un segment horizontal', () => {
+      const segH = {
+        start: { x: 10, y: 50 },
+        end: { x: 100, y: 50 },
+        orientation: 'horizontal' as const,
+      }
+      expect(getSegmentClearance(segH, { x: 15, y: 50 })).toBe(5)
+      expect(getSegmentClearance(segH, { x: 90, y: 50 })).toBe(10)
+      expect(getSegmentClearance(segH, { x: 50, y: 50 })).toBe(40)
+    })
+
+    it('calcule la distance minimale aux extrémités d un segment vertical', () => {
+      const segV = {
+        start: { x: 50, y: 0 },
+        end: { x: 50, y: 100 },
+        orientation: 'vertical' as const,
+      }
+      expect(getSegmentClearance(segV, { x: 50, y: 12 })).toBe(12)
+      expect(getSegmentClearance(segV, { x: 50, y: 95 })).toBe(5)
+      expect(getSegmentClearance(segV, { x: 50, y: 50 })).toBe(50)
+    })
+  })
+
   describe('computeEdgeCrossovers', () => {
     const edgeA = {
       id: 'edgeA',
@@ -133,6 +163,50 @@ describe('lineJumps utility', () => {
         y: 50,
         orientation: 'horizontal',
       })
+    })
+
+    it('redirige le saut vers l arête droite lorsque l autre arête est dans un virage/coin', () => {
+      // edgeBend tourne juste au-dessus du croisement (distance au coin = 5px < MIN_CORNER_CLEARANCE)
+      // Malgré un zIndex supérieur (10 vs 1), elle ne doit PAS recevoir le saut pour ne pas déformer le coin
+      const edgeStraight = {
+        id: 'straight',
+        path: 'M 0 50 L 100 50',
+        zIndex: 1,
+      }
+      const edgeBend = {
+        id: 'bend',
+        path: 'M 50 45 L 50 100', // start Y=45, intersection à (50, 50) -> clearance = 5px
+        zIndex: 10,
+      }
+
+      const crossovers = computeEdgeCrossovers([edgeStraight, edgeBend])
+      const jumpsStraight = crossovers.get('straight')
+      const jumpsBend = crossovers.get('bend')
+
+      expect(jumpsBend).toHaveLength(0)
+      expect(jumpsStraight).toHaveLength(1)
+      expect(jumpsStraight![0]).toMatchObject({
+        x: 50,
+        y: 50,
+        orientation: 'horizontal',
+      })
+    })
+
+    it('ne génère aucun saut si les deux arêtes sont trop proches d un coin (< MIN_CORNER_CLEARANCE)', () => {
+      const edgeNearCorner1 = {
+        id: 'corner1',
+        path: 'M 45 50 L 100 50', // clearance = 5px
+        zIndex: 1,
+      }
+      const edgeNearCorner2 = {
+        id: 'corner2',
+        path: 'M 50 45 L 50 100', // clearance = 5px
+        zIndex: 2,
+      }
+
+      const crossovers = computeEdgeCrossovers([edgeNearCorner1, edgeNearCorner2])
+      expect(crossovers.get('corner1')).toHaveLength(0)
+      expect(crossovers.get('corner2')).toHaveLength(0)
     })
   })
 
@@ -208,6 +282,24 @@ describe('lineJumps utility', () => {
       expect(result).toBe(
         'M 0 50 L 44 50 A 6 6 0 0 1 56 50 L 144 50 A 6 6 0 0 1 156 50 L 200 50',
       )
+    })
+
+    it('ignore un saut qui déborderait des bornes du segment pour éviter toute boucle rétrograde', () => {
+      const initialPath = 'M 0 50 L 100 50'
+      // Saut à x=98 sur un segment finissant à 100 : avec radius=6, 98 + 6 = 104 > 98 (100 - 2)
+      const overflowingJumps = [
+        {
+          x: 98,
+          y: 50,
+          segmentIndex: 0,
+          orientation: 'horizontal' as const,
+          direction: 'positive' as const,
+        },
+      ]
+
+      const result = applyLineJumpsToPath(initialPath, overflowingJumps, 6)
+      // Le saut est ignoré, le chemin reste rectiligne
+      expect(result).toBe('M 0 50 L 100 50')
     })
 
     it('retourne le chemin inchangé en l absence de pontets', () => {
