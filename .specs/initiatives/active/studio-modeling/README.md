@@ -68,8 +68,8 @@
   ↳ *Fichier :* `planned/06-shortcuts-cheatsheet-modal.md` *(À cadrer via `/feature`)*
 - [ ] **`07-activity-log-notion-style`** : Journal d'activité granulaire action par action avec diff visuel et restauration  
   ↳ *Fichier :* `planned/07-activity-log-notion-style.md` *(Cadré via PDR-005 — À initialiser)*
-- [ ] **`08-omnidirectional-and-smart-anchor-connectors`** : Poignées omnidirectionnelles 4 côtés et point central d'ancrage dynamique (`auto`)  
-  ↳ *Fichier :* [`planned/08-omnidirectional-and-smart-anchor-connectors.md`](./planned/08-omnidirectional-and-smart-anchor-connectors.md) *(Cadré ✅ — Prêt pour `/spec`)*
+- [x] **`08-omnidirectional-and-smart-anchor-connectors`** : Poignées omnidirectionnelles 4 côtés et point central d'ancrage dynamique (`auto`)  
+  ↳ *Fichier :* [`archive/08-omnidirectional-and-smart-anchor-connectors.md`](./archive/08-omnidirectional-and-smart-anchor-connectors.md) *(Livré & Archivé ✅ — Spec 022)*
 - [ ] **`09-multi-anchor-distribution-and-auto-scale`** : Répartition spatiale harmonieuse multi-ports par flanc et redimensionnement automatique $\times 2$  
   ↳ *Fichier :* [`planned/09-multi-anchor-distribution-and-auto-scale.md`](./planned/09-multi-anchor-distribution-and-auto-scale.md) *(Cadré ✅ — Backlog Feature)*
 - [ ] **`10-draggable-connector-labels`** : Repositionnement manuel par glisser des labels de connecteurs et persistance `!LAYOUT`  

@@ -21,9 +21,9 @@ flowchart LR
 
 | Couche | Responsabilité Technique | Composants Clés |
 |---|---|---|
-| **Client / Frontend** | Rendu interactif du graphe, manipulation nodale, tracé magnétique de connecteurs, auto-layout Dagre et infobulles Blueprint | `DocumentEditorView`, `NankoCanvas`, `RectangleNode`, `CircleNode`, `TextNode`, `NankoEdge`, `BlueprintTooltip`, `insertConnectorToSource`, `isValidConnection` |
+| **Client / Frontend** | Rendu interactif du graphe, manipulation nodale, tracé magnétique de connecteurs, auto-layout Dagre, poignées omnidirectionnelles et géométrie d'ancrage dynamique | `DocumentEditorView`, `NankoCanvas`, `RectangleNode`, `CircleNode`, `TextNode`, `NankoEdge`, `BlueprintTooltip`, `connectorGeometry`, `insertConnectorToSource`, `isValidConnection` |
 | **Transport / API** | Désérialisation de l'entrée, gestion des codes d'erreur de syntaxe HTTP 400 | `UpdateDocument.php`, `GetDocument.php`, `UpdateDocumentInput.php` |
-| **Cœur Métier (Core)** | Analyse lexicale, parsing déterministe et construction de l'arbre syntaxique | `NankoParser.php`, `NankoAst.php`, `Shape.php`, `Connector.php` |
+| **Cœur Métier (Core)** | Analyse lexicale, parsing déterministe, construction de l'arbre syntaxique et support du layout d'arêtes (`edgeLayout`) | `NankoParser.php`, `NankoAst.php`, `Shape.php`, `Connector.php` |
 | **Persistance / Données** | Écriture conjointe du code source et de l'arbre AST dans la table `documents` | `DocumentRepository.php`, `DoctrineRepository.php` |
 
 > [!IMPORTANT]
@@ -48,6 +48,8 @@ flowchart LR
 | **`INV-TECH-02`** | **Isolation Événementielle du Canvas** : Aucun événement souris (clic, molette, glissement) dans les infobulles ou modales ne doit propager de zoom/pan au canvas React Flow | Attributs `nodrag`, `nowheel`, `nopan` et `stopPropagation()` |
 | **`INV-TECH-03`** | **Auto-Layout Borné** : L'algorithme Dagre s'exécute côté client en moins de 100 ms pour un graphe standard (< 200 nœuds) sans dégrader le thread principal | Calcul asynchrone / Web Worker prêt |
 | **`INV-TECH-04`** | **Intégrité du Tracé Réactif** : L'injection de connecteurs se fait avant le bloc `!LAYOUT` sans altérer les déclarations existantes, avec `connectionRadius={32}` et `connectionMode={ConnectionMode.Loose}` | Tests unitaires `insertConnectorToSource` et `isValidConnection` |
+| **`INV-TECH-05`** | **Ancrage Dynamique & Omnidirectionnalité** : Chaque nœud expose 4 poignées cardinales bidirectionnelles (`isConnectableStart={true}`, `isConnectableEnd={true}`) et 1 poignée centrale `auto`. La géométrie `connectorGeometry` résout les flancs de contact optimaux en temps réel et projette le label à 36px du point de départ | Fonctions `getOptimalConnectorSides`, rendu `NankoEdge` |
+| **`INV-TECH-06`** | **Persistance Sélective du Layout d'Arêtes** : Seules les arêtes avec ancrages cardinaux explicites (`from=[side], to=[side]`) sont sérialisées dans `!LAYOUT`. Le mode `auto` pur reste implicite | Parsers/sérialiseurs `syncLayoutToSource`, `nankoParser.ts`, `NankoParser.php` |
 
 ---
 
@@ -56,6 +58,7 @@ flowchart LR
 | Référence | Décision Structurante | Impact Technique |
 |---|---|---|
 | [`PDR-004`](../../../decisions/product/PDR-004-radial-menu-and-contextual-handles.md) | Poignées contextuelles & Tracé magnétique | Révélation au survol/sélection, poignées carrées Blueprint, exclusion stricte d'auto-boucles |
+| [`Spec 022`](../../specs/archive/022-omnidirectional-and-smart-anchor-connectors.md) | Poignées Omnidirectionnelles & Ancrage Dynamique Intelligent | 4 poignées cardinales bidirectionnelles, cible centrale `auto`, calcul d'angle euclidien temps réel |
 | [`ADR-0002`](../../../decisions/architecture/ADR-002-bounded-contexts-structure.md) | Monolithe Modulaire | Découplage strict entre le conteneur documentaire et le moteur de studio |
 | [`ADR-0007`](../../../decisions/architecture/ADR-007-postgres-only-for-mvp.md) | Runtime PostgreSQL unique | Stockage hybride relationnel et JSONB dénormalisé sur un seul moteur SQL |
 | [`ADR-0011`](../../../decisions/architecture/ADR-011-hexagonal-architecture-backend.md) | Hexagone & DBAL sans ORM | Parser DSL pur sans adhérence à Doctrine ORM ni au framework Symfony |

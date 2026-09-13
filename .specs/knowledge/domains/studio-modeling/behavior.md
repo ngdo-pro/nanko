@@ -100,14 +100,15 @@ flowchart TD
   2. L'algorithme Dagre calcule un placement hiérarchique optimal tenant compte des rayons circulaires réels et des largeurs rectangulaires.
   3. Toutes les coordonnées du bloc `!LAYOUT` sont mises à jour sans aucun croisement évitable.
 
-### `JRN-07` : Tracé de Connecteur par Glisser & Magnétisme Automatique
+### `JRN-07` : Tracé de Connecteur par Glisser, Omnidirectionnalité & Ancrage Dynamique
 * **Contexte :** Liaison visuelle de deux formes sur le canvas sans basculer dans l'éditeur de code.
 * **Flux Nominal :**
   1. Au repos, les poignées d'ancrage sont masquées pour garantir la pureté visuelle du schéma.
-  2. Le survol (`:hover`) ou la sélection (`.selected`) d'une forme révèle immédiatement ses 4 poignées d'ancrage Blueprint.
-  3. L'utilisateur glisse directement depuis une poignée ; un fil élastique suit le pointeur tandis que les formes distantes restent nettes.
-  4. À l'approche de la forme cible (< 32px), la poignée candidate la plus proche s'aimante avec surbrillance distinctive (`scale(1.5)`, `--brand`).
-  5. Au relâchement, l'arête `source -> target` est insérée de façon déterministe dans le code source `.nanko` après les shapes et avant `!LAYOUT`, activant l'état non sauvegardé.
+  2. Le survol (`:hover`) ou la sélection (`.selected`) d'une forme révèle immédiatement ses 4 poignées cardinales Blueprint et son ancre centrale `auto` (motif concentric target `◎`).
+  3. L'utilisateur peut initier un tracé sortant depuis n'importe laquelle des 4 poignées cardinales (`top`, `bottom`, `left`, `right`) ou depuis l'ancre centrale `auto` ; un fil élastique suit le pointeur tandis que les formes distantes restent nettes.
+  4. À l'approche de la forme cible (< 32px), la poignée candidate la plus proche s'aimante avec surbrillance distinctive (`scale(1.5)`, `--brand`). Si l'utilisateur vise le corps ou le centre de la cible, le mode d'ancrage dynamique `auto` est retenu.
+  5. Au relâchement, l'arête `source -> target` est insérée dans le code source `.nanko`. Si des ancres cardinales fixes ont été sélectionnées, elles sont persistées dans le bloc `!LAYOUT` (`source->target: from=[side], to=[side]`). En mode `auto` pur, aucune surcharge n'est inscrite dans `!LAYOUT`.
+  6. Le badge de libellé (`label`) se positionne automatiquement à 36px du point de départ le long du tracé, qualifiant immédiatement le flux sortant.
 * **Variantes & Erreurs :** En cas d'auto-connexion (`source === target`) ou de doublon d'arête dans le même sens, la tentative est silencieusement annulée sans modifier le code source.
 
 ---
@@ -118,6 +119,8 @@ flowchart TD
 * **`INV-BUS-02` (Préservation de l'Édition Non Sauvegardée) :** Une tentative de quitter la vue avec des modifications non sauvegardées déclenche obligatoirement un avertissement de confirmation de navigation (`beforeunload`).
 * **`INV-BUS-03` (Isolement des Événements Canvas) :** Les interactions au sein des modales, menus radiaux et infobulles scrollables sont totalement étanches des événements de zoom et de pan de React Flow.
 * **`INV-BUS-04` (Intégrité des Connexions & Rejet des Doublons) :** Les auto-connexions (`source === target`) et les arêtes dupliquées dans le même sens sont strictement neutralisées au niveau du canvas et du moteur de sérialisation.
+* **`INV-BUS-05` (Omnidirectionnalité & Ancrage Dynamique) :** Les 4 poignées cardinales de toute forme autorisent indifféremment l'émission et la réception de flux. L'ancre centrale `auto` recalcule les flancs de contact optimaux en temps réel lors du déplacement des nœuds.
+* **`INV-BUS-06` (Positionnement Déterministe du Label de Flux) :** Le libellé du connecteur est positionné à une distance fixe de 36px de la poignée source le long du tracé (borné au milieu si distance < 72px).
 
 ---
 

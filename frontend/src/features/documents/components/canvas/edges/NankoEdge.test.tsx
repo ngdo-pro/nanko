@@ -136,4 +136,30 @@ describe('NankoEdge', () => {
     })
     expect(screen.queryByTestId('edge-tooltip-api-db')).not.toBeInTheDocument()
   })
+
+  it('positionne le label à 36px de la source le long du tracé (INV-6)', () => {
+    render(
+      <svg>
+        <NankoEdge
+          id="api->db"
+          source="api"
+          target="db"
+          sourceX={100}
+          sourceY={100}
+          targetX={300}
+          targetY={100}
+          sourcePosition={Position.Right}
+          targetPosition={Position.Left}
+          label="SQL"
+          data={{ label: 'SQL', desc: null }}
+        />
+      </svg>,
+    )
+
+    const badgeContainer = screen.getByTestId('ast-connector-api-db')
+    // sourceX = 100, sourcePosition = Right => badgeX = 136, badgeY = 100
+    expect(badgeContainer).toHaveStyle({
+      transform: 'translate(-50%, -50%) translate(136px,100px)',
+    })
+  })
 })

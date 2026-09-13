@@ -36,8 +36,46 @@ export const RectangleNode: React.FC<NodeProps> = ({ id, data, selected }) => {
       onMouseEnter={desc ? handleMouseEnter : undefined}
       onMouseLeave={desc ? handleMouseLeave : undefined}
     >
-      <Handle type="target" position={Position.Left} id="left" className="nanko-handle nanko-handle-left" />
-      <Handle type="target" position={Position.Top} id="top" className="nanko-handle nanko-handle-top" />
+      <Handle
+        type="source"
+        position={Position.Left}
+        id="left"
+        isConnectableStart={true}
+        isConnectableEnd={true}
+        className="nanko-handle nanko-handle-left"
+      />
+      <Handle
+        type="source"
+        position={Position.Top}
+        id="top"
+        isConnectableStart={true}
+        isConnectableEnd={true}
+        className="nanko-handle nanko-handle-top"
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="right"
+        isConnectableStart={true}
+        isConnectableEnd={true}
+        className="nanko-handle nanko-handle-right"
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="bottom"
+        isConnectableStart={true}
+        isConnectableEnd={true}
+        className="nanko-handle nanko-handle-bottom"
+      />
+      <Handle
+        type="source"
+        position={Position.Top}
+        id="auto"
+        isConnectableStart={true}
+        isConnectableEnd={true}
+        className="nanko-handle nanko-handle-auto"
+      />
 
       <div className={styles.nodeHeader}>
         <span className={clsx(styles.nodeBadge, 'nanko-node-badge')} data-qa="node-rectangle">rectangle</span>
@@ -61,9 +99,6 @@ export const RectangleNode: React.FC<NodeProps> = ({ id, data, selected }) => {
           onMouseLeave={handleTooltipMouseLeave}
         />
       )}
-
-      <Handle type="source" position={Position.Right} id="right" className="nanko-handle nanko-handle-right" />
-      <Handle type="source" position={Position.Bottom} id="bottom" className="nanko-handle nanko-handle-bottom" />
     </div>
   )
 }

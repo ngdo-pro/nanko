@@ -1,7 +1,7 @@
 # Feature : Poignées Omnidirectionnelles & Ancrage Dynamique Intelligent (08-omnidirectional-and-smart-anchor-connectors)
 
 > **Parent Initiative :** `studio-modeling`  
-> **Status :** Planned *(Framed ✅ — Ready for `/spec`)*  
+> **Status :** Implemented ✅ *(Spec 022 Delivered)*  
 > **Author(s) :** Nicolas & Nanko Core Team  
 > **Last Updated :** 2026-09-13  
 
@@ -70,5 +70,5 @@ SURVOL OU SÉLECTION D'UNE SHAPE           CONNEXION FIXE VS DYNAMIQUE (AUTO)
 ---
 
 ## 6. Implementation Spec(s)
-
-*No execution specs linked yet.*
+ 
+- [x] **`022-omnidirectional-and-smart-anchor-connectors`** : Poignées Omnidirectionnelles & Ancrage Dynamique Intelligent (Fichier : `../../../../specs/archive/022-omnidirectional-and-smart-anchor-connectors.md`)

@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { updateNankoSourceLayout, updateNankoSourceBulkLayout } from './syncLayoutToSource'
+import {
+  updateNankoSourceLayout,
+  updateNankoSourceBulkLayout,
+  updateNankoSourceEdgeLayout,
+} from './syncLayoutToSource'
 
 describe('syncLayoutToSource', () => {
   describe('updateNankoSourceLayout', () => {
@@ -70,6 +74,68 @@ describe('syncLayoutToSource', () => {
       const updated = updateNankoSourceBulkLayout(code, layout)
       expect(updated).toContain('!LAYOUT\nfront: x=150, y=250\n!END')
       expect(updated).not.toContain('old: x=1, y=2')
+    })
+
+    it('préserve les entrées de connecteurs existantes dans !LAYOUT', () => {
+      const code = [
+        'rectangle front label="Front"',
+        '!LAYOUT',
+        'front: x=1, y=2',
+        'front->back: from=top, to=left',
+        '!END',
+      ].join('\n')
+
+      const layout = {
+        front: { x: 150, y: 250 },
+      }
+
+      const updated = updateNankoSourceBulkLayout(code, layout)
+      expect(updated).toContain('front: x=150, y=250')
+      expect(updated).toContain('front->back: from=top, to=left')
+    })
+  })
+
+  describe('updateNankoSourceEdgeLayout', () => {
+    it('ajoute une ancre d arête dans un !LAYOUT existant', () => {
+      const code = [
+        'rectangle a label="A"',
+        'rectangle b label="B"',
+        'a -> b',
+        '!LAYOUT',
+        'a: x=10, y=20',
+        'b: x=100, y=200',
+        '!END',
+      ].join('\n')
+
+      const updated = updateNankoSourceEdgeLayout(code, 'a', 'b', { from: 'top', to: 'bottom' })
+      expect(updated).toContain('a->b: from=top, to=bottom')
+    })
+
+    it('met à jour une ancre d arête existante', () => {
+      const code = [
+        'rectangle a label="A"',
+        '!LAYOUT',
+        'a->b: from=top, to=left',
+        '!END',
+      ].join('\n')
+
+      const updated = updateNankoSourceEdgeLayout(code, 'a', 'b', { from: 'bottom', to: 'right' })
+      expect(updated).toContain('a->b: from=bottom, to=right')
+      expect(updated).not.toContain('from=top')
+    })
+
+    it('retire la ligne si les deux côtés deviennent auto', () => {
+      const code = [
+        'rectangle a label="A"',
+        '!LAYOUT',
+        'a: x=10, y=20',
+        'a->b: from=top, to=left',
+        '!END',
+      ].join('\n')
+
+      const updated = updateNankoSourceEdgeLayout(code, 'a', 'b', { from: 'auto', to: 'auto' })
+      expect(updated).not.toContain('a->b:')
+      expect(updated).toContain('a: x=10, y=20')
     })
   })
 })

@@ -108,8 +108,9 @@ auth: x=250, y=100
     await page.mouse.move(endX, endY, { steps: 10 })
     await page.mouse.up()
 
-    // 7. Vérifier que la connexion a été injectée dans le code source
+    // 7. Vérifier que la connexion a été injectée dans le code source avec persistance des ancres
     await expect(textarea).toHaveValue(/gateway\s*->\s*auth/)
+    await expect(textarea).toHaveValue(/gateway->auth:\s*from=right,\s*to=left/)
 
     // 8. Vérifier que l'état non enregistré est actif
     const unsavedBadge = page.getByTestId('unsaved-changes-badge')
@@ -125,5 +126,86 @@ auth: x=250, y=100
     await expect(page.getByTestId('canvas-node-gateway')).toBeVisible()
     await expect(page.getByTestId('canvas-node-auth')).toBeVisible()
     await expect(textarea).toHaveValue(/gateway\s*->\s*auth/)
+    await expect(textarea).toHaveValue(/gateway->auth:\s*from=right,\s*to=left/)
+  })
+
+  test('Tracé omnidirectionnel ascendant depuis un handle top (INV-1)', async ({ page }) => {
+    const uniqueSuffix = Date.now().toString().slice(-6)
+    const baseUser = await getOrSetupTestUser()
+    const isLocal = !env.testUser.username
+
+    const email = isLocal ? `connector-omni-${uniqueSuffix}@nanko.dev` : baseUser.email
+    const password = baseUser.password
+    if (isLocal) {
+      await createOrResetKeycloakUser(email, password)
+    }
+
+    const docName = `Omni Connector ${uniqueSuffix}`
+    const docSlug = `omni-connector-${uniqueSuffix}`
+
+    await page.goto('/')
+    const loginButton = page.getByTestId('login-button')
+    await expect(loginButton).toBeVisible()
+    await loginButton.click()
+
+    await expect(page).toHaveURL(/.*\/realms\/nanko\/protocol\/openid-connect\/auth.*/)
+    await page.locator('#username').fill(email)
+    await page.locator('#password').fill(password)
+    await page.locator('#kc-login').click()
+    await expect(page).toHaveURL(/.*localhost:45173.*|.*app.*nanko\.dev.*/)
+
+    const newDocButton = page.getByTestId('new-document-button')
+    await expect(newDocButton).toBeVisible()
+    await newDocButton.click()
+
+    await page.getByTestId('document-name-input').fill(docName)
+    await page.getByTestId('document-slug-input').fill(docSlug)
+    await page.getByTestId('submit-create-document').click()
+
+    await expect(page).toHaveURL(/.*\/projects\/[0-9a-f-]+\/documents\/[0-9a-f-]+/)
+    const textarea = page.getByTestId('source-code-textarea')
+    await expect(textarea).toBeVisible()
+
+    const initialDsl = `rectangle lower label="Lower Service"
+rectangle upper label="Upper Service"
+
+!LAYOUT
+lower: x=100, y=300
+upper: x=100, y=100
+!END
+`
+    await textarea.fill(initialDsl)
+
+    const nodeLower = page.getByTestId('canvas-node-lower')
+    const nodeUpper = page.getByTestId('canvas-node-upper')
+
+    await expect(nodeLower).toBeVisible()
+    await expect(nodeUpper).toBeVisible()
+
+    // Handle top de lower (qui était autrefois strictement target) initie le tracé !
+    const lowerTopHandle = nodeLower.locator('.nanko-handle-top')
+    const upperBottomHandle = nodeUpper.locator('.nanko-handle-bottom')
+
+    await nodeLower.hover()
+    const lowerBox = await lowerTopHandle.boundingBox()
+    expect(lowerBox).not.toBeNull()
+
+    const upperBox = await upperBottomHandle.boundingBox()
+    expect(upperBox).not.toBeNull()
+
+    const startX = (lowerBox?.x ?? 0) + (lowerBox?.width ?? 0) / 2
+    const startY = (lowerBox?.y ?? 0) + (lowerBox?.height ?? 0) / 2
+
+    const endX = (upperBox?.x ?? 0) + (upperBox?.width ?? 0) / 2
+    const endY = (upperBox?.y ?? 0) + (upperBox?.height ?? 0) / 2
+
+    await page.mouse.move(startX, startY)
+    await page.mouse.down()
+    await page.mouse.move(endX, endY, { steps: 10 })
+    await page.mouse.up()
+
+    // Vérifier l'injection déclarative et la persistance dans !LAYOUT
+    await expect(textarea).toHaveValue(/lower\s*->\s*upper/)
+    await expect(textarea).toHaveValue(/lower->upper:\s*from=top,\s*to=bottom/)
   })
 })

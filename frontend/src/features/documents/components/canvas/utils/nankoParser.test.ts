@@ -131,4 +131,24 @@ describe('parseNankoSource', () => {
 
     expect(result.syntaxError).toContain('inconnu')
   })
+
+  it('parse correctement les ancres de connecteurs dans le bloc !LAYOUT', () => {
+    const code = [
+      'rectangle front label="Front"',
+      'rectangle back label="Back"',
+      'front -> back',
+      '',
+      '!LAYOUT',
+      'front: x=10, y=20',
+      'back: x=100, y=200',
+      'front->back: from=top, to=left',
+      '!END',
+    ].join('\n')
+
+    const result = parseNankoSource(code)
+    expect(result.syntaxError).toBeNull()
+    expect(result.ast.edgeLayout).toEqual({
+      'front->back': { from: 'top', to: 'left' },
+    })
+  })
 })

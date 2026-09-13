@@ -119,4 +119,40 @@ a -> b
     expect(checkConnectorExists(code, 'app_worker', 'db_replica')).toBe(true)
     expect(checkConnectorExists(code, 'ap', 'db')).toBe(false)
   })
+
+  it('ajoute les ancres cardinales dans le bloc !LAYOUT (INV-3)', () => {
+    const code = `rectangle a label="A"
+rectangle b label="B"
+
+!LAYOUT
+a: x=10, y=20
+b: x=100, y=200
+!END`
+
+    const res = insertConnectorToSource(code, 'a', 'b', { from: 'top', to: 'left' })
+    expect(res.alreadyExists).toBe(false)
+    expect(res.newSourceCode).toContain('a->b: from=top, to=left')
+
+    const parsed = parseNankoSource(res.newSourceCode)
+    expect(parsed.syntaxError).toBeNull()
+    expect(parsed.ast.edgeLayout?.['a->b']).toEqual({ from: 'top', to: 'left' })
+  })
+
+  it('ne persiste rien dans !LAYOUT pour des ancres en mode auto (INV-3)', () => {
+    const code = `rectangle a label="A"
+rectangle b label="B"
+
+!LAYOUT
+a: x=10, y=20
+b: x=100, y=200
+!END`
+
+    const res = insertConnectorToSource(code, 'a', 'b', { from: 'auto', to: 'auto' })
+    expect(res.alreadyExists).toBe(false)
+    expect(res.newSourceCode).not.toContain('a->b:')
+
+    const parsed = parseNankoSource(res.newSourceCode)
+    expect(parsed.syntaxError).toBeNull()
+    expect(parsed.ast.edgeLayout?.['a->b']).toBeUndefined()
+  })
 })
