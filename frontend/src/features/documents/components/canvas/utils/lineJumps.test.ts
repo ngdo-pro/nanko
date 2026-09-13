@@ -324,6 +324,29 @@ describe('lineJumps utility', () => {
       expect(result).toBe('M 0 50 L 100 50')
     })
 
+    it('maintient strictement la verticalité parfaite d une ligne lors de l insertion d un pontet (pas de déviation oblique)', () => {
+      const initialPath = 'M 50 0 L 50 100'
+      const jumps = [
+        {
+          x: 50,
+          y: 50,
+          segmentIndex: 0,
+          orientation: 'vertical' as const,
+          direction: 'positive' as const,
+        },
+      ]
+
+      const result = applyLineJumpsToPath(initialPath, jumps, 6)
+      // Tous les points du chemin (hors arc SVG) doivent avoir exactement x = 50
+      expect(result).toBe('M 50 0 L 50 44 A 6 6 0 0 1 50 56 L 50 100')
+      // Vérification que chaque commande L utilise bien 50
+      const lines = result.match(/L\s+([-\d.]+)\s+([-\d.]+)/g) ?? []
+      for (const line of lines) {
+        const parts = line.split(/\s+/)
+        expect(parts[1]).toBe('50')
+      }
+    })
+
     it('retourne le chemin inchangé en l absence de pontets', () => {
       const initialPath = 'M 0 50 L 100 50'
       expect(applyLineJumpsToPath(initialPath, [])).toBe(initialPath)

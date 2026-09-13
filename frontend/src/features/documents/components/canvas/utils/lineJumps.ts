@@ -322,6 +322,9 @@ export function applyLineJumpsToPath(
     }
 
     const isHorizontal = Math.abs(end.y - start.y) < Math.abs(end.x - start.x)
+    const isPositive = isHorizontal ? start.x <= end.x : start.y <= end.y
+    const segX = start.x
+    const segY = start.y
 
     // Trier les jumps le long du segment depuis start vers end
     const sortedJumps = [...segJumps].sort((a, b) => {
@@ -343,7 +346,7 @@ export function applyLineJumpsToPath(
     }
 
     for (const jump of validJumps) {
-      const { x: jx, y: jy, direction } = jump
+      const { x: jx, y: jy } = jump
 
       if (isHorizontal) {
         const minX = Math.min(start.x, end.x)
@@ -353,16 +356,16 @@ export function applyLineJumpsToPath(
           continue
         }
 
-        if (direction === 'positive') {
+        if (isPositive) {
           // Gauche vers droite : arc bombé vers le haut (y décroissant)
           const enterX = jx - radius
           const exitX = jx + radius
-          resultPath += ` L ${enterX} ${jy} A ${radius} ${radius} 0 0 1 ${exitX} ${jy}`
+          resultPath += ` L ${enterX} ${segY} A ${radius} ${radius} 0 0 1 ${exitX} ${segY}`
         } else {
           // Droite vers gauche : arc bombé vers le haut
           const enterX = jx + radius
           const exitX = jx - radius
-          resultPath += ` L ${enterX} ${jy} A ${radius} ${radius} 0 0 0 ${exitX} ${jy}`
+          resultPath += ` L ${enterX} ${segY} A ${radius} ${radius} 0 0 0 ${exitX} ${segY}`
         }
       } else {
         const minY = Math.min(start.y, end.y)
@@ -372,16 +375,16 @@ export function applyLineJumpsToPath(
           continue
         }
 
-        if (direction === 'positive') {
+        if (isPositive) {
           // Haut vers bas : arc bombé vers la droite (x croissant)
           const enterY = jy - radius
           const exitY = jy + radius
-          resultPath += ` L ${jx} ${enterY} A ${radius} ${radius} 0 0 1 ${jx} ${exitY}`
+          resultPath += ` L ${segX} ${enterY} A ${radius} ${radius} 0 0 1 ${segX} ${exitY}`
         } else {
           // Bas vers haut : arc bombé vers la droite
           const enterY = jy + radius
           const exitY = jy - radius
-          resultPath += ` L ${jx} ${enterY} A ${radius} ${radius} 0 0 0 ${jx} ${exitY}`
+          resultPath += ` L ${segX} ${enterY} A ${radius} ${radius} 0 0 0 ${segX} ${exitY}`
         }
       }
     }
