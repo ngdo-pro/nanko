@@ -500,5 +500,123 @@ srcNode->dstNode: from=right, to=left
     await expect(textarea).not.toHaveValue(/labelY=/)
     await expect(textarea).toHaveValue(/srcNode->dstNode:\s*from=right,\s*to=left/)
   })
+
+  test('Création Rapide Connectée par Dépôt dans le Vide (Miro Quick Spawn - Spec 026)', async ({ page }) => {
+    const uniqueSuffix = Date.now().toString().slice(-6)
+    const baseUser = await getOrSetupTestUser()
+    const isLocal = !env.testUser.username
+
+    const email = isLocal ? `quick-spawn-${uniqueSuffix}@nanko.dev` : baseUser.email
+    const password = baseUser.password
+    if (isLocal) {
+      await createOrResetKeycloakUser(email, password)
+    }
+
+    const docName = `Quick Spawn Doc ${uniqueSuffix}`
+    const docSlug = `quick-spawn-${uniqueSuffix}`
+
+    await page.goto('/')
+    const loginButton = page.getByTestId('login-button')
+    await expect(loginButton).toBeVisible()
+    await loginButton.click()
+
+    await expect(page).toHaveURL(/.*\/realms\/nanko\/protocol\/openid-connect\/auth.*/)
+    await page.locator('#username').fill(email)
+    await page.locator('#password').fill(password)
+    await page.locator('#kc-login').click()
+
+    await expect(page).toHaveURL(/.*localhost:45173.*|.*app.*nanko\.dev.*/)
+    await expect(page.getByTestId('dashboard-view')).toBeVisible()
+
+    await page.getByTestId('new-document-button').click()
+    await page.getByTestId('document-name-input').fill(docName)
+    await page.getByTestId('document-slug-input').fill(docSlug)
+    await page.getByTestId('submit-create-document').click()
+
+    await expect(page).toHaveURL(/.*\/projects\/[0-9a-f-]+\/documents\/[0-9a-f-]+/)
+    const textarea = page.getByTestId('source-code-textarea')
+    await expect(textarea).toBeVisible()
+
+    const initialDsl = `rectangle srcNode label="Source Node"
+
+!LAYOUT
+srcNode: x=100, y=150
+!END
+`
+    await textarea.fill(initialDsl)
+
+    const sourceNode = page.getByTestId('canvas-node-srcNode')
+    await expect(sourceNode).toBeVisible()
+
+    // 1. Localiser la poignée droite
+    const sourceHandle = sourceNode.locator('.nanko-handle-right')
+    await expect(sourceHandle).toBeAttached()
+    await sourceNode.hover()
+
+    const sourceBox = await sourceHandle.boundingBox()
+    expect(sourceBox).not.toBeNull()
+    const startX = (sourceBox?.x ?? 0) + (sourceBox?.width ?? 0) / 2
+    const startY = (sourceBox?.y ?? 0) + (sourceBox?.height ?? 0) / 2
+
+    // 2. Étirer le fil de connexion vers un espace vide du canvas
+    await page.mouse.move(startX, startY)
+    await page.mouse.down()
+    const dropX = startX + 220
+    const dropY = startY + 60
+    await page.mouse.move(dropX, dropY, { steps: 5 })
+    await page.mouse.up()
+
+    // 3. Le QuickSpawnMenu doit apparaître
+    const quickSpawnMenu = page.getByTestId('quick-spawn-menu')
+    await expect(quickSpawnMenu).toBeVisible()
+
+    const rectBtn = page.getByTestId('quick-spawn-rectangle')
+    const circleBtn = page.getByTestId('quick-spawn-circle')
+    await expect(rectBtn).toBeVisible()
+    await expect(circleBtn).toBeVisible()
+
+    // 4. Sélectionner Rectangle par clic
+    await rectBtn.click()
+
+    // 5. Le menu disparaît
+    await expect(quickSpawnMenu).not.toBeVisible()
+
+    // 6. Vérifier la création atomique dans le code source :
+    // - Nouvelle forme rectangle déclarée (ex: rect_1 label="Rectangle 1")
+    // - Connecteur reliant srcNode vers la nouvelle forme
+    // - Coordonnées !LAYOUT et ancres opposées
+    await expect(textarea).toHaveValue(/rectangle\s+(rect_\d+)\s+label="Rectangle\s*\d*"/)
+    await expect(textarea).toHaveValue(/srcNode\s*->\s*(rect_\d+)/)
+    await expect(textarea).toHaveValue(/srcNode->rect_\d+:\s*from=right,\s*to=left/)
+
+    // 7. Le nouveau nœud apparaît sur le canvas
+    const newShapeMatch = (await textarea.inputValue()).match(/rectangle\s+(rect_\d+)/)
+    expect(newShapeMatch).not.toBeNull()
+    const newShapeId = newShapeMatch![1]
+    await expect(page.getByTestId(`canvas-node-${newShapeId}`)).toBeVisible()
+
+    // 8. Test d'annulation par touche Échap : étirer à nouveau vers le vide
+    await sourceNode.hover()
+    const secondSourceBox = await sourceHandle.boundingBox()
+    expect(secondSourceBox).not.toBeNull()
+    const sX = (secondSourceBox?.x ?? 0) + (secondSourceBox?.width ?? 0) / 2
+    const sY = (secondSourceBox?.y ?? 0) + (secondSourceBox?.height ?? 0) / 2
+
+    await page.mouse.move(sX, sY)
+    await page.mouse.down()
+    await page.mouse.move(sX + 150, sY - 80, { steps: 5 })
+    await page.mouse.up()
+
+    await expect(quickSpawnMenu).toBeVisible()
+    const sourceBeforeEscape = await textarea.inputValue()
+
+    // Appuyer sur Escape
+    await page.keyboard.press('Escape')
+    await expect(quickSpawnMenu).not.toBeVisible()
+
+    // Vérifier l'intégrité absolue : aucune altération du code
+    expect(await textarea.inputValue()).toBe(sourceBeforeEscape)
+  })
 })
+
 

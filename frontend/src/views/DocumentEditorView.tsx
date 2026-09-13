@@ -13,6 +13,7 @@ import {
   updateNankoSourceEdgeLabelPosition,
   insertShapeToSource,
   insertConnectorToSource,
+  quickSpawnConnectedShape,
   type AnchorSide,
   type ShapePrimitiveType,
   parseNankoSource,
@@ -125,6 +126,27 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
       return newSourceCode
     })
   }, [])
+
+  const handleQuickSpawnConnectedShape = useCallback(
+    (
+      sourceNodeId: string,
+      sourceHandle: AnchorSide | null,
+      shapeType: ShapePrimitiveType,
+      position: { x: number; y: number },
+    ) => {
+      setCode((prevCode) => {
+        const { newSourceCode } = quickSpawnConnectedShape({
+          sourceCode: prevCode,
+          sourceNodeId,
+          sourceHandle,
+          shapeType,
+          cursorPosition: position,
+        })
+        return newSourceCode
+      })
+    },
+    [],
+  )
 
   const handleEdgeLabelPositionChange = useCallback(
     (edgeKey: string, position: { x: number; y: number }) => {
@@ -261,6 +283,7 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
               onAutoLayoutApplied={handleAutoLayoutApplied}
               onCreateShape={handleCreateShape}
               onConnectorCreated={handleConnectorCreated}
+              onQuickSpawnConnectedShape={handleQuickSpawnConnectedShape}
               onEdgeLabelPositionChange={handleEdgeLabelPositionChange}
               onEdgeLabelPositionReset={handleEdgeLabelPositionReset}
             />
@@ -276,6 +299,7 @@ const DocumentEditorContent: React.FC<DocumentEditorContentProps> = ({ document,
               onAutoLayoutApplied={handleAutoLayoutApplied}
               onCreateShape={handleCreateShape}
               onConnectorCreated={handleConnectorCreated}
+              onQuickSpawnConnectedShape={handleQuickSpawnConnectedShape}
               onEdgeLabelPositionChange={handleEdgeLabelPositionChange}
               onEdgeLabelPositionReset={handleEdgeLabelPositionReset}
             />

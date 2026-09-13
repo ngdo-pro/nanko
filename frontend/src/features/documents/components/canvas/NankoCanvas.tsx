@@ -16,6 +16,8 @@ import {
   type OnNodesChange,
   type OnEdgesChange,
   type OnNodeDrag,
+  type OnConnectStart,
+  type OnConnectEnd,
   type Connection,
   type IsValidConnection,
 } from '@xyflow/react'
@@ -26,6 +28,7 @@ import { TextNode } from './nodes/TextNode'
 import { NankoEdge } from './edges/NankoEdge'
 import { CanvasControls } from './CanvasControls'
 import { RadialMenu } from './radial/RadialMenu'
+import { QuickSpawnMenu } from './quick-spawn/QuickSpawnMenu'
 import styles from './NankoCanvas.module.css'
 import { calculateDagreLayout } from './utils/dagreLayout'
 import { isValidNankoConnection } from './utils/isValidConnection'
@@ -61,6 +64,12 @@ export interface NankoCanvasProps {
   ) => void
   onEdgeLabelPositionChange?: (edgeKey: string, position: { x: number; y: number }) => void
   onEdgeLabelPositionReset?: (edgeKey: string) => void
+  onQuickSpawnConnectedShape?: (
+    sourceNodeId: string,
+    sourceHandle: AnchorSide | null,
+    shapeType: ShapePrimitiveType,
+    position: { x: number; y: number },
+  ) => void
 }
 
 function buildNodesFromAst(ast: NankoAst): Node[] {
@@ -137,6 +146,14 @@ interface RadialMenuState {
   clientY: number
 }
 
+interface QuickSpawnMenuState {
+  x: number
+  y: number
+  flowPos: { x: number; y: number }
+  sourceNodeId: string
+  sourceHandle: AnchorSide | null
+}
+
 const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
   ast,
   syntaxError,
@@ -146,11 +163,13 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
   onConnectorCreated,
   onEdgeLabelPositionChange,
   onEdgeLabelPositionReset,
+  onQuickSpawnConnectedShape,
 }) => {
   const [showMiniMap, setShowMiniMap] = useState<boolean>(false)
   const [colorMode, setColorMode] = useState<'dark' | 'light'>('dark')
   const [radialMenu, setRadialMenu] = useState<RadialMenuState | null>(null)
   const [activeEdgeId, setActiveEdgeId] = useState<string | null>(null)
+  const [quickSpawnMenu, setQuickSpawnMenu] = useState<QuickSpawnMenuState | null>(null)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const isMouseOverCanvasRef = useRef<boolean>(false)
@@ -158,6 +177,8 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
   const hoveredSectorRef = useRef<ShapePrimitiveType | null>(null)
   const radialMenuRef = useRef<RadialMenuState | null>(null)
   const isRadialActionHandledRef = useRef<boolean>(false)
+  const connectingStartRef = useRef<{ nodeId: string | null; handleId: string | null } | null>(null)
+  const isConnectionSuccessfulRef = useRef<boolean>(false)
 
   const { screenToFlowPosition } = useReactFlow()
 
@@ -272,9 +293,20 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
     [edges],
   )
 
+  // Démarrage du tracé d'un connecteur
+  const handleConnectStart: OnConnectStart = useCallback((_event, params) => {
+    connectingStartRef.current = {
+      nodeId: params.nodeId,
+      handleId: params.handleId,
+    }
+    isConnectionSuccessfulRef.current = false
+    setQuickSpawnMenu(null)
+  }, [])
+
   // Création terminée d'une connexion
   const handleConnect = useCallback(
     (connection: Connection) => {
+      isConnectionSuccessfulRef.current = true
       if (!isValidNankoConnection(connection, edges)) return
       const sourceHandle = extractCanonicalSide(connection.sourceHandle)
       const targetHandle = extractCanonicalSide(connection.targetHandle)
@@ -284,6 +316,56 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
       })
     },
     [edges, onConnectorCreated],
+  )
+
+  // Relâchement du câble : détection d'un dépôt dans le vide (Quick Spawn)
+  const handleConnectEnd: OnConnectEnd = useCallback(
+    (event) => {
+      const start = connectingStartRef.current
+      connectingStartRef.current = null
+
+      if (isConnectionSuccessfulRef.current) {
+        return
+      }
+
+      if (!start?.nodeId) {
+        return
+      }
+
+      const targetElement = event.target as HTMLElement | null
+      const isOverNode = Boolean(targetElement?.closest?.('.react-flow__node'))
+      const isOverHandle = Boolean(targetElement?.closest?.('.react-flow__handle'))
+
+      if (isOverNode || isOverHandle) {
+        return
+      }
+
+      let clientX: number
+      let clientY: number
+      if ('clientX' in event && typeof event.clientX === 'number') {
+        clientX = event.clientX
+        clientY = event.clientY
+      } else if ('changedTouches' in event && (event as TouchEvent).changedTouches?.[0]) {
+        clientX = (event as TouchEvent).changedTouches[0]!.clientX
+        clientY = (event as TouchEvent).changedTouches[0]!.clientY
+      } else {
+        return
+      }
+
+      const flowPos = screenToFlowPosition({ x: clientX, y: clientY })
+      const rect = containerRef.current?.getBoundingClientRect()
+      const menuX = clientX - (rect?.left ?? 0)
+      const menuY = clientY - (rect?.top ?? 0)
+
+      setQuickSpawnMenu({
+        x: menuX,
+        y: menuY,
+        flowPos,
+        sourceNodeId: start.nodeId,
+        sourceHandle: extractCanonicalSide(start.handleId),
+      })
+    },
+    [screenToFlowPosition],
   )
 
   // Déplacement terminé : synchroniser la position vers le code source
@@ -535,6 +617,8 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
         onEdgeMouseEnter={(_, edge) => setActiveEdgeId(edge.id)}
         onEdgeMouseLeave={() => setActiveEdgeId(null)}
         onNodeDragStop={handleNodeDragStop}
+        onConnectStart={handleConnectStart}
+        onConnectEnd={handleConnectEnd}
         onConnect={handleConnect}
         isValidConnection={isValidConnection}
         connectionRadius={32}
@@ -598,6 +682,25 @@ const NankoCanvasInner: React.FC<NankoCanvasProps> = ({
             isRadialActionHandledRef.current = false
             setRadialMenu(null)
           }}
+        />
+      )}
+
+      {quickSpawnMenu && (
+        <QuickSpawnMenu
+          x={quickSpawnMenu.x}
+          y={quickSpawnMenu.y}
+          onSelect={(shapeType) => {
+            if (onQuickSpawnConnectedShape) {
+              onQuickSpawnConnectedShape(
+                quickSpawnMenu.sourceNodeId,
+                quickSpawnMenu.sourceHandle,
+                shapeType,
+                quickSpawnMenu.flowPos,
+              )
+            }
+            setQuickSpawnMenu(null)
+          }}
+          onCancel={() => setQuickSpawnMenu(null)}
         />
       )}
     </div>
