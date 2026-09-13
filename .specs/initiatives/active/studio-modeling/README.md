@@ -80,8 +80,8 @@
   ↳ *Fichier :* [`planned/12-connector-selection-and-deletion.md`](./planned/12-connector-selection-and-deletion.md) *(Cadré ✅ — Backlog Feature)*
 - [ ] **`13-connector-reconnection`** : Reconnexion interactive et ré-ancrage d'extrémités existantes par glisser  
   ↳ *Fichier :* [`planned/13-connector-reconnection.md`](./planned/13-connector-reconnection.md) *(Cadré ✅ — Backlog Feature)*
-- [ ] **`14-connector-line-jumps`** : Pontets de croisement de connecteurs (Line Jumps) et hiérarchie visuelle par z-index  
-  ↳ *Fichier :* [`active/14-connector-line-jumps.md`](./active/14-connector-line-jumps.md) *(En cours 🚀 — Spec 024)*
+- [x] **`14-connector-line-jumps`** : Pontets de croisement de connecteurs (Line Jumps) et hiérarchie visuelle par z-index  
+  ↳ *Fichier :* [`archive/14-connector-line-jumps.md`](./archive/14-connector-line-jumps.md) *(Livré & Archivé ✅ — Spec 024)*
 
 
 
