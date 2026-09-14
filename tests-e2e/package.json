@@ -10,6 +10,6 @@
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "@types/node": "^24.13.3",
-    "zod": "^4.5.4"
+    "zod": "^4.6.2"
   }
 }
